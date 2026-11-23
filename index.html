@@ -688,7 +688,7 @@ footer.credit{
     <input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden>
     <input type="password" id="lockPw2" placeholder="Repetí la contraseña" autocomplete="new-password" hidden>
     <ul class="pw-rules" id="pwRules" hidden>
-      <li data-r="len">Al menos 6 caracteres</li><li data-r="up">Una mayúscula</li><li data-r="lo">Una minúscula</li><li data-r="num">Un número</li><li data-r="sym">Un símbolo (por ej. ! ? # $ . -)</li>
+      <li data-r="len">Al menos 6 caracteres</li><li data-r="up">Una mayúscula</li><li data-r="lo">Una minúscula</li><li data-r="ns">Un número o un símbolo (por ej. 7 ! ? # $)</li>
     </ul>
     <button type="button" class="lock-link" id="lockShow" hidden>Mostrar contraseña</button>
     <div class="scan-box" id="scanBox" hidden><video id="scanVideo" playsinline muted></video><p>Apuntá la cámara al QR que aparece en tu otro dispositivo (⚙️ → Dispositivos conectados).</p></div>
@@ -2540,7 +2540,7 @@ function setMode(mode, msg){
   lockEl.classList.remove('off');
   if(mode !== 'install') setTimeout(()=> (mode === 'connect' || mode === 'code' ? lockCode : lockPw).focus(), 50);
 }
-const PW_RULES = { len: s => s.length >= 6, up: s => /\p{Lu}/u.test(s), lo: s => /\p{Ll}/u.test(s), num: s => /\d/.test(s), sym: s => /[^\p{L}\d\s]/u.test(s) };
+const PW_RULES = { len: s => s.length >= 6, up: s => /\p{Lu}/u.test(s), lo: s => /\p{Ll}/u.test(s), ns: s => /[^\p{L}\s]/u.test(s) };
 function pwRulesOk(s){ return Object.values(PW_RULES).every(f => f(s)); }
 function renderPwRules(){ L('pwRules').querySelectorAll('li').forEach(li => li.classList.toggle('ok', PW_RULES[li.dataset.r](lockPw.value))); }
 lockPw.addEventListener('input', ()=>{ if(!L('pwRules').hidden) renderPwRules(); });
