@@ -697,7 +697,6 @@ footer.credit{
     <button type="button" class="btn-g" id="lockBio" hidden>Entrar con huella o cara</button>
     <button type="button" class="lock-link" id="lockAlt" hidden></button>
     <p class="lock-err" id="lockErr"></p>
-    <button type="button" class="lock-link" id="lockInstall" hidden>📲 Instalar la app en este dispositivo</button>
   </form>
 </div>
 
@@ -2531,7 +2530,7 @@ function setMode(mode, msg){
   L('pwRules').hidden = !(mode === 'create' || mode === 'code'); if(!L('pwRules').hidden) renderPwRules();
   L('lockShow').hidden = lockPw.hidden; lockPw.type = lockPw2.type = 'password'; L('lockShow').textContent = 'Mostrar contraseña';
   L('lockScan').hidden = mode !== 'connect'; stopScan();
-  renderInstall(); if(mode === 'install') L('lockInstall').hidden = true;
+  renderInstall();
   lockPw.placeholder = mode === 'code' ? 'Contraseña nueva' : 'Contraseña';
   lockPw.autocomplete = mode === 'enter' ? 'current-password' : 'new-password';
   lockPw2.hidden = !(mode === 'create' || mode === 'code');
@@ -2805,26 +2804,44 @@ L('devBg').addEventListener('click', ev=>{ if(ev.target === L('devBg')) L('devBg
 function isStandalone(){ return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
 let installEvt = null;
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let installedElsewhere = false;
+async function detectInstalled(){
+  try{ if(navigator.getInstalledRelatedApps) installedElsewhere = (await navigator.getInstalledRelatedApps()).length > 0; }catch(_){}
+  renderInstall();
+}
 function renderInstall(){
-  const show = !isStandalone() && (installEvt || isIOS || /Android/.test(navigator.userAgent));
-  L('lockInstall').hidden = !show; L('cfgInstall').hidden = !show;
+  // solo se ofrece si NO está instalada: dentro de la app, o si el navegador avisa que ya existe, no aparece
+  const mobile = isIOS || /Android/.test(navigator.userAgent);
+  L('cfgInstall').hidden = !(!isStandalone() && !installedElsewhere && (installEvt || mobile));
 }
 window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt = e; renderInstall(); });
 window.addEventListener('appinstalled', ()=>{ installEvt = null; renderInstall(); });
 async function doInstall(){
   if(typeof closeCfg === 'function') closeCfg();
   if(installEvt){ installEvt.prompt(); await installEvt.userChoice.catch(()=>{}); installEvt = null; renderInstall(); return; }
+  const ua = navigator.userAgent;
+  let msg;
   if(isIOS){
-    const notSafari = /CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
-    alert((notSafari ? 'En iPhone conviene instalarla desde Safari: copiá el link mfquiroga.github.io/diario y abrilo en Safari.\n\n' : '') +
-      'Para instalarla:\n1. Tocá el botón Compartir (el cuadrado con la flecha hacia arriba).\n2. Bajá y tocá «Agregar a inicio».\n3. Tocá «Agregar».\n\nDespués abrila desde el ícono del corazón y conectala ahí (en iPhone, la app instalada guarda sus datos aparte del navegador).');
-    return;
+    msg = (/CriOS|FxiOS|EdgiOS/.test(ua) ? 'En iPhone hay que instalarla desde Safari: abrí mfquiroga.github.io/diario en Safari.\n\n' : '') +
+      'En Safari:\n1. Tocá el botón Compartir (cuadrado con flecha hacia arriba).\n2. Tocá «Agregar a inicio» (bajá si no lo ves).\n3. Tocá «Agregar».\n\nDespués abrila desde el ícono del corazón y conectala ahí.';
+  } else if(/EdgA\//.test(ua)){
+    msg = 'En Edge (celular):\n1. Tocá el botón de menú de Edge, abajo (las tres rayitas o los tres puntos).\n2. Buscá «Agregar al teléfono» o «Agregar a la pantalla de inicio». Si no lo ves, deslizá las opciones.\n3. Confirmá con «Instalar» o «Agregar».\n\nSi no aparece ninguna de esas opciones, abrí el link en Chrome: ahí la instalación es directa.';
+  } else if(/SamsungBrowser/.test(ua)){
+    msg = 'En Samsung Internet:\n1. Tocá el menú (tres rayitas, abajo a la derecha).\n2. Tocá «Agregar página a» → «Pantalla de inicio».\n3. Confirmá.';
+  } else if(/Firefox/.test(ua) && /Android/.test(ua)){
+    msg = 'En Firefox:\n1. Tocá los tres puntitos ⋮.\n2. Tocá «Instalar» o «Agregar a pantalla de inicio».\n3. Confirmá.';
+  } else if(/Android/.test(ua)){
+    msg = 'En Chrome:\n1. Tocá los tres puntitos ⋮ arriba a la derecha.\n2. Tocá «Instalar app» o «Agregar a la pantalla principal».\n3. Confirmá.';
+  } else if(/Edg\//.test(ua)){
+    msg = 'En Edge (compu): tocá los tres puntos … arriba a la derecha → «Aplicaciones» → «Instalar este sitio como aplicación».\n\nSi esa opción no aparece, la app ya está instalada: buscala en el menú Inicio como «Diario».';
+  } else {
+    msg = 'En Chrome (compu): tocá el ícono de instalar a la derecha de la barra de direcciones, o ⋮ → «Transmitir, guardar y compartir» → «Instalar página como app».\n\nSi no aparece, la app ya está instalada: buscala en el menú Inicio como «Diario».';
   }
-  alert('Para instalarla en Android:\n1. Tocá los tres puntitos ⋮ arriba a la derecha de Chrome.\n2. Tocá «Instalar app» o «Agregar a la pantalla principal».\n3. Confirmá.\n\nSi no aparece, recargá la página y esperá unos segundos.');
+  alert(msg);
 }
-L('lockInstall').addEventListener('click', doInstall);
 L('cfgInstall').addEventListener('click', doInstall);
 renderInstall();
+detectInstalled();
 
 let scanStream = null, scanTimer = null;
 function stopScan(){
@@ -2878,7 +2895,11 @@ async function startLock(){
   }
   const hc0 = /#c=/.test(location.hash);
   const mobile = isIOS || /Android/.test(navigator.userAgent);
-  if(!isLinked() && mobile && !isStandalone() && !(hc0 && !isIOS)){ setMode('install'); return; }
+  await detectInstalled();
+  if(!isLinked() && mobile && !isStandalone() && !(hc0 && !isIOS)){
+    setMode('install', installedElsewhere ? 'Ya tenés la app instalada en este dispositivo: abrila desde el ícono del corazón y conectala ahí.' : '');
+    return;
+  }
   setMode(isLinked() ? 'create' : 'connect');
   const hc = location.hash.match(/#c=([^&]+)/);
   if(hc && lockMode === 'connect'){ lockCode.value = decodeURIComponent(hc[1]); history.replaceState(null, '', location.pathname); L('lockGo').click(); }
