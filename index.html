@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diario</title>
+<title>Mimo · Diario</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#191726">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -680,27 +680,50 @@ footer.credit{
 .cfg-ver{ padding:6px 10px 4px; font-size:11.5px; color:var(--text-mute,#a9a3c4); opacity:.75; }
 .lock-card p:empty{ display:none; }
 .lock-link{ background:none; border:0; color:var(--accent); font:500 13px 'Inter',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
+/* ===== v10: Google y hoja propia ===== */
+.lock-pic{ width:84px; height:84px; border-radius:50%; margin:0 auto 4px; object-fit:cover; }
+.lock-links{ display:flex; flex-wrap:wrap; justify-content:center; gap:2px 12px; }
+.lock-links:empty{ display:none; }
+.lock-pick{ display:flex; flex-direction:column; gap:8px; }
+.pick-row{ display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:12px; background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-light); cursor:pointer; text-align:left; font:500 14px 'Inter',sans-serif; }
+.pick-row:hover{ border-color:var(--accent); }
+.pick-row img,.pick-ini{ width:36px; height:36px; border-radius:50%; flex:none; object-fit:cover; }
+.pick-ini{ display:flex; align-items:center; justify-content:center; background:var(--accent); color:#fff; font-weight:600; }
+.pick-row small{ display:block; font-weight:400; font-size:12px; color:var(--text-mute,#a9a3c4); }
+.sheet-card{ width:min(440px,100%); display:flex; flex-direction:column; gap:10px; }
+.sheet-card h2{ margin:0; }
+.sheet-help{ margin:0; font-size:13.5px; line-height:1.5; color:var(--text-mute,#a9a3c4); }
+.sheet-card input{ padding:12px 14px; border-radius:12px; background:var(--bg-deep); border:1px solid var(--line); color:var(--text-light); font:14px 'Inter',sans-serif; }
+.sheet-card input:focus{ outline:none; border-color:var(--accent); }
+.sheet-card .btn-p,.sheet-card .btn-g{ padding:12px 16px; }
+.sheet-card .lock-err{ margin:0; font-size:13px; }
+.sheet-foot{ display:flex; justify-content:center; gap:12px; }
+#sheetBg{ z-index:40; }
+.nosheet .grid,.nosheet .titles,.nosheet .search-shell,.nosheet #writeBtn{ filter:blur(7px); pointer-events:none; user-select:none; }
+.nosheet .import-shell{ z-index:60; }
+.auth-pill{ position:absolute; top:48px; right:0; z-index:55; max-width:min(300px,86vw); padding:9px 12px; border-radius:12px; cursor:pointer;
+  background:var(--bg-panel-2); border:1px solid var(--accent); color:var(--text-light); font:500 12.5px 'Inter',sans-serif; text-align:left; box-shadow:0 8px 22px rgba(0,0,0,.35); }
+@media (max-width:600px){ .auth-pill{ position:static; } }
 </style>
 </head>
 <body>
 <div class="lock" id="lockScreen">
   <form class="lock-card" id="lockForm" autocomplete="on">
-    <img src="icon-192.png" alt="">
-    <h2 id="lockTitle">Diario</h2>
+    <img src="icon-192.png" alt="" id="lockIcon">
+    <img alt="" id="lockPic" class="lock-pic" referrerpolicy="no-referrer" hidden>
+    <h2 id="lockTitle">Mimo</h2>
     <p id="lockMsg">Cargando…</p>
-    <input type="text" name="username" value="diario" autocomplete="username" hidden>
-    <div class="scan-box" id="scanBox" hidden><video id="scanVideo" playsinline muted></video><p>Apuntá al código de tu otro dispositivo.</p></div>
-    <button type="button" class="btn-g" id="lockScan" hidden>📷 Escanear código</button>
-    <input type="text" id="lockCode" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" hidden>
+    <input type="text" name="username" id="lockUser" value="" autocomplete="username" hidden>
+    <div class="lock-pick" id="lockPick" hidden></div>
     <input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden>
-    <input type="password" id="lockPw2" placeholder="Repetí la contraseña" autocomplete="new-password" hidden>
+    <input type="password" id="lockPw2" placeholder="Repetila" autocomplete="new-password" hidden>
     <ul class="pw-rules" id="pwRules" hidden>
       <li data-r="len">6 o más caracteres</li><li data-r="up">Una mayúscula</li><li data-r="lo">Una minúscula</li><li data-r="ns">Un número o símbolo</li>
     </ul>
     <button type="button" class="lock-link" id="lockShow" hidden>Mostrar contraseña</button>
     <button type="submit" class="btn-p" id="lockGo" hidden>Entrar</button>
-    <button type="button" class="btn-g" id="lockBio" hidden>Entrar con huella o cara</button>
-    <button type="button" class="lock-link" id="lockAlt" hidden></button>
+    <button type="button" class="btn-g" id="lockBio" hidden>Entrar con huella</button>
+    <div class="lock-links" id="lockLinks"></div>
     <p class="lock-err" id="lockErr"></p>
     <p class="lock-ver" id="lockVer"></p>
   </form>
@@ -722,21 +745,15 @@ footer.credit{
     </div>
   </div>
 </div>
-<div class="modal-bg" id="devBg">
-  <div class="composer" role="dialog" aria-labelledby="devTitle">
-    <h2 id="devTitle">Dispositivos</h2>
-    <div id="devList" class="dev-list">Cargando…</div>
-    <div class="dev-pair">
-      <h3>Agregar un dispositivo</h3>
-      <p class="dev-hint">Escaneá este código con la cámara del otro dispositivo y seguí los pasos.</p>
-      <div id="devQr" class="dev-qr"></div>
-      <div class="actions dev-act">
-        <span class="hint" id="devExp"></span>
-        <button class="btn-g" id="devCopy">Copiar código</button>
-        <button class="btn-g" id="devNew">Código nuevo</button>
-      </div>
-    </div>
-    <div class="actions"><button class="btn-g" id="devClose">Cerrar</button></div>
+<div class="modal-bg" id="sheetBg">
+  <div class="composer sheet-card" role="dialog" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle">Enlazá tu hoja de cálculo</h2>
+    <p class="sheet-help">Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado.</p>
+    <input id="sheetUrl" type="text" placeholder="Pegá el link de tu hoja de cálculo" autocomplete="off" spellcheck="false">
+    <button class="btn-p" id="sheetLink">Enlazar</button>
+    <button class="btn-g" id="sheetNew">No tengo hoja de cálculo: crear una nueva y enlazar</button>
+    <p class="lock-err" id="sheetErr"></p>
+    <div class="sheet-foot"><button class="lock-link" id="sheetOther">Usar otra cuenta de Google</button><button class="lock-link" id="sheetClose" hidden>Cancelar</button></div>
   </div>
 </div>
 <div class="wrap">
@@ -766,25 +783,20 @@ footer.credit{
       </button>
       <div class="cfg-menu" id="cfgMenu" role="menu">
         <div class="cfg-state" id="cfgState"></div>
-        <button class="cfg-item" id="cfgOpenSheet"><span class="ic">📗</span><span>Abrir hoja de cálculo</span></button>
-        <button class="cfg-item" id="cfgCode"><span class="ic">📱</span><span>Dispositivos</span></button>
+        <button class="cfg-item" id="cfgLinkSheet" title="Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado."><span class="ic">📗</span><span>Enlazar a hoja de cálculo<small>Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado.</small></span></button>
+        <button class="cfg-item" id="cfgOpenSheet" data-linked><span class="ic">📗</span><span>Abrir en Google Sheets</span></button>
+        <button class="cfg-item" id="cfgChangeSheet" data-linked><span class="ic">🔁</span><span>Cambiar hoja</span></button>
         <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Activar huella</span></button>
-        <button class="cfg-item" id="cfgLockNow"><span class="ic">🔒</span><span>Bloquear</span></button>
+        <button class="cfg-item" id="cfgLockNow" data-linked><span class="ic">🔒</span><span>Bloquear</span></button>
         <button class="cfg-item" id="cfgInstall" hidden><span class="ic">📲</span><span>Instalar app</span></button>
-        <div class="cfg-sep"></div>
-        <button class="cfg-item" id="cfgImport"><span class="ic">⬆️</span><span>Importar respaldo<small>PDF o CSV de MindDiary</small></span></button>
-        <button class="cfg-item" id="cfgCsv"><span class="ic">⬇️</span><span>Descargar copia (CSV)</span></button>
-        <div id="cfgCreateWrap">
-          <div class="cfg-sep"></div>
-          <button class="cfg-item" id="cfgCreate"><span class="ic">✨</span><span>Conectar a la hoja de cálculo</span></button>
-          <div class="cfg-link" id="cfgLinkBox" hidden>
-            <span style="font-size:12px;color:var(--text-mute,#a9a3c4)">Pegá el link que termina en <b>/exec</b> o un código de conexión.</span>
-            <input id="cfgUrl" type="text" placeholder="Link /exec o código de conexión" autocomplete="off">
-            <button class="btn-p" id="cfgLinkGo">Conectar</button>
-          </div>
-        </div>
+        <div class="cfg-sep" data-linked></div>
+        <button class="cfg-item" id="cfgImport" data-linked><span class="ic">⬆️</span><span>Importar respaldo<small>PDF o CSV de MindDiary</small></span></button>
+        <button class="cfg-item" id="cfgCsv" data-linked><span class="ic">⬇️</span><span>Descargar copia (CSV)</span></button>
+        <div class="cfg-sep" data-linked></div>
+        <button class="cfg-item" id="cfgLogout" data-linked><span class="ic">🚪</span><span>Cerrar sesión<small>Borra lo guardado en este dispositivo. Tu hoja no se toca.</small></span></button>
         <div class="cfg-ver" id="cfgVer"></div>
       </div>
+      <button class="auth-pill" id="authPill" hidden>🔄 Tocá para conectar con Google y guardar en tu hoja</button>
       <div class="import-status" id="importStatus"></div>
     </div>
   </header>
@@ -1909,11 +1921,12 @@ function refreshAll(keepSelection){
    PERSISTENT STORAGE (per-user, private to this artifact)
    ========================================================= */
 const STORAGE_KEY = 'entries_data_v1';
+let DB_NAME = 'mimo_anon';   // una base por cuenta: mimo_<mail>
 let storageAvailable = true;
 
 function idb_(){
   return new Promise((ok, ko)=>{
-    const r = indexedDB.open('diario_v2', 1);
+    const r = indexedDB.open(DB_NAME, 1);
     r.onupgradeneeded = ()=> r.result.createObjectStore('kv');
     r.onsuccess = ()=> ok(r.result); r.onerror = ()=> ko(r.error);
   });
@@ -2266,32 +2279,108 @@ importInput.addEventListener('change', async ()=>{
 });
 
 /* =========================================================
-   v2 · ENTRADAS PROPIAS, HOJA DE CÁLCULO Y MENÚ ⚙️
+   v10 · CUENTA DE GOOGLE Y HOJA PROPIA (Sheets API directo, sin Apps Script)
    ========================================================= */
-const LOCAL_EXTRA_KEY = 'diario_local_extra_v1';
-const SHEET_CFG_KEY   = 'diario_sheet_cfg_v1';
-const PENDING_KEY     = 'diario_pending_v1';
-const DRAFT_KEY       = 'diario_draft_v1';
-const EMBEDDED_KEYS = new Set(EMBEDDED_ENTRIES.map(entryKey));
+const PENDING_KEY = 'diario_pending_v1';
+const DRAFT_KEY   = 'diario_draft_v1';
+const PROFILES_KEY = 'mimo_profiles_v1';
+const CLIENT_ID = '113344335854-jafcp3jjej55ard6r762bq0viuj7j5ln.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyAILH651QId6ekVBWRDTpOkdDi296yl-r4', APP_ID = '113344335854';
+const SCOPES = 'openid email profile https://www.googleapis.com/auth/drive.file';
+const HEADERS = ['Fecha','Día','Hora','Ánimo','Texto','Guardado'];
+const SHEETS = 'https://sheets.googleapis.com/v4/spreadsheets/';
+const L = id => document.getElementById(id);
 
 function lsGet(k, def){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; }catch(e){ return def; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } }
-
+try{ ['diario_sheet_cfg_v1','diario_local_extra_v1','diario_pair_pending_v1','diario_lock_v1','diario_lock_v2', DRAFT_KEY].forEach(k=> localStorage.removeItem(k)); }catch(_){}
 function saveLocalExtras(){ saveStoredEntries(); }
-function getSheetCfg(){ return lsGet(SHEET_CFG_KEY, null); }
-function isLinked(){ const c = getSheetCfg(); return !!(c && c.url && c.token); }
 
-async function sheetApi(action, extra, cfgOverride){
-  const cfg = cfgOverride || getSheetCfg();
-  const res = await fetch(cfg.url, {
-    method:'POST',
-    headers:{ 'Content-Type':'text/plain;charset=utf-8' },   // sin preflight CORS
-    body: JSON.stringify(Object.assign({ action, token: cfg.token || '' }, extra||{}))
+/* --- perfiles de este dispositivo: mail, nombre, foto, hoja y último uso (nunca tokens) --- */
+let ME = null;
+function profiles(){ return lsGet(PROFILES_KEY, []); }
+function getProfile(email){ return profiles().find(p => p.email === email) || null; }
+function putProfile(p){ const all = profiles().filter(x => x.email !== p.email); all.unshift(p); lsSet(PROFILES_KEY, all); }
+function dropProfile(email){ lsSet(PROFILES_KEY, profiles().filter(x => x.email !== email)); }
+function setActive(p){ ME = p; DB_NAME = 'mimo_' + p.email.toLowerCase(); }
+function lastProfile(){ return profiles().slice().sort((a,b)=> (b.last||0) - (a.last||0))[0] || null; }
+function isLinked(){ return !!(ME && ME.sheetId); }
+
+/* --- Google Identity Services: el token vive solo en memoria --- */
+let gisLib = null, tokenClient = null, TOKEN = null, tokCb = ()=>{}, tokErr = ()=>{};
+function loadScript(src){ return new Promise((ok, ko)=>{ const s = document.createElement('script'); s.src = src; s.async = true; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }); }
+function gisReady(){ return !!(window.google && google.accounts && google.accounts.oauth2); }
+function loadGis(){ if(gisReady()) return Promise.resolve(); return gisLib || (gisLib = loadScript('https://accounts.google.com/gsi/client').catch(e=>{ gisLib = null; throw e; })); }
+function tokenOk(){ return !!(TOKEN && TOKEN.exp > Date.now() + 60000); }
+/* se llama directo desde un clic: Google necesita un gesto para abrir su ventana */
+function askToken(hint, prompt){
+  if(!gisReady()) return Promise.reject(new Error(navigator.onLine ? 'Google todavía está cargando. Probá de nuevo en unos segundos.' : 'Sin internet.'));
+  if(!tokenClient) tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: r => tokCb(r), error_callback: e => tokErr(e) });
+  return new Promise((ok, ko)=>{
+    tokCb = r => {
+      if(r.error){ ko(new Error(r.error_description || r.error)); return; }
+      if(!google.accounts.oauth2.hasGrantedAllScopes(r, 'https://www.googleapis.com/auth/drive.file')){
+        ko(new Error('Google no le dio permiso a Mimo para usar tu hoja. Probá de nuevo y dejá marcado ese permiso.')); return;
+      }
+      TOKEN = { access_token: r.access_token, exp: Date.now() + (Number(r.expires_in) || 3600) * 1000 };
+      needAuth(false); ok(TOKEN);
+    };
+    tokErr = e => ko(new Error(e && e.type === 'popup_closed' ? 'Se cerró la ventana de Google.' : e && e.type === 'popup_failed_to_open' ? 'El navegador bloqueó la ventana de Google. Permitila y probá de nuevo.' : 'No se pudo abrir Google.'));
+    tokenClient.requestAccessToken({ prompt: prompt || '', login_hint: hint || '' });
   });
-  const data = await res.json();
-  if(!data.ok && data.code === 'revoked' && !cfgOverride) await handleRevoked();
-  if(!data.ok) throw new Error(data.error || 'Error de la hoja');
-  return data;
+}
+class NeedAuth extends Error{}
+async function gfetch(url, opts){
+  if(!tokenOk()){ needAuth(true); throw new NeedAuth('Falta conectar con Google'); }
+  opts = Object.assign({}, opts);
+  opts.headers = Object.assign({ Authorization: 'Bearer ' + TOKEN.access_token }, opts.headers || {});
+  if(opts.body && typeof opts.body !== 'string'){ opts.body = JSON.stringify(opts.body); opts.headers['Content-Type'] = 'application/json'; }
+  const r = await fetch(url, opts);
+  if(r.status === 401){ TOKEN = null; needAuth(true); throw new NeedAuth('Se venció la conexión con Google'); }
+  const j = await r.json().catch(()=> ({}));
+  if(!r.ok){ const e = new Error((j.error && j.error.message) || ('Error ' + r.status)); e.status = r.status; throw e; }
+  return j;
+}
+const userInfo = () => gfetch('https://www.googleapis.com/oauth2/v3/userinfo');
+
+/* --- la hoja --- */
+const rng = a1 => encodeURIComponent(a1);
+async function sheetMeta(id){ return gfetch(SHEETS + id + '?fields=spreadsheetId,spreadsheetUrl,properties.title,sheets.properties(sheetId,title)'); }
+async function prepareSheet(id){
+  let m = await sheetMeta(id);
+  const has = t => (m.sheets || []).some(s => s.properties.title === t);
+  const needDiario = !has('Diario'), reqs = [];
+  if(needDiario) reqs.push({ addSheet:{ properties:{ title:'Diario', gridProperties:{ frozenRowCount:1 } } } });
+  if(!has('_diario')) reqs.push({ addSheet:{ properties:{ title:'_diario', hidden:true } } });
+  if(reqs.length){ await gfetch(SHEETS + id + ':batchUpdate', { method:'POST', body:{ requests: reqs } }); m = await sheetMeta(id); }
+  if(needDiario) await gfetch(SHEETS + id + '/values/' + rng('Diario!A1:F1') + '?valueInputOption=RAW', { method:'PUT', body:{ values:[HEADERS] } });
+  const d = m.sheets.find(s => s.properties.title === 'Diario');
+  return { url: m.spreadsheetUrl, title: m.properties.title, gid: d.properties.sheetId };
+}
+async function createSheet(){
+  const tz = (()=>{ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(_){ return undefined; } })();
+  const r = await gfetch(SHEETS, { method:'POST', body:{
+    properties:{ title:'Diario', timeZone: tz },
+    sheets:[
+      { properties:{ title:'Diario', gridProperties:{ frozenRowCount:1 } },
+        data:[{ startRow:0, startColumn:0, rowData:[{ values: HEADERS.map(h => ({ userEnteredValue:{ stringValue:h }, userEnteredFormat:{ textFormat:{ bold:true } } })) }] }] },
+      { properties:{ title:'_diario', hidden:true } }
+    ] } });
+  return r.spreadsheetId;
+}
+/* verificador de la contraseña (nunca la contraseña): pestaña oculta _diario, celda B1 */
+async function readPw(){
+  const r = await gfetch(SHEETS + ME.sheetId + '/values/' + rng('_diario!A1:B1'));
+  const v = r.values && r.values[0] && r.values[0][1];
+  if(!v) return null;
+  try{ const p = JSON.parse(v); return p && p.hash && p.salt ? p : null; }catch(_){ return null; }
+}
+async function serverPw(){ try{ return await readPw(); }catch(_){ return undefined; } }   // undefined = no se pudo leer
+async function writePw(c){
+  const pw = { salt:c.salt, iter:c.iter, hash:c.hash, ver: Date.now() };
+  await gfetch(SHEETS + ME.sheetId + '/values/' + rng('_diario!A1:B1') + '?valueInputOption=RAW', { method:'PUT',
+    body:{ values:[['Verificador de la contraseña (no es la contraseña). No lo borres.', JSON.stringify(pw)]] } });
+  return pw;
 }
 
 function setStatus(msg, kind){
@@ -2309,76 +2398,219 @@ function addPending(list){
   list.forEach(e=>{ if(!keys.has(entryKey(e))){ p.push(e); keys.add(entryKey(e)); } });
   setPending(p); updateGearDot();
 }
+let COLS = { date:0, dow:1, time:2, mood:3, text:4, saved:5 };
+const pad2 = n => String(n).padStart(2,'0');
+function nowStamp(){ const d = new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+async function appendRows(list){
+  const gid = ME.diarioGid != null ? ME.diarioGid : (await prepareSheet(ME.sheetId)).gid;
+  const width = Math.max(...Object.values(COLS)) + 1, stamp = nowStamp();
+  const rows = list.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.time.localeCompare(a.time)).map(e=>{
+    const v = new Array(width).fill('');
+    v[COLS.date] = e.date; v[COLS.dow] = e.dow || csvDowFor(e.date); v[COLS.time] = e.time; v[COLS.mood] = e.mood; v[COLS.text] = e.text; v[COLS.saved] = stamp;
+    return { values: v.map(s => ({ userEnteredValue:{ stringValue: String(s == null ? '' : s) } })) };
+  });
+  await gfetch(SHEETS + ME.sheetId + ':batchUpdate', { method:'POST', body:{ requests:[   // lo nuevo va arriba, debajo de los títulos
+    { insertDimension:{ range:{ sheetId:gid, dimension:'ROWS', startIndex:1, endIndex:1 + rows.length }, inheritFromBefore:false } },
+    { updateCells:{ start:{ sheetId:gid, rowIndex:1, columnIndex:0 }, fields:'userEnteredValue', rows } }
+  ] } });
+}
 let syncing = false;
 async function syncPendingToSheet(extra){
   if(extra) addPending(extra);
   if(!isLinked() || syncing) return;
-  const p = getPending(); if(!p.length) return;
+  const p = getPending().slice().sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  if(!p.length) return;
+  if(!navigator.onLine){ setStatus('Sin internet: quedó guardado en este dispositivo y se sube después.'); return; }
+  if(!tokenOk()){ needAuth(true); setStatus('Guardado en este dispositivo. Tocá 🔄 para subirlo a tu hoja.'); return; }
   syncing = true;
   try{
-    for(let i=0; i<p.length; i+=300){
-      await sheetApi('add', { entries: p.slice(i, i+300) });
-      setPending(p.slice(i+300));
-    }
+    for(let i=0; i<p.length; i+=300){ await appendRows(p.slice(i, i+300)); setPending(p.slice(i+300)); }
     setPending([]);
   }catch(err){
     console.error(err);
-    setStatus('Sin conexión con la hoja: se guardó en este dispositivo y se sube después.', 'err');
-  }finally{ syncing = false; updateGearDot(); }
+    setStatus(err instanceof NeedAuth ? 'Guardado en este dispositivo. Tocá 🔄 para subirlo a tu hoja.' : 'No se pudo subir a tu hoja: quedó en este dispositivo y se reintenta.', 'err');
+  }finally{ syncing = false; updateGearDot(); renderCfgMenu(); }
 }
 
 /* --- al abrir: traer lo de la hoja y subir lo que falte --- */
+function normDate(s){
+  s = String(s || '').trim(); let m;
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  if((m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return m[3]+'-'+pad2(m[2])+'-'+pad2(m[1]);
+  return '';
+}
+function normTime(s){ const m = String(s || '').match(/(\d{1,2}):(\d{2})/); return m ? pad2(m[1])+':'+m[2] : '00:00'; }
+let pulledOnce = false;
 async function pullFromSheet(){
   if(!isLinked()) return;
   if(!navigator.onLine){ setStatus('Sin internet: lo que escribas se sube solo después.'); return; }
-  setStatus('Sincronizando con la hoja…');
+  if(!tokenOk()){ needAuth(true); return; }
+  setStatus('Sincronizando con tu hoja…');
   try{
-    const data = await sheetApi('list');
-    const cfg = getSheetCfg(); if(data.sheetUrl){ cfg.sheetUrl = data.sheetUrl; lsSet(SHEET_CFG_KEY, cfg); }
-    const sheetKeys = new Set(data.entries.map(entryKey));
+    const r = await gfetch(SHEETS + ME.sheetId + '/values/' + rng('Diario!A1:Z'));
+    const rows = r.values || [];
+    const head = (rows[0] || []).map(h => String(h).trim().toLowerCase());
+    const ix = (n, d) => { const i = head.indexOf(n); return i < 0 ? d : i; };
+    COLS = { date: ix('fecha',0), dow: ix('día',1), time: ix('hora',2), mood: ix('ánimo',3), text: ix('texto',4), saved: ix('guardado',5) };
+    const sheetEntries = rows.slice(1).map(row => {
+      const date = normDate(row[COLS.date]);
+      return { date, dow: row[COLS.dow] || (date ? csvDowFor(date) : ''), time: normTime(row[COLS.time]), mood: String(row[COLS.mood] || '').trim(), text: String(row[COLS.text] || '') };
+    }).filter(e => e.date && e.text.trim());
+    const sheetKeys = new Set(sheetEntries.map(entryKey));
     const localKeys = new Set(ENTRIES.map(entryKey));
     let added = 0;
-    data.entries.forEach(e=>{ if(!localKeys.has(entryKey(e))){ ENTRIES.push(e); localKeys.add(entryKey(e)); added++; } });
-    const missing = ENTRIES.filter(e=> !sheetKeys.has(entryKey(e)));
+    sheetEntries.forEach(e=>{ if(!localKeys.has(entryKey(e))){ ENTRIES.push(e); localKeys.add(entryKey(e)); added++; } });
+    const missing = ENTRIES.filter(e => !sheetKeys.has(entryKey(e)));
     if(added){
       ENTRIES.sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
       refreshAll(true); saveLocalExtras();
     }
+    pulledOnce = true;
     setPending([]);
     if(missing.length) await syncPendingToSheet(missing);
-    setStatus('Hoja sincronizada ✓', 'ok');
+    if(!getPending().length) setStatus('Hoja sincronizada ✓', 'ok');
   }catch(err){
     console.error(err);
-    setStatus('No se pudo leer la hoja; mostrando lo guardado en este dispositivo.', 'err');
+    setStatus(err instanceof NeedAuth ? '' : 'No se pudo leer tu hoja; mostrando lo guardado en este dispositivo.', err instanceof NeedAuth ? '' : 'err');
   }
   renderCfgMenu();
 }
+/* si se venció el permiso de Google, un botón para renovarlo (necesita un toque) */
+function needAuth(on){ const b = L('authPill'); if(b) b.hidden = !(on && unlocked && isLinked()); updateGearDot(); }
+async function afterToken(){ if(!pulledOnce) await pullFromSheet(); else await syncPendingToSheet(); await reconcilePw(); }
+L('authPill').addEventListener('click', async ()=>{
+  try{ await askToken(ME.email); await afterToken(); }
+  catch(err){ setStatus(err.message, 'err'); }
+});
+
+/* --- enlazar la hoja (o crear una nueva) --- */
+let pickerLib = null;
+function loadPicker(){
+  if(window.google && google.picker) return Promise.resolve();
+  return pickerLib || (pickerLib = loadScript('https://apis.google.com/js/api.js')
+    .then(()=> new Promise((ok, ko)=> gapi.load('picker', { callback: ok, onerror: ko }))).catch(e=>{ pickerLib = null; throw e; }));
+}
+/* con el permiso drive.file, Mimo solo ve las hojas que vos elegís en esta ventana de Google */
+async function pickFile(id){
+  await loadPicker();
+  return new Promise(ok=>{
+    const view = new google.picker.DocsView(google.picker.ViewId.SPREADSHEETS).setMode(google.picker.DocsViewMode.LIST);
+    if(id && view.setFileIds) view.setFileIds(id);
+    new google.picker.PickerBuilder().addView(view).setOAuthToken(TOKEN.access_token).setDeveloperKey(API_KEY).setAppId(APP_ID)
+      .setLocale('es-419').setTitle('Elegí tu hoja y tocá «Seleccionar»')
+      .setCallback(d=>{
+        const a = d[google.picker.Response.ACTION];
+        if(a === google.picker.Action.PICKED) ok(d[google.picker.Response.DOCUMENTS][0][google.picker.Document.ID]);
+        else if(a === google.picker.Action.CANCEL) ok(null);
+      }).build().setVisible(true);
+  });
+}
+function sheetIdFrom(txt){
+  txt = String(txt || '').trim();
+  const m = txt.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]{20,})/) || txt.match(/^([a-zA-Z0-9_-]{30,})$/);
+  return m ? m[1] : null;
+}
+const sheetBg = L('sheetBg');
+function openSheetCard(changing){
+  L('sheetTitle').textContent = changing ? 'Cambiar de hoja' : 'Enlazá tu hoja de cálculo';
+  L('sheetClose').hidden = !changing; L('sheetOther').hidden = !!changing;
+  L('sheetErr').textContent = ''; L('sheetUrl').value = '';
+  sheetBg.classList.add('open');
+  setTimeout(()=> L('sheetUrl').focus(), 50);
+}
+function closeSheetCard(){ sheetBg.classList.remove('open'); }
+function showNoSheet(msg){
+  lockEl.classList.add('off');
+  document.body.classList.add('nosheet');
+  renderCfgMenu(); openSheetCard(false);
+  if(msg) L('sheetErr').textContent = msg;
+}
+function sheetBusy(on){ L('sheetLink').disabled = L('sheetNew').disabled = on; }
+async function linkSheet(id){
+  const changing = !!(ME.sheetId && ME.sheetId !== id);
+  if(changing){
+    await syncPendingToSheet();
+    if(getPending().length) throw new Error('Primero tiene que subirse lo pendiente a tu hoja actual. Probá con internet.');
+  }
+  const info = await prepareSheet(id);
+  Object.assign(ME, { sheetId:id, sheetUrl:info.url, sheetTitle:info.title, diarioGid:info.gid });
+  if(changing){ delete ME.lock; }
+  putProfile(ME);
+  closeSheetCard();
+  if(changing){ await wipeLocalData(); alert('Listo, enlazaste «' + info.title + '». Entrá de nuevo para cargar esa hoja.'); relock(); return; }
+  await afterGoogle();
+}
+L('sheetLink').addEventListener('click', async ()=>{
+  L('sheetErr').textContent = '';
+  const id = sheetIdFrom(L('sheetUrl').value);
+  if(!id){ L('sheetErr').textContent = 'Ese link no es de una hoja de Google. Abrí tu hoja y copiá el link de la barra del navegador.'; return; }
+  sheetBusy(true);
+  try{
+    if(!tokenOk()) await askToken(ME.email);
+    let seen = false;
+    try{ await sheetMeta(id); seen = true; }catch(e){ if(e instanceof NeedAuth) throw e; }
+    if(!seen){
+      L('sheetLink').textContent = 'Elegí la hoja en la ventana de Google…';
+      const picked = await pickFile(id);
+      if(!picked){ L('sheetErr').textContent = 'Para enlazarla, elegila en la ventana de Google y tocá «Seleccionar».'; return; }
+      if(picked !== id){ L('sheetErr').textContent = 'Elegiste otra hoja distinta a la del link. Probá de nuevo.'; return; }
+    }
+    L('sheetLink').textContent = 'Enlazando…';
+    await linkSheet(id);
+  }catch(err){
+    console.error(err);
+    L('sheetErr').textContent = err.status === 404 || err.status === 403 ? 'No pude abrir esa hoja con tu cuenta de Google. ¿Es tuya?' : (navigator.onLine ? 'No se pudo: ' + err.message : 'Necesitás internet para enlazar tu hoja.');
+  }finally{ sheetBusy(false); L('sheetLink').textContent = 'Enlazar'; }
+});
+L('sheetNew').addEventListener('click', async ()=>{
+  L('sheetErr').textContent = '';
+  sheetBusy(true); L('sheetNew').textContent = 'Creando tu hoja…';
+  try{
+    if(!tokenOk()) await askToken(ME.email);
+    await linkSheet(await createSheet());
+  }catch(err){
+    console.error(err);
+    L('sheetErr').textContent = navigator.onLine ? 'No se pudo crear: ' + err.message : 'Necesitás internet para crear tu hoja.';
+  }finally{ sheetBusy(false); L('sheetNew').textContent = 'No tengo hoja de cálculo: crear una nueva y enlazar'; }
+});
+L('sheetUrl').addEventListener('keydown', ev=>{ if(ev.key === 'Enter') L('sheetLink').click(); });
+L('sheetClose').addEventListener('click', closeSheetCard);
+sheetBg.addEventListener('click', ev=>{ if(ev.target === sheetBg && !L('sheetClose').hidden) closeSheetCard(); });
+L('sheetOther').addEventListener('click', ()=>{ closeSheetCard(); document.body.classList.remove('nosheet'); setMode('google'); });
 
 /* --- menú ⚙️ --- */
-const cfgMenu = document.getElementById('cfgMenu');
+const cfgMenu = L('cfgMenu');
 function closeCfg(){ cfgMenu.classList.remove('open'); }
-function updateGearDot(){ document.getElementById('gearDot').classList.toggle('on', !isLinked() || getPending().length>0); }
+function updateGearDot(){ L('gearDot').classList.toggle('on', !isLinked() || getPending().length > 0 || !L('authPill').hidden); }
 function renderCfgMenu(){
-  const linked = isLinked();
-  const pend = getPending().length;
-  document.getElementById('cfgCreateWrap').hidden = linked;          // ya hay hoja: se oculta
-  document.getElementById('cfgOpenSheet').hidden = !linked;
-  document.getElementById('cfgCode').hidden = !linked;
-  document.getElementById('cfgState').innerHTML = linked
-    ? (pend ? `⏳ ${pend} sin subir a la hoja` : '✓ Todo guardado en tu hoja')
-    : 'Solo en este dispositivo';
+  const linked = isLinked(), pend = getPending().length;
+  cfgMenu.querySelectorAll('[data-linked]').forEach(el => el.hidden = !linked);
+  L('cfgLinkSheet').hidden = linked;
+  L('cfgState').innerHTML = !linked ? 'Tu diario todavía no tiene hoja'
+    : (ME ? escH(ME.email) + '<br>' : '') + (pend ? `⏳ ${pend} sin subir a tu hoja` : '✓ Todo guardado en tu hoja' + (ME && ME.sheetTitle ? ' «' + escH(ME.sheetTitle) + '»' : ''));
+  if(linked){ renderInstall(); renderBioItem(); }
   updateGearDot();
 }
-document.getElementById('gearBtn').addEventListener('click', (ev)=>{
-  ev.stopPropagation(); renderCfgMenu(); cfgMenu.classList.toggle('open');
+L('gearBtn').addEventListener('click', ev=>{ ev.stopPropagation(); renderCfgMenu(); cfgMenu.classList.toggle('open'); });
+document.addEventListener('click', ev=>{ if(!cfgMenu.contains(ev.target)) closeCfg(); });
+L('cfgLinkSheet').addEventListener('click', ()=>{ closeCfg(); openSheetCard(false); });
+L('cfgOpenSheet').addEventListener('click', ()=>{ closeCfg(); if(ME && ME.sheetId) window.open(ME.sheetUrl || ('https://docs.google.com/spreadsheets/d/' + ME.sheetId + '/edit'), '_blank'); });
+L('cfgChangeSheet').addEventListener('click', ()=>{ closeCfg(); openSheetCard(true); });
+L('cfgLogout').addEventListener('click', async ()=>{
+  closeCfg();
+  if(getPending().length) await syncPendingToSheet();
+  const pend = getPending().length;
+  if(!confirm(pend ? `⚠️ Hay ${pend} registro(s) que todavía no se subieron a tu hoja y se van a perder.\n\n¿Cerrar sesión igual?`
+                   : '¿Cerrar sesión en este dispositivo?\n\nSe borra lo guardado acá. Tu hoja de Google no se toca.')) return;
+  try{ if(TOKEN && gisReady()) google.accounts.oauth2.revoke(TOKEN.access_token, ()=>{}); }catch(_){}
+  TOKEN = null;
+  await wipeLocalData();
+  try{ indexedDB.deleteDatabase(DB_NAME); }catch(_){}
+  dropProfile(ME.email);
+  try{ sessionStorage.removeItem(SESS_KEY); }catch(_){}
+  location.reload();
 });
-document.addEventListener('click', (ev)=>{ if(!cfgMenu.contains(ev.target)) closeCfg(); });
-document.getElementById('cfgOpenSheet').addEventListener('click', ()=>{
-  const c = getSheetCfg(); closeCfg();
-  if(c && c.sheetUrl) window.open(c.sheetUrl, '_blank');
-});
-document.getElementById('cfgCode').addEventListener('click', ()=>{ closeCfg(); openDevices(); });
-document.getElementById('cfgCsv').addEventListener('click', ()=>{
+L('cfgCsv').addEventListener('click', ()=>{
   closeCfg();
   const q = s => '"' + String(s==null?'':s).replace(/\\/g,'\\\\').replace(/"/g,'\\"') + '"';
   const dmy = d => d.split('-').reverse().join('/');
@@ -2389,33 +2621,7 @@ document.getElementById('cfgCsv').addEventListener('click', ()=>{
   a.href = URL.createObjectURL(blob); a.download = 'diario-' + toISO(new Date()) + '.csv';
   document.body.appendChild(a); a.click(); a.remove();
 });
-document.getElementById('cfgCreate').addEventListener('click', ()=>{
-  const box = document.getElementById('cfgLinkBox'); box.hidden = !box.hidden;
-  if(!box.hidden) document.getElementById('cfgUrl').focus();
-});
-document.getElementById('cfgLinkGo').addEventListener('click', async (ev)=>{
-  const btn = ev.currentTarget;
-  const url = document.getElementById('cfgUrl').value.trim();
-  const pc = /^https:\/\/script\.google\.com\/.+\/exec$/.test(url) ? null : parseConnCode(url);
-  if(!pc && !/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)){ setStatus('No reconozco ese link ni ese código.', 'err'); return; }
-  btn.disabled = true; btn.textContent = 'Conectando…';
-  try{
-    const r = pc ? await sheetApi('pairRedeem', { pair: pc.p, name: devName() }, { url: pc.u, token:'' })
-                 : await sheetApi('setup', { name: devName() }, { url, token:'' });
-    lsSet(SHEET_CFG_KEY, { url: pc ? pc.u : url, token: r.token, sheetUrl: r.sheetUrl, v2:1 });
-    setPending([]);
-    btn.textContent = 'Cargando tus registros…';
-    await pullFromSheet();    // sube todo lo que la hoja no tiene, en tandas
-    await reconcilePw();
-    closeCfg();
-    setStatus(`Conectado: ${ENTRIES.length} registros en tu hoja ✓`, 'ok');
-  }catch(err){
-    console.error(err);
-    setStatus('No se pudo crear la hoja: ' + err.message, 'err');
-  }finally{
-    btn.disabled = false; btn.textContent = 'Conectar'; renderCfgMenu();
-  }
-});
+const escH = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
 
 /* --- escribir una entrada --- */
 const compBg = document.getElementById('composerBg');
@@ -2470,28 +2676,21 @@ compSave.addEventListener('click', async ()=>{
 });
 
 /* =========================================================
-   INIT
+   BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
+   huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-
-/* =========================================================
-   BLOQUEO · contraseña única (sincronizada con la hoja), huella/cara
-   por dispositivo, recuperación por mail y datos cifrados
-   ========================================================= */
-const APP_VERSION = '9', APP_DATE = '23/11/2026 19:45';
-const LOCK_KEY = 'diario_lock_v2';
+const APP_VERSION = '10', APP_DATE = '23/11/2026 20:24';
 const LAST_KEY = 'diario_last_active_v1';
-const SESS_KEY = 'diario_sk_v1';
+const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
-const lockEl = document.getElementById('lockScreen');
-const L = id => document.getElementById(id);
-const lockPw = L('lockPw'), lockPw2 = L('lockPw2'), lockCode = L('lockCode'), lockErr = L('lockErr');
+const lockEl = L('lockScreen');
+const lockPw = L('lockPw'), lockPw2 = L('lockPw2'), lockErr = L('lockErr');
 let unlocked = false, lastWrite = 0, lockMode = '', modeCfg = null, started = false;
 const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
 const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const rnd = n => crypto.getRandomValues(new Uint8Array(n));
-function lockCfg(){ return lsGet(LOCK_KEY, null); }
-function saveLockCfg(c){ lsSet(LOCK_KEY, c); }
-try{ localStorage.removeItem('diario_lock_v1'); localStorage.removeItem(DRAFT_KEY); localStorage.removeItem(LOCAL_EXTRA_KEY); }catch(_){}
+function lockCfg(){ return (ME && ME.lock) || null; }
+function saveLockCfg(c){ ME.lock = c; putProfile(ME); }
 
 async function derive(pw, saltB64, iter){
   const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
@@ -2514,38 +2713,56 @@ function markActive(force){
   if(force || now - lastWrite > 15000){ lastWrite = now; try{ localStorage.setItem(LAST_KEY, String(now)); }catch(_){} }
 }
 
+/* links de abajo del cartel según el modo */
+function lockLinks(list){
+  L('lockLinks').innerHTML = list.map(([act, txt]) => `<button type="button" class="lock-link" data-act="${act}">${txt}</button>`).join('');
+}
 function setMode(mode, msg){
   lockMode = mode; lockErr.textContent = '';
-  const cfg = lockCfg();
+  const cfg = lockCfg(), many = profiles().length > 0;
+  const hola = ME ? 'Hola, ' + (ME.name || ME.email) : 'Mimo';
   const T = {
-    install:   ['Instalá el Diario', 'Así lo abrís como una app, desde un ícono.', 'Instalar', 'Seguir en el navegador'],
-    installed: ['¡Listo, ya está instalada!', 'Abrí el Diario desde el ícono del corazón. Ya podés cerrar esta página.', '', 'Seguir en el navegador'],
-    connect:   ['Conectá este dispositivo', 'En tu otro dispositivo: ⚙️ → Dispositivos.', 'Conectar', 'Es mi primer dispositivo'],
-    create:    ['Creá tu contraseña', 'Es la misma para todos tus dispositivos.', 'Guardar', ''],
-    enter:     ['Diario', '', 'Entrar', isLinked() ? 'Me la olvidé' : ''],
-    code:      ['Revisá tu mail', '', 'Guardar contraseña nueva', 'Volver'],
+    install:   ['Instalá Mimo', 'Así lo abrís como una app, desde un ícono.', 'Instalar'],
+    installed: ['¡Listo, ya está instalada!', 'Abrí Mimo desde el ícono del corazón. Ya podés cerrar esta página.', ''],
+    google:    ['Mimo', 'Tu diario emocional. Se guarda en tu propia hoja de Google: nadie más lo ve.', 'Entrar con Google'],
+    resume:    [hola, 'Para seguir, entrá con tu cuenta de Google.', 'Seguir con Google'],
+    pick:      ['¿Quién sos?', 'Elegí tu cuenta.', ''],
+    create:    ['Creá tu contraseña', 'La vas a usar para abrir tu diario en todos tus dispositivos.', 'Guardar'],
+    reset:     ['Contraseña nueva', 'Como entraste con Google, podés crear una nueva. Tus otros dispositivos te la van a pedir.', 'Guardar contraseña nueva'],
+    enter:     [hola, '', 'Entrar'],
   }[mode];
   L('lockTitle').textContent = T[0];
   L('lockMsg').textContent = msg || T[1];
   L('lockGo').textContent = T[2]; L('lockGo').hidden = !T[2];
-  L('lockAlt').textContent = T[3]; L('lockAlt').hidden = !T[3];
-  lockCode.hidden = !(mode === 'connect' || mode === 'code');
-  lockCode.placeholder = mode === 'connect' ? '…o pegá el código' : 'Código del mail';
-  lockPw.hidden = !(mode === 'create' || mode === 'enter' || mode === 'code');
-  lockCode.hidden = !(mode === 'connect' || mode === 'code');
-  L('pwRules').hidden = !(mode === 'create' || mode === 'code'); if(!L('pwRules').hidden) renderPwRules();
-  L('lockShow').hidden = !(mode === 'create' || mode === 'code');   // al entrar no se muestra: protege lo que el navegador autocompleta lockPw.type = lockPw2.type = 'password'; L('lockShow').textContent = 'Mostrar contraseña';
-  L('lockScan').hidden = mode !== 'connect'; stopScan();
-  renderInstall();
-  lockPw.placeholder = mode === 'code' ? 'Contraseña nueva' : 'Contraseña';
-  lockPw2.placeholder = 'Repetila';
+  const pic = L('lockPic'); pic.hidden = !(ME && ME.picture && (mode === 'enter' || mode === 'resume'));
+  if(!pic.hidden) pic.src = ME.picture;
+  L('lockIcon').hidden = !pic.hidden;
+  const pwMode = mode === 'create' || mode === 'enter' || mode === 'reset';
+  lockPw.hidden = !pwMode;
+  lockPw2.hidden = L('pwRules').hidden = L('lockShow').hidden = !(mode === 'create' || mode === 'reset');
+  if(!L('pwRules').hidden) renderPwRules();
+  lockPw.type = lockPw2.type = 'password'; L('lockShow').textContent = 'Mostrar contraseña';
+  lockPw.placeholder = mode === 'reset' ? 'Contraseña nueva' : 'Contraseña';
   lockPw.autocomplete = mode === 'enter' ? 'current-password' : 'new-password';
-  lockPw2.hidden = !(mode === 'create' || mode === 'code');
+  L('lockUser').value = ME ? ME.email : '';
   L('lockBio').hidden = !(mode === 'enter' && cfg && cfg.bio);
   L('lockBio').textContent = 'Entrar con huella';
-  lockPw.value = lockPw2.value = lockCode.value = '';
+  lockPw.value = lockPw2.value = '';
+  L('lockPick').hidden = mode !== 'pick';
+  if(mode === 'pick') L('lockPick').innerHTML = profiles().map(p => `<button type="button" class="pick-row" data-email="${escH(p.email)}">${p.picture ? `<img src="${escH(p.picture)}" alt="" referrerpolicy="no-referrer">` : '<span class="pick-ini">' + escH((p.name || p.email)[0].toUpperCase()) + '</span>'}<span>${escH(p.name || p.email)}<small>${escH(p.email)}</small></span></button>`).join('');
+  lockLinks({
+    install:   [['skip', 'Seguir en el navegador']],
+    installed: [['skip', 'Seguir en el navegador']],
+    google:    many ? [['pick', 'Volver']] : [],
+    resume:    [['pick', 'Cambiar de usuario']],
+    pick:      [['add', 'Agregar otra cuenta']],
+    create:    [['pick', 'Cambiar de usuario']],
+    reset:     [['enter', 'Volver']],
+    enter:     [['forgot', 'Me la olvidé'], ['pick', 'Cambiar de usuario'], ['add', 'Agregar otra cuenta']],
+  }[mode]);
+  renderInstall();
   lockEl.classList.remove('off');
-  if(mode !== 'install') setTimeout(()=> (mode === 'connect' || mode === 'code' ? lockCode : lockPw).focus(), 50);
+  if(pwMode) setTimeout(()=> lockPw.focus(), 50);
 }
 const PW_RULES = { len: s => s.length >= 6, up: s => /\p{Lu}/u.test(s), lo: s => /\p{Ll}/u.test(s), ns: s => /[^\p{L}\s]/u.test(s) };
 function pwRulesOk(s){ return Object.values(PW_RULES).every(f => f(s)); }
@@ -2557,37 +2774,46 @@ L('lockShow').addEventListener('click', ()=>{
   L('lockShow').textContent = show ? 'Ocultar contraseña' : 'Mostrar contraseña';
 });
 function busy(on, txt){ L('lockGo').disabled = on; if(txt) L('lockGo').textContent = txt; }
-
-async function serverPw(){ try{ return (await sheetApi('pwGet')).pw; }catch(_){ return undefined; } }   // undefined = sin conexión
+function sessGet(){ try{ return JSON.parse(sessionStorage.getItem(SESS_KEY) || 'null'); }catch(_){ return null; } }
 
 async function finishUnlock(){
   unlocked = true;
   try{ localStorage.setItem(LAST_KEY, String(Date.now())); }catch(_){}
   lastWrite = Date.now();
-  if(KEY_RAW){ try{ sessionStorage.setItem(SESS_KEY, b64(KEY_RAW)); }catch(_){} }
-  lockEl.classList.add('off');
+  if(KEY_RAW){ try{ sessionStorage.setItem(SESS_KEY, JSON.stringify({ email: ME.email, k: b64(KEY_RAW) })); }catch(_){} }
+  ME.last = Date.now(); putProfile(ME);
+  lockEl.classList.add('off'); document.body.classList.remove('nosheet'); closeSheetCard();
   renderBioItem();
-  if(!started){ started = true; await init(); await saveStoredEntries(); setPending(pendingMem.slice()); }   // re-guarda cifrado lo que hubiera sin cifrar
+  if(!started){ started = true; await init(); await saveStoredEntries(); setPending(pendingMem.slice()); }
+  needAuth(!tokenOk());
   await reconcilePw();
 }
 
-/* la contraseña de la hoja manda: si cambió en otro dispositivo, este se pone al día */
-async function ensureOwnKey(){
-  const c = getSheetCfg(); if(!c || c.v2 || !navigator.onLine) return;
-  try{ const r = await sheetApi('rekey', { name: devName() }); c.token = r.token; c.v2 = 1; lsSet(SHEET_CFG_KEY, c); }catch(_){}
+/* después de entrar con Google: ¿tiene hoja? ¿ya hay contraseña en la hoja? */
+async function afterGoogle(){
+  if(!ME.sheetId){ showNoSheet(); return; }
+  let sp;
+  try{ sp = await readPw(); }
+  catch(err){
+    if(err.status === 403 || err.status === 404){ delete ME.sheetId; putProfile(ME); showNoSheet('No pude abrir tu hoja con esta cuenta. Enlazala de nuevo.'); return; }
+    throw err;
+  }
+  if(sp){
+    const cfg = lockCfg();
+    if(!(cfg && cfg.hash === sp.hash)) modeCfg = sp;
+    setMode('enter', 'Escribí tu contraseña.');
+  } else setMode('create');
 }
+
+/* la contraseña de la hoja manda: si cambió en otro dispositivo, este se pone al día */
 async function reconcilePw(){
-  await ensureOwnKey();
-  if(!isLinked() || !navigator.onLine) return;
+  if(!isLinked() || !navigator.onLine || !tokenOk()) return;
   const cfg = lockCfg(); if(!cfg) return;
   const sp = await serverPw();
   if(sp === undefined) return;
-  if(!sp){
-    try{ const r = await sheetApi('pwSet', { pw:{ salt:cfg.salt, iter:cfg.iter, hash:cfg.hash } }); saveLockCfg(Object.assign(cfg, { ver:r.pw.ver })); }catch(_){}
-    return;
-  }
+  if(!sp){ try{ const w = await writePw(cfg); saveLockCfg(Object.assign(cfg, { ver:w.ver })); }catch(_){} return; }
   if(sp.hash !== cfg.hash){
-    await syncPendingToSheet();                         // primero sube lo que falte
+    await syncPendingToSheet();
     if(getPending().length) return;                     // sin poder subir: no se borra nada
     await wipeLocalData();
     saveLockCfg({ salt:sp.salt, iter:sp.iter, hash:sp.hash, ver:sp.ver });
@@ -2601,70 +2827,84 @@ L('lockForm').addEventListener('submit', async ev=>{
   const pw = lockPw.value;
   try{
     if(lockMode === 'install'){ if(installedElsewhere){ tryOpenApp(); return; } await doInstall(); return; }
-    if(lockMode === 'connect'){
-      const c = parseConnCode(lockCode.value);
-      if(!c){ lockErr.textContent = 'Ese código no es válido. Generá uno nuevo en tu otro dispositivo (⚙️ → Dispositivos conectados).'; return; }
-      busy(true, 'Conectando…');
-      const r = await sheetApi('pairRedeem', { pair: c.p, name: devName() }, { url: c.u, token:'' });
-      lsSet(SHEET_CFG_KEY, { url:c.u, token:r.token, sheetUrl:r.sheetUrl, v2:1 });
-      try{ localStorage.removeItem(PCODE_KEY); }catch(_){}
-      const sp = await serverPw();
-      if(sp){ modeCfg = sp; setMode('enter', '✓ Conectado. Escribí tu contraseña.'); }
-      else setMode('create');
+    if(lockMode === 'google' || lockMode === 'resume'){
+      const tp = askToken(lockMode === 'resume' ? ME.email : '', lockMode === 'google' && profiles().length ? 'select_account' : '');
+      busy(true, 'Abriendo Google…');
+      await tp;
+      const u = await userInfo();
+      const email = String(u.email || '').toLowerCase();
+      if(!email) throw new Error('Google no devolvió tu mail.');
+      const p = Object.assign(getProfile(email) || { email }, { name: u.given_name || u.name || email, picture: u.picture || '', last: Date.now() });
+      setActive(p); putProfile(p);
+      await afterGoogle();
       return;
     }
-    if(lockMode === 'create' || lockMode === 'code'){
+    if(lockMode === 'create' || lockMode === 'reset'){
       if(!pwRulesOk(pw)){ renderPwRules(); lockErr.textContent = 'Falta cumplir la lista.'; return; }
       if(pw !== lockPw2.value){ lockErr.textContent = 'Las dos contraseñas no coinciden.'; return; }
+      const tp = !tokenOk() && navigator.onLine ? askToken(ME.email).catch(e => e) : null;
       busy(true, 'Guardando…');
+      if(tp) await tp;
+      if(!tokenOk() || !navigator.onLine){ lockErr.textContent = 'Necesitás internet y entrar con Google para guardar la contraseña.'; return; }
+      if(lockMode === 'create'){
+        const sp = await readPw();
+        if(sp){ modeCfg = sp; setMode('enter', 'Ya tenés una contraseña para esta hoja: escribí esa.'); return; }
+      }
       const salt = b64(rnd(16)), iter = 300000;
       const d = await derive(pw, salt, iter);
-      let ver = 0;
-      if(isLinked()){
-        const extra = { pw:{ salt, iter, hash:d.hash } };
-        if(lockMode === 'code') extra.code = lockCode.value.replace(/[^a-z0-9]/gi,'').toUpperCase();
-        try{ ver = (await sheetApi('pwSet', extra)).pw.ver; }
-        catch(err){
-          if(lockMode === 'code'){ lockErr.textContent = err.message; return; }
-          if(!navigator.onLine){ /* se sube después */ }
-          else { const sp = await serverPw(); if(sp){ modeCfg = sp; setMode('enter', 'Ya tenés una contraseña en tus otros dispositivos: escribí esa.'); return; } }
-        }
-      }
-      if(lockMode === 'code') await wipeLocalData();     // lo de este dispositivo se vuelve a bajar de la hoja
-      saveLockCfg({ salt, iter, hash:d.hash, ver });
+      const w = await writePw({ salt, iter, hash:d.hash });
+      if(lockMode === 'reset'){ await syncPendingToSheet(); await wipeLocalData(); }   // lo de este dispositivo se vuelve a bajar de la hoja
+      saveLockCfg({ salt, iter, hash:d.hash, ver:w.ver });
       await useKeyRaw(d.raw);
       await finishUnlock();
-      if(lockMode !== 'code' && await bioAvailable()) setStatus('✓ Contraseña guardada. Podés activar la huella en ⚙️.', 'ok');
+      if(await bioAvailable()) setStatus('✓ Contraseña guardada. Podés activar la huella en ⚙️.', 'ok');
       return;
     }
     if(lockMode === 'enter'){
+      const tp = navigator.onLine && gisReady() && !tokenOk() && ME.sheetId ? askToken(ME.email).catch(e => e) : null;
       const cfg = modeCfg || lockCfg();
+      if(!cfg){ lockErr.textContent = 'Necesitás internet para entrar por primera vez.'; return; }
       busy(true, 'Abriendo…');
       const d = await derive(pw, cfg.salt, cfg.iter);
       if(d.hash !== cfg.hash){ lockErr.textContent = 'Contraseña incorrecta.'; lockPw.select(); return; }
-      if(modeCfg){ saveLockCfg({ salt:cfg.salt, iter:cfg.iter, hash:cfg.hash, ver:cfg.ver }); modeCfg = null; }
+      if(modeCfg){
+        const old = lockCfg();
+        if(old && old.hash !== modeCfg.hash) await wipeLocalData();
+        saveLockCfg({ salt:modeCfg.salt, iter:modeCfg.iter, hash:modeCfg.hash, ver:modeCfg.ver }); modeCfg = null;
+      }
       await useKeyRaw(d.raw);
       try{ await encGet(STORAGE_KEY); }catch(_){ await wipeLocalData(); }   // copia ilegible: se vuelve a bajar
+      if(tp){ L('lockGo').textContent = 'Conectando con Google…'; await tp; }
       await finishUnlock();
     }
   }catch(err){
     console.error(err);
     lockErr.textContent = navigator.onLine ? ('No se pudo: ' + err.message) : 'Sin internet. Probá de nuevo cuando tengas conexión.';
-  }finally{ busy(false); if(!unlocked) L('lockGo').textContent = { install:'Instalar', connect:'Conectar', create:'Guardar', enter:'Entrar', code:'Guardar contraseña nueva' }[lockMode]; }
+  }finally{
+    busy(false);
+    if(!unlocked && lockEl && !lockEl.classList.contains('off')) L('lockGo').textContent = { install:'Instalar', google:'Entrar con Google', resume:'Seguir con Google', create:'Guardar', reset:'Guardar contraseña nueva', enter:'Entrar' }[lockMode] || '';
+  }
 });
 
-L('lockAlt').addEventListener('click', async ()=>{
+L('lockLinks').addEventListener('click', ev=>{
+  const b = ev.target.closest('button[data-act]'); if(!b) return;
   lockErr.textContent = '';
-  if(lockMode === 'install' || lockMode === 'installed'){ try{ localStorage.setItem(SKIP_KEY, '1'); }catch(_){} startLock(); return; }
-  if(lockMode === 'connect'){ setMode('create'); return; }
-  if(lockMode === 'code'){ setMode('enter'); return; }
-  if(lockMode === 'enter'){
-    if(!confirm('¿Te mandamos un código a tu Gmail para crear una contraseña nueva?')) return;
-    try{
-      const r = await sheetApi('recover');
-      setMode('code', `Te mandamos un código a ${r.to}. Vence en 15 minutos.`);
-    }catch(err){ lockErr.textContent = navigator.onLine ? err.message : 'Necesitás internet para recibir el código.'; }
+  const act = b.dataset.act;
+  if(act === 'skip'){ try{ localStorage.setItem(SKIP_KEY, '1'); }catch(_){} startLock(); return; }
+  if(act === 'pick'){ try{ sessionStorage.removeItem(SESS_KEY); }catch(_){} if(profiles().length) setMode('pick'); else setMode('google'); return; }
+  if(act === 'add'){ ME = null; setMode('google'); return; }
+  if(act === 'enter'){ setMode('enter'); return; }
+  if(act === 'forgot'){
+    if(!navigator.onLine){ lockErr.textContent = 'Necesitás internet para crear una contraseña nueva.'; return; }
+    if(!confirm('¿Crear una contraseña nueva?\n\nVas a entrar con Google y tus otros dispositivos te van a pedir la nueva.')) return;
+    setMode('reset');
   }
+});
+L('lockPick').addEventListener('click', ev=>{
+  const b = ev.target.closest('button[data-email]'); if(!b) return;
+  const p = getProfile(b.dataset.email); if(!p) return;
+  setActive(p); modeCfg = null;
+  if(p.sheetId && p.lock) setMode('enter'); else setMode('resume');
 });
 
 /* --- huella o cara (se activa en cada dispositivo) --- */
@@ -2699,8 +2939,8 @@ L('cfgBio').addEventListener('click', async ()=>{
   try{
     const prfSalt = b64(rnd(32));
     const c = await navigator.credentials.create({ publicKey:{
-      challenge: rnd(32), rp:{ name:'Diario' },
-      user:{ id: rnd(16), name:'diario', displayName:'Diario' },
+      challenge: rnd(32), rp:{ name:'Mimo' },
+      user:{ id: rnd(16), name: ME.email, displayName: ME.name || ME.email },
       pubKeyCredParams:[{ type:'public-key', alg:-7 }, { type:'public-key', alg:-257 }],
       authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required', residentKey:'discouraged' },
       timeout:60000, extensions:{ prf:{} } } });
@@ -2731,83 +2971,6 @@ document.addEventListener('visibilitychange', ()=>{
 });
 setInterval(()=>{ if(unlocked && !document.hidden && idleTooLong()) relock(); }, 30000);
 
-/* =========================================================
-   DISPOSITIVOS · código de conexión (QR), lista y desconectar
-   ========================================================= */
-function parseConnCode(txt){
-  let s = String(txt || '').trim();
-  const m = s.match(/#c=([^&\s]+)/); if(m) s = decodeURIComponent(m[1]);
-  try{ const j = JSON.parse(decodeURIComponent(escape(atob(s.replace(/\s+/g,''))))); if(j.u && j.p) return j; }catch(_){}
-  return null;
-}
-function devName(){
-  const ua = navigator.userAgent;
-  const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? (/Mobile/.test(ua) ? 'Celular Android' : 'Tablet Android')
-           : /Windows/.test(ua) ? 'Compu Windows' : /Mac OS X/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Compu Linux' : 'Dispositivo';
-  const br = /Edg\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /Chrome|CriOS/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : '';
-  return os + (br ? ' · ' + br : '') + (isStandalone() ? ' (app)' : '');
-}
-async function handleRevoked(){
-  await wipeLocalData();
-  try{ localStorage.removeItem(SHEET_CFG_KEY); localStorage.removeItem(LOCK_KEY); sessionStorage.removeItem(SESS_KEY); }catch(_){}
-  alert('Este dispositivo fue desconectado de tu diario. Se borró lo que estaba guardado acá.');
-  location.reload();
-  await new Promise(()=>{});
-}
-const fmtWhen = t => t ? new Date(t).toLocaleString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
-const escH = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
-async function renderDevices(){
-  const box = L('devList');
-  if(!navigator.onLine){ box.textContent = 'Necesitás internet para ver tus dispositivos.'; return; }
-  try{
-    const r = await sheetApi('devList');
-    box.innerHTML = r.devices.map(d => `<div class="dev-row"><span class="nm">${escH(d.name)}<small>Conectado el ${fmtWhen(d.created)} · último uso ${fmtWhen(d.seen)}</small></span>${d.me ? '<span class="me">este</span>' : ''}<button data-id="${escH(d.id)}" data-me="${d.me ? 1 : ''}">Desconectar</button></div>`).join('') || 'No hay dispositivos.';
-  }catch(err){ box.textContent = 'No se pudo cargar la lista: ' + err.message; }
-}
-L('devList').addEventListener('click', async ev=>{
-  const b = ev.target.closest('button[data-id]'); if(!b) return;
-  const me = !!b.dataset.me;
-  if(!confirm(me ? '¿Desconectar ESTE dispositivo? Se borra lo que hay guardado acá (lo que ya está en la hoja no se pierde).'
-                 : '¿Desconectar ese dispositivo? La próxima vez que se abra va a borrar lo que tiene guardado y no va a poder leer ni escribir en tu diario.')) return;
-  b.disabled = true;
-  try{ await sheetApi('devRemove', { id: b.dataset.id }); if(me) await handleRevoked(); renderDevices(); }
-  catch(err){ b.disabled = false; alert('No se pudo: ' + err.message); }
-});
-const APP_URL = 'https://mfquiroga.github.io/diario/';
-let qrLib = null;
-async function drawQr(el, text, size, after){
-  el.innerHTML = '';
-  try{ await loadQr(); new QRCode(el, { text, width:size, height:size, correctLevel: QRCode.CorrectLevel.L }); if(after) el.insertAdjacentHTML('beforeend', after); }
-  catch(_){ el.innerHTML = ''; }
-}
-function loadQr(){
-  if(window.QRCode) return Promise.resolve();
-  return qrLib || (qrLib = new Promise((ok, ko)=>{ const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }));
-}
-let pairCode = '';
-async function newPairCode(){
-  const btn = L('devNew'); btn.disabled = true;
-  L('devExp').textContent = 'Generando…'; L('devQr').innerHTML = ''; pairCode = '';
-  try{
-    const r = await sheetApi('pairCreate');
-    pairCode = btoa(unescape(encodeURIComponent(JSON.stringify({ u: getSheetCfg().url, p: r.pair }))));
-    await drawQr(L('devQr'), APP_URL + '#c=' + encodeURIComponent(pairCode), 420);
-    L('devExp').textContent = 'Vence a las ' + new Date(r.exp).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' }) + ' · sirve una vez';
-  }catch(err){ L('devExp').textContent = navigator.onLine ? 'No se pudo generar: ' + err.message : 'Necesitás internet.'; }
-  finally{ btn.disabled = false; }
-}
-L('devNew').addEventListener('click', newPairCode);
-L('devCopy').addEventListener('click', async ()=>{
-  if(!pairCode) return;
-  try{ await navigator.clipboard.writeText(pairCode); L('devCopy').textContent = 'Copiado ✓'; }
-  catch(_){ prompt('Copiá este código:', pairCode); }
-  setTimeout(()=> L('devCopy').textContent = 'Copiar código', 2000);
-});
-function openDevices(){
-  L('devBg').classList.add('open'); renderDevices(); newPairCode();
-}
-L('devClose').addEventListener('click', ()=> L('devBg').classList.remove('open'));
-L('devBg').addEventListener('click', ev=>{ if(ev.target === L('devBg')) L('devBg').classList.remove('open'); });
 
 /* =========================================================
    INSTALAR LA APP
@@ -2826,6 +2989,7 @@ function renderInstall(){
   L('cfgInstall').hidden = !(!isStandalone() && !installedElsewhere && (installEvt || mobile));
 }
 window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt = e; renderInstall(); });
+const APP_URL = 'https://mfquiroga.github.io/diario/';
 function tryOpenApp(){ try{ window.open(APP_URL, '_blank'); }catch(_){} }
 window.addEventListener('appinstalled', ()=>{ installEvt = null; installedElsewhere = true; renderInstall(); if(!unlocked){ setMode('installed'); setTimeout(tryOpenApp, 800); } else setStatus('✓ App instalada. Abrila desde el ícono del corazón.', 'ok'); });
 async function doInstall(){
@@ -2835,7 +2999,7 @@ async function doInstall(){
   let msg;
   if(isIOS){
     msg = (/CriOS|FxiOS|EdgiOS/.test(ua) ? 'En iPhone hay que instalarla desde Safari: abrí mfquiroga.github.io/diario en Safari.\n\n' : '') +
-      'En Safari:\n1. Tocá el botón Compartir (cuadrado con flecha hacia arriba).\n2. Tocá «Agregar a inicio» (bajá si no lo ves).\n3. Tocá «Agregar».\n\nDespués abrila desde el ícono del corazón y conectala ahí.';
+      'En Safari:\n1. Tocá el botón Compartir (cuadrado con flecha hacia arriba).\n2. Tocá «Agregar a inicio» (bajá si no lo ves).\n3. Tocá «Agregar».\n\nDespués abrila desde el ícono del corazón y entrá con Google.';
   } else if(/EdgA\//.test(ua)){
     msg = 'En Edge (celular):\n1. Tocá el botón de menú de Edge, abajo (las tres rayitas o los tres puntos).\n2. Buscá «Agregar al teléfono» o «Agregar a la pantalla de inicio». Si no lo ves, deslizá las opciones.\n3. Confirmá con «Instalar» o «Agregar».\n\nSi no aparece ninguna de esas opciones, abrí el link en Chrome: ahí la instalación es directa.';
   } else if(/SamsungBrowser/.test(ua)){
@@ -2855,72 +3019,29 @@ L('cfgInstall').addEventListener('click', doInstall);
 renderInstall();
 detectInstalled();
 
-let scanStream = null, scanTimer = null;
-function stopScan(){
-  if(scanTimer){ clearTimeout(scanTimer); scanTimer = null; }
-  if(scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
-  L('scanBox').hidden = true; L('lockScan').textContent = '📷 Escanear código';
-}
-function loadJsQr(){
-  if(window.jsQR) return Promise.resolve();
-  return new Promise((ok, ko)=>{ const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
-}
-L('lockScan').addEventListener('click', async ()=>{
-  if(scanStream){ stopScan(); return; }
-  lockErr.textContent = '';
-  try{
-    scanStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
-  }catch(_){ lockErr.textContent = 'No pude usar la cámara. Revisá el permiso o pegá el código.'; return; }
-  const v = L('scanVideo'); v.srcObject = scanStream; await v.play().catch(()=>{});
-  L('scanBox').hidden = false; L('lockScan').textContent = 'Cancelar escaneo';
-  let det = null;
-  try{ if('BarcodeDetector' in window && (await BarcodeDetector.getSupportedFormats()).includes('qr_code')) det = new BarcodeDetector({ formats:['qr_code'] }); }catch(_){}
-  if(!det){ try{ await loadJsQr(); }catch(_){ stopScan(); lockErr.textContent = 'Sin internet no puedo leer el QR. Pegá el código.'; return; } }
-  const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently:true });
-  const tick = async ()=>{
-    if(!scanStream) return;
-    let txt = null;
-    try{
-      if(v.videoWidth){
-        if(det){ const r = await det.detect(v); if(r[0]) txt = r[0].rawValue; }
-        else { cv.width = v.videoWidth; cv.height = v.videoHeight; cx.drawImage(v, 0, 0); const img = cx.getImageData(0, 0, cv.width, cv.height); const r = jsQR(img.data, img.width, img.height); if(r) txt = r.data; }
-      }
-    }catch(_){}
-    if(txt && parseConnCode(txt)){ stopScan(); lockCode.value = txt; L('lockGo').click(); return; }
-    if(txt && !parseConnCode(txt)){ lockErr.textContent = 'Ese QR no es un código de conexión. Usá el del Paso 2.'; }
-    scanTimer = setTimeout(tick, 250);
-  };
-  tick();
-});
 
-const PCODE_KEY = 'diario_pair_pending_v1', SKIP_KEY = 'diario_skip_install_v1';
+const SKIP_KEY = 'diario_skip_install_v1';
 async function startLock(){
   L('lockVer').textContent = L('cfgVer').textContent = 'Versión ' + APP_VERSION + ' · ' + APP_DATE;
-  const hc = location.hash.match(/#c=([^&]+)/);
-  if(hc){ lsSet(PCODE_KEY, { c: decodeURIComponent(hc[1]), exp: Date.now() + 15*60*1000 }); history.replaceState(null, '', location.pathname); }
-  const cfg = lockCfg();
-  const sk = (()=>{ try{ return sessionStorage.getItem(SESS_KEY); }catch(_){ return null; } })();
-  if(cfg && sk && !idleTooLong()){
-    try{ await useKeyRaw(unb64(sk)); await encGet(STORAGE_KEY); await finishUnlock(); return; }catch(_){ try{ sessionStorage.removeItem(SESS_KEY); }catch(__){} }
+  if(navigator.onLine) loadGis().catch(()=>{});
+  const p = lastProfile();
+  if(p){
+    setActive(p);
+    const sk = sessGet();
+    if(p.lock && sk && sk.email === p.email && !idleTooLong()){
+      try{ await useKeyRaw(unb64(sk.k)); await encGet(STORAGE_KEY); await finishUnlock(); return; }
+      catch(_){ try{ sessionStorage.removeItem(SESS_KEY); }catch(__){} }
+    }
   }
-  if(cfg){ setMode('enter'); return; }
   await detectInstalled();
   const mobile = isIOS || /Android/.test(navigator.userAgent);
-  if(mobile && !isStandalone() && !localStorage.getItem(SKIP_KEY)){
-    const pend = lsGet(PCODE_KEY, null);
-    setMode('install', installedElsewhere ? 'Ya está instalada: abrila desde el ícono del corazón.'
-      : (isIOS && pend ? 'Así lo abrís como una app. Después abrila y escaneá el código otra vez.' : ''));
+  if(!p && mobile && !isStandalone() && !localStorage.getItem(SKIP_KEY)){
+    setMode('install', installedElsewhere ? 'Ya está instalada: abrila desde el ícono del corazón.' : '');
     return;
   }
-  if(isLinked() && navigator.onLine){
-    const sp = await serverPw();
-    if(sp){ modeCfg = sp; setMode('enter'); return; }
-    setMode('create'); return;
-  }
-  if(isLinked()){ setMode('create'); return; }
-  setMode('connect');
-  const pc = lsGet(PCODE_KEY, null);
-  if(pc && pc.exp > Date.now()){ lockCode.value = pc.c; L('lockGo').click(); }
+  if(!p){ setMode('google'); return; }
+  if(p.sheetId && p.lock){ setMode('enter'); return; }
+  setMode('resume');
 }
 
 async function init(){
@@ -2943,10 +3064,8 @@ async function init(){
   renderStats();
   renderCfgMenu();
 
-
   await pullFromSheet();
-  syncPendingToSheet();
-  window.addEventListener('online', ()=>{ syncPendingToSheet(); });
+  window.addEventListener('online', ()=>{ if(tokenOk()) afterToken(); else needAuth(true); });
 }
 if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
   const hadSW = !!navigator.serviceWorker.controller;
