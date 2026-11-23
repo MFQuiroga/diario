@@ -2148,7 +2148,7 @@ importInput.addEventListener('change', async ()=>{
       ENTRIES.sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
       refreshAll(true);
       await saveStoredEntries();
-      syncPendingToSheet();
+      pullFromSheet();          // sube a la hoja todo lo que todavía no tiene
     }
 
     importStatus.className = 'import-status ok';
