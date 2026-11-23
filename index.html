@@ -651,6 +651,19 @@ footer.credit{
 .lock-card input:focus{ outline:none; border-color:var(--accent); }
 .lock-card .btn-p,.lock-card .btn-g{ padding:12px 16px; }
 .lock-err{ color:#ff8a8a !important; min-height:18px; }
+.dev-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; color:var(--text-light); }
+.dev-row{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:var(--bg-panel-2); border:1px solid var(--line); }
+.dev-row .nm{ flex:1; font:500 14px 'Inter',sans-serif; }
+.dev-row .nm small{ display:block; font-weight:400; font-size:12px; color:var(--text-mute,#a9a3c4); margin-top:2px; }
+.dev-row .me{ font-size:11px; padding:2px 8px; border-radius:20px; background:var(--accent); color:#fff; }
+.dev-row button{ padding:7px 10px; border-radius:9px; background:none; border:1px solid var(--line); color:#ff9a9a; cursor:pointer; font:500 12.5px 'Inter',sans-serif; }
+.dev-pair h3{ margin:0 0 6px; font:600 15px 'Inter',sans-serif; color:var(--text-light); }
+.dev-hint{ margin:0 0 10px; font-size:13px; line-height:1.5; color:var(--text-mute,#a9a3c4); }
+.dev-qr{ display:flex; justify-content:center; margin:6px 0 10px; }
+.dev-qr:empty{ display:none; }
+.dev-qr img,.dev-qr canvas{ background:#fff; padding:10px; border-radius:12px; width:210px !important; height:210px !important; }
+#devCode{ width:100%; box-sizing:border-box; padding:10px; border-radius:10px; background:var(--bg-deep); border:1px solid var(--line); color:var(--text-light); font:12px 'JetBrains Mono',monospace; resize:none; word-break:break-all; }
+#devCode:placeholder-shown,#devCode:empty{ display:none; }
 .lock-link{ background:none; border:0; color:var(--accent); font:500 13px 'Inter',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
 </style>
 </head>
@@ -668,6 +681,7 @@ footer.credit{
     <button type="button" class="btn-g" id="lockBio" hidden>Entrar con huella o cara</button>
     <button type="button" class="lock-link" id="lockAlt" hidden></button>
     <p class="lock-err" id="lockErr"></p>
+    <button type="button" class="lock-link" id="lockInstall" hidden>📲 Instalar la app en este dispositivo</button>
   </form>
 </div>
 
@@ -685,6 +699,25 @@ footer.credit{
       <button class="btn-g" id="compCancel">Cerrar</button>
       <button class="btn-p" id="compSave" disabled>Guardar</button>
     </div>
+  </div>
+</div>
+<div class="modal-bg" id="devBg">
+  <div class="composer" role="dialog" aria-labelledby="devTitle">
+    <h2 id="devTitle">Dispositivos conectados</h2>
+    <div id="devList" class="dev-list">Cargando…</div>
+    <div class="dev-pair">
+      <h3>Conectar otro dispositivo</h3>
+      <p class="dev-hint">En el otro dispositivo abrí <b>mfquiroga.github.io/diario</b>. Después <b>escaneá este QR con la cámara</b> o pegá el código. Sirve una sola vez y vence en 15 minutos.</p>
+      <div id="devQr" class="dev-qr"></div>
+      <textarea id="devCode" readonly rows="3"></textarea>
+      <div class="actions">
+        <span class="hint" id="devExp"></span>
+        <button class="btn-g" id="devShare" hidden>Compartir</button>
+        <button class="btn-g" id="devCopy">Copiar</button>
+        <button class="btn-p" id="devNew">Generar código</button>
+      </div>
+    </div>
+    <div class="actions"><button class="btn-g" id="devClose">Cerrar</button></div>
   </div>
 </div>
 <div class="wrap">
@@ -716,7 +749,8 @@ footer.credit{
         <div class="cfg-state" id="cfgState"></div>
         <button class="cfg-item" id="cfgImport"><span class="ic">⬆️</span><span>Importar<small>Sumar registros desde un PDF o CSV de MindDiary</small></span></button>
         <button class="cfg-item" id="cfgOpenSheet"><span class="ic">📗</span><span>Exportar · abrir hoja de cálculo<small>Tu diario en la pestaña «Diario» de Diario DBT</small></span></button>
-        <button class="cfg-item" id="cfgCode"><span class="ic">📱</span><span>Conectar otro dispositivo<small>Copiá el código y pegalo en el otro</small></span></button>
+        <button class="cfg-item" id="cfgCode"><span class="ic">📱</span><span>Dispositivos conectados<small>Conectar uno nuevo o desconectar alguno</small></span></button>
+        <button class="cfg-item" id="cfgInstall" hidden><span class="ic">📲</span><span>Instalar en este dispositivo<small>Para abrirlo desde un ícono, como una app</small></span></button>
         <button class="cfg-item" id="cfgLockNow"><span class="ic">🔒</span><span>Bloquear ahora<small>Se bloquea sola a los 10 minutos sin usarla</small></span></button>
         <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Usar huella o cara<small>Para entrar más rápido en este dispositivo</small></span></button>
         <button class="cfg-item" id="cfgCsv"><span class="ic">⬇️</span><span>Descargar copia en CSV<small>Todos los registros en un archivo</small></span></button>
@@ -2234,6 +2268,7 @@ async function sheetApi(action, extra, cfgOverride){
     body: JSON.stringify(Object.assign({ action, token: cfg.token || '' }, extra||{}))
   });
   const data = await res.json();
+  if(!data.ok && data.code === 'revoked' && !cfgOverride) await handleRevoked();
   if(!data.ok) throw new Error(data.error || 'Error de la hoja');
   return data;
 }
@@ -2321,13 +2356,7 @@ document.getElementById('cfgOpenSheet').addEventListener('click', ()=>{
   const c = getSheetCfg(); closeCfg();
   if(c && c.sheetUrl) window.open(c.sheetUrl, '_blank');
 });
-document.getElementById('cfgCode').addEventListener('click', async ()=>{
-  const c = getSheetCfg(); if(!c) return;
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify({ u:c.url, t:c.token }))));
-  try{ await navigator.clipboard.writeText(code); setStatus('Código copiado: pegalo en ⚙️ del otro dispositivo. No lo compartas con nadie.', 'ok'); }
-  catch(_){ prompt('Copiá este código y pegalo en el otro dispositivo (no lo compartas):', code); }
-  closeCfg();
-});
+document.getElementById('cfgCode').addEventListener('click', ()=>{ closeCfg(); openDevices(); });
 document.getElementById('cfgCsv').addEventListener('click', ()=>{
   closeCfg();
   const q = s => '"' + String(s==null?'':s).replace(/\\/g,'\\\\').replace(/"/g,'\\"') + '"';
@@ -2346,15 +2375,13 @@ document.getElementById('cfgCreate').addEventListener('click', ()=>{
 document.getElementById('cfgLinkGo').addEventListener('click', async (ev)=>{
   const btn = ev.currentTarget;
   const url = document.getElementById('cfgUrl').value.trim();
-  let cfg = null;
-  if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)){
-    try{ const c = JSON.parse(decodeURIComponent(escape(atob(url)))); if(c.u && c.t) cfg = { url:c.u, token:c.t }; }catch(_){}
-    if(!cfg){ setStatus('No reconozco ese link ni ese código.', 'err'); return; }
-  }
+  const pc = /^https:\/\/script\.google\.com\/.+\/exec$/.test(url) ? null : parseConnCode(url);
+  if(!pc && !/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)){ setStatus('No reconozco ese link ni ese código.', 'err'); return; }
   btn.disabled = true; btn.textContent = 'Conectando…';
   try{
-    const r = await sheetApi('setup', {}, cfg || { url, token:'' });
-    lsSet(SHEET_CFG_KEY, { url: cfg ? cfg.url : url, token: r.token, sheetUrl: r.sheetUrl });
+    const r = pc ? await sheetApi('pairRedeem', { pair: pc.p, name: devName() }, { url: pc.u, token:'' })
+                 : await sheetApi('setup', { name: devName() }, { url, token:'' });
+    lsSet(SHEET_CFG_KEY, { url: pc ? pc.u : url, token: r.token, sheetUrl: r.sheetUrl });
     setPending([]);
     btn.textContent = 'Cargando tus registros…';
     await pullFromSheet();    // sube todo lo que la hoja no tiene, en tandas
@@ -2529,12 +2556,11 @@ L('lockForm').addEventListener('submit', async ev=>{
   const pw = lockPw.value;
   try{
     if(lockMode === 'connect'){
-      const raw = lockCode.value.trim(); let c = null;
-      try{ const j = JSON.parse(decodeURIComponent(escape(atob(raw)))); if(j.u && j.t) c = { url:j.u, token:j.t }; }catch(_){}
-      if(!c){ lockErr.textContent = 'Ese código no es válido. Copialo de nuevo desde el otro dispositivo.'; return; }
+      const c = parseConnCode(lockCode.value);
+      if(!c){ lockErr.textContent = 'Ese código no es válido. Generá uno nuevo en tu otro dispositivo (⚙️ → Dispositivos conectados).'; return; }
       busy(true, 'Conectando…');
-      const r = await sheetApi('setup', {}, c);
-      lsSet(SHEET_CFG_KEY, { url:c.url, token:r.token, sheetUrl:r.sheetUrl });
+      const r = await sheetApi('pairRedeem', { pair: c.p, name: devName() }, { url: c.u, token:'' });
+      lsSet(SHEET_CFG_KEY, { url:c.u, token:r.token, sheetUrl:r.sheetUrl });
       const sp = await serverPw();
       if(sp){ modeCfg = sp; setMode('enter', 'Conectado ✓ Escribí la contraseña que usás en tus otros dispositivos.'); }
       else setMode('create');
@@ -2657,6 +2683,108 @@ document.addEventListener('visibilitychange', ()=>{
 });
 setInterval(()=>{ if(unlocked && !document.hidden && idleTooLong()) relock(); }, 30000);
 
+/* =========================================================
+   DISPOSITIVOS · código de conexión (QR), lista y desconectar
+   ========================================================= */
+function parseConnCode(txt){
+  let s = String(txt || '').trim();
+  const m = s.match(/#c=([^&\s]+)/); if(m) s = decodeURIComponent(m[1]);
+  try{ const j = JSON.parse(decodeURIComponent(escape(atob(s.replace(/\s+/g,''))))); if(j.u && j.p) return j; }catch(_){}
+  return null;
+}
+function devName(){
+  const ua = navigator.userAgent;
+  const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? (/Mobile/.test(ua) ? 'Celular Android' : 'Tablet Android')
+           : /Windows/.test(ua) ? 'Compu Windows' : /Mac OS X/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Compu Linux' : 'Dispositivo';
+  const br = /Edg\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /Chrome|CriOS/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : '';
+  return os + (br ? ' · ' + br : '') + (isStandalone() ? ' (app)' : '');
+}
+async function handleRevoked(){
+  await wipeLocalData();
+  try{ localStorage.removeItem(SHEET_CFG_KEY); localStorage.removeItem(LOCK_KEY); sessionStorage.removeItem(SESS_KEY); }catch(_){}
+  alert('Este dispositivo fue desconectado de tu diario. Se borró lo que estaba guardado acá.');
+  location.reload();
+  await new Promise(()=>{});
+}
+const fmtWhen = t => t ? new Date(t).toLocaleString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+const escH = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+async function renderDevices(){
+  const box = L('devList');
+  if(!navigator.onLine){ box.textContent = 'Necesitás internet para ver tus dispositivos.'; return; }
+  try{
+    const r = await sheetApi('devList');
+    box.innerHTML = r.devices.map(d => `<div class="dev-row"><span class="nm">${escH(d.name)}<small>Conectado el ${fmtWhen(d.created)} · último uso ${fmtWhen(d.seen)}</small></span>${d.me ? '<span class="me">este</span>' : ''}<button data-id="${escH(d.id)}" data-me="${d.me ? 1 : ''}">Desconectar</button></div>`).join('') || 'No hay dispositivos.';
+  }catch(err){ box.textContent = 'No se pudo cargar la lista: ' + err.message; }
+}
+L('devList').addEventListener('click', async ev=>{
+  const b = ev.target.closest('button[data-id]'); if(!b) return;
+  const me = !!b.dataset.me;
+  if(!confirm(me ? '¿Desconectar ESTE dispositivo? Se borra lo que hay guardado acá (lo que ya está en la hoja no se pierde).'
+                 : '¿Desconectar ese dispositivo? La próxima vez que se abra va a borrar lo que tiene guardado y no va a poder leer ni escribir en tu diario.')) return;
+  b.disabled = true;
+  try{ await sheetApi('devRemove', { id: b.dataset.id }); if(me) await handleRevoked(); renderDevices(); }
+  catch(err){ b.disabled = false; alert('No se pudo: ' + err.message); }
+});
+let qrLib = null;
+function loadQr(){
+  if(window.QRCode) return Promise.resolve();
+  return qrLib || (qrLib = new Promise((ok, ko)=>{ const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }));
+}
+L('devNew').addEventListener('click', async ()=>{
+  const btn = L('devNew'); btn.disabled = true; btn.textContent = 'Generando…';
+  try{
+    const r = await sheetApi('pairCreate');
+    const code = btoa(unescape(encodeURIComponent(JSON.stringify({ u: getSheetCfg().url, p: r.pair }))));
+    L('devCode').value = code;
+    L('devExp').textContent = 'Vence a las ' + new Date(r.exp).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+    L('devShare').hidden = !navigator.share;
+    L('devQr').innerHTML = '';
+    try{ await loadQr(); new QRCode(L('devQr'), { text: location.origin + location.pathname + '#c=' + encodeURIComponent(code), width: 420, height: 420, correctLevel: QRCode.CorrectLevel.L }); }
+    catch(_){ L('devQr').innerHTML = ''; }
+    btn.textContent = 'Generar otro';
+  }catch(err){ alert('No se pudo generar el código: ' + err.message); btn.textContent = 'Generar código'; }
+  finally{ btn.disabled = false; }
+});
+L('devCopy').addEventListener('click', async ()=>{
+  const v = L('devCode').value; if(!v){ L('devNew').click(); return; }
+  try{ await navigator.clipboard.writeText(v); L('devCopy').textContent = 'Copiado ✓'; setTimeout(()=> L('devCopy').textContent = 'Copiar', 2000); }
+  catch(_){ L('devCode').select(); }
+});
+L('devShare').addEventListener('click', ()=>{ const v = L('devCode').value; if(v) navigator.share({ title:'Código para conectar mi Diario', text: v }).catch(()=>{}); });
+function openDevices(){
+  L('devCode').value = ''; L('devQr').innerHTML = ''; L('devExp').textContent = ''; L('devNew').textContent = 'Generar código';
+  L('devBg').classList.add('open'); renderDevices();
+}
+L('devClose').addEventListener('click', ()=> L('devBg').classList.remove('open'));
+L('devBg').addEventListener('click', ev=>{ if(ev.target === L('devBg')) L('devBg').classList.remove('open'); });
+
+/* =========================================================
+   INSTALAR LA APP
+   ========================================================= */
+function isStandalone(){ return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; }
+let installEvt = null;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function renderInstall(){
+  const show = !isStandalone() && (installEvt || isIOS || /Android/.test(navigator.userAgent));
+  L('lockInstall').hidden = !show; L('cfgInstall').hidden = !show;
+}
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt = e; renderInstall(); });
+window.addEventListener('appinstalled', ()=>{ installEvt = null; renderInstall(); });
+async function doInstall(){
+  if(typeof closeCfg === 'function') closeCfg();
+  if(installEvt){ installEvt.prompt(); await installEvt.userChoice.catch(()=>{}); installEvt = null; renderInstall(); return; }
+  if(isIOS){
+    const notSafari = /CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+    alert((notSafari ? 'En iPhone conviene instalarla desde Safari: copiá el link mfquiroga.github.io/diario y abrilo en Safari.\n\n' : '') +
+      'Para instalarla:\n1. Tocá el botón Compartir (el cuadrado con la flecha hacia arriba).\n2. Bajá y tocá «Agregar a inicio».\n3. Tocá «Agregar».\n\nDespués abrila desde el ícono del corazón y conectala ahí (en iPhone, la app instalada guarda sus datos aparte del navegador).');
+    return;
+  }
+  alert('Para instalarla en Android:\n1. Tocá los tres puntitos ⋮ arriba a la derecha de Chrome.\n2. Tocá «Instalar app» o «Agregar a la pantalla principal».\n3. Confirmá.\n\nSi no aparece, recargá la página y esperá unos segundos.');
+}
+L('lockInstall').addEventListener('click', doInstall);
+L('cfgInstall').addEventListener('click', doInstall);
+renderInstall();
+
 async function startLock(){
   const cfg = lockCfg();
   const sk = (()=>{ try{ return sessionStorage.getItem(SESS_KEY); }catch(_){ return null; } })();
@@ -2670,6 +2798,8 @@ async function startLock(){
     setMode('create'); return;
   }
   setMode(isLinked() ? 'create' : 'connect');
+  const hc = location.hash.match(/#c=([^&]+)/);
+  if(hc && lockMode === 'connect'){ lockCode.value = decodeURIComponent(hc[1]); history.replaceState(null, '', location.pathname); L('lockGo').click(); }
 }
 
 async function init(){
