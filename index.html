@@ -659,7 +659,9 @@ footer.credit{
 .dev-row button{ padding:7px 10px; border-radius:9px; background:none; border:1px solid var(--line); color:#ff9a9a; cursor:pointer; font:500 12.5px 'Inter',sans-serif; }
 .dev-pair h3{ margin:0 0 6px; font:600 15px 'Inter',sans-serif; color:var(--text-light); }
 .dev-hint{ margin:0 0 10px; font-size:13px; line-height:1.5; color:var(--text-mute,#a9a3c4); }
-.dev-qr{ display:flex; justify-content:center; margin:6px 0 10px; }
+.dev-qr{ display:flex; justify-content:center; margin:6px auto 10px; }
+.dev-act{ justify-content:center !important; flex-wrap:wrap; }
+.dev-act .hint{ margin:0 !important; width:100%; text-align:center; }
 .dev-qr:empty{ display:none; }
 .dev-qr img,.dev-qr canvas{ background:#fff; padding:10px; border-radius:12px; width:210px !important; height:210px !important; }
 #devCode{ width:100%; box-sizing:border-box; padding:10px; border-radius:10px; background:var(--bg-deep); border:1px solid var(--line); color:var(--text-light); font:12px 'JetBrains Mono',monospace; resize:none; word-break:break-all; }
@@ -668,12 +670,15 @@ footer.credit{
 .pw-rules li::before{ content:'○ '; }
 .pw-rules li.ok{ color:var(--mood-bien,#7ed6a5); }
 .pw-rules li.ok::before{ content:'✓ '; }
-.pw-rules li:last-child{ grid-column:1 / -1; }
 .scan-box video{ width:100%; max-height:300px; border-radius:14px; background:#000; object-fit:cover; }
 .scan-box p{ margin-top:8px !important; }
 .dev-qr-app{ display:flex; gap:14px; align-items:center; margin:0 0 14px; }
 .dev-qr-app img,.dev-qr-app canvas{ background:#fff; padding:8px; border-radius:10px; width:120px !important; height:120px !important; }
 .dev-qr-app:empty{ display:none; }
+[hidden]{ display:none !important; }
+.lock-ver{ margin-top:18px !important; font-size:11.5px !important; opacity:.6; }
+.cfg-ver{ padding:6px 10px 4px; font-size:11.5px; color:var(--text-mute,#a9a3c4); opacity:.75; }
+.lock-card p:empty{ display:none; }
 .lock-link{ background:none; border:0; color:var(--accent); font:500 13px 'Inter',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
 </style>
 </head>
@@ -684,19 +689,20 @@ footer.credit{
     <h2 id="lockTitle">Diario</h2>
     <p id="lockMsg">Cargando…</p>
     <input type="text" name="username" value="diario" autocomplete="username" hidden>
+    <div class="scan-box" id="scanBox" hidden><video id="scanVideo" playsinline muted></video><p>Apuntá al código de tu otro dispositivo.</p></div>
+    <button type="button" class="btn-g" id="lockScan" hidden>📷 Escanear código</button>
     <input type="text" id="lockCode" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" hidden>
     <input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden>
     <input type="password" id="lockPw2" placeholder="Repetí la contraseña" autocomplete="new-password" hidden>
     <ul class="pw-rules" id="pwRules" hidden>
-      <li data-r="len">Al menos 6 caracteres</li><li data-r="up">Una mayúscula</li><li data-r="lo">Una minúscula</li><li data-r="ns">Un número o un símbolo (por ej. 7 ! ? # $)</li>
+      <li data-r="len">6 o más caracteres</li><li data-r="up">Una mayúscula</li><li data-r="lo">Una minúscula</li><li data-r="ns">Un número o símbolo</li>
     </ul>
     <button type="button" class="lock-link" id="lockShow" hidden>Mostrar contraseña</button>
-    <div class="scan-box" id="scanBox" hidden><video id="scanVideo" playsinline muted></video><p>Apuntá la cámara al QR que aparece en tu otro dispositivo (⚙️ → Dispositivos conectados).</p></div>
-    <button type="button" class="btn-g" id="lockScan" hidden>📷 Escanear QR</button>
     <button type="submit" class="btn-p" id="lockGo" hidden>Entrar</button>
     <button type="button" class="btn-g" id="lockBio" hidden>Entrar con huella o cara</button>
     <button type="button" class="lock-link" id="lockAlt" hidden></button>
     <p class="lock-err" id="lockErr"></p>
+    <p class="lock-ver" id="lockVer"></p>
   </form>
 </div>
 
@@ -718,20 +724,16 @@ footer.credit{
 </div>
 <div class="modal-bg" id="devBg">
   <div class="composer" role="dialog" aria-labelledby="devTitle">
-    <h2 id="devTitle">Dispositivos conectados</h2>
+    <h2 id="devTitle">Dispositivos</h2>
     <div id="devList" class="dev-list">Cargando…</div>
     <div class="dev-pair">
-      <h3>Conectar otro dispositivo</h3>
-      <p class="dev-hint"><b>Paso 1 · Instalá la app.</b> Escaneá este QR con la cámara del otro dispositivo: abre la página del diario sin escribir nada. Instalala desde ahí.</p>
-      <div class="dev-qr-app" id="devQrApp"></div>
-      <p class="dev-hint"><b>Paso 2 · Conectala.</b> Tocá «Generar código». En la app recién instalada tocá <b>📷 Escanear QR</b> y apuntá a este QR, o pegá el código. Sirve una sola vez y vence en 15 minutos.</p>
+      <h3>Agregar un dispositivo</h3>
+      <p class="dev-hint">Escaneá este código con la cámara del otro dispositivo y seguí los pasos.</p>
       <div id="devQr" class="dev-qr"></div>
-      <textarea id="devCode" readonly rows="3"></textarea>
-      <div class="actions">
+      <div class="actions dev-act">
         <span class="hint" id="devExp"></span>
-        <button class="btn-g" id="devShare" hidden>Compartir</button>
-        <button class="btn-g" id="devCopy">Copiar</button>
-        <button class="btn-p" id="devNew">Generar código</button>
+        <button class="btn-g" id="devCopy">Copiar código</button>
+        <button class="btn-g" id="devNew">Código nuevo</button>
       </div>
     </div>
     <div class="actions"><button class="btn-g" id="devClose">Cerrar</button></div>
@@ -764,22 +766,24 @@ footer.credit{
       </button>
       <div class="cfg-menu" id="cfgMenu" role="menu">
         <div class="cfg-state" id="cfgState"></div>
-        <button class="cfg-item" id="cfgImport"><span class="ic">⬆️</span><span>Importar<small>Sumar registros desde un PDF o CSV de MindDiary</small></span></button>
-        <button class="cfg-item" id="cfgOpenSheet"><span class="ic">📗</span><span>Exportar · abrir hoja de cálculo<small>Tu diario en la pestaña «Diario» de Diario DBT</small></span></button>
-        <button class="cfg-item" id="cfgCode"><span class="ic">📱</span><span>Dispositivos conectados<small>Conectar uno nuevo o desconectar alguno</small></span></button>
-        <button class="cfg-item" id="cfgInstall" hidden><span class="ic">📲</span><span>Instalar en este dispositivo<small>Para abrirlo desde un ícono, como una app</small></span></button>
-        <button class="cfg-item" id="cfgLockNow"><span class="ic">🔒</span><span>Bloquear ahora<small>Se bloquea sola a los 10 minutos sin usarla</small></span></button>
-        <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Usar huella o cara<small>Para entrar más rápido en este dispositivo</small></span></button>
-        <button class="cfg-item" id="cfgCsv"><span class="ic">⬇️</span><span>Descargar copia en CSV<small>Todos los registros en un archivo</small></span></button>
+        <button class="cfg-item" id="cfgOpenSheet"><span class="ic">📗</span><span>Abrir hoja de cálculo</span></button>
+        <button class="cfg-item" id="cfgCode"><span class="ic">📱</span><span>Dispositivos</span></button>
+        <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Activar huella</span></button>
+        <button class="cfg-item" id="cfgLockNow"><span class="ic">🔒</span><span>Bloquear</span></button>
+        <button class="cfg-item" id="cfgInstall" hidden><span class="ic">📲</span><span>Instalar app</span></button>
+        <div class="cfg-sep"></div>
+        <button class="cfg-item" id="cfgImport"><span class="ic">⬆️</span><span>Importar respaldo<small>PDF o CSV de MindDiary</small></span></button>
+        <button class="cfg-item" id="cfgCsv"><span class="ic">⬇️</span><span>Descargar copia (CSV)</span></button>
         <div id="cfgCreateWrap">
           <div class="cfg-sep"></div>
-          <button class="cfg-item" id="cfgCreate"><span class="ic">✨</span><span>Crear o conectar hoja de cálculo<small>Este dispositivo todavía no guarda en tu hoja</small></span></button>
+          <button class="cfg-item" id="cfgCreate"><span class="ic">✨</span><span>Conectar a la hoja de cálculo</span></button>
           <div class="cfg-link" id="cfgLinkBox" hidden>
-            <span style="font-size:12px;color:var(--text-mute,#a9a3c4)">Primera vez: pegá el link de tu app «Diario DBT» (termina en <b>/exec</b>). Otro dispositivo: pegá el <b>código de conexión</b>.</span>
+            <span style="font-size:12px;color:var(--text-mute,#a9a3c4)">Pegá el link que termina en <b>/exec</b> o un código de conexión.</span>
             <input id="cfgUrl" type="text" placeholder="Link /exec o código de conexión" autocomplete="off">
             <button class="btn-p" id="cfgLinkGo">Conectar</button>
           </div>
         </div>
+        <div class="cfg-ver" id="cfgVer"></div>
       </div>
       <div class="import-status" id="importStatus"></div>
     </div>
@@ -2361,8 +2365,8 @@ function renderCfgMenu(){
   document.getElementById('cfgOpenSheet').hidden = !linked;
   document.getElementById('cfgCode').hidden = !linked;
   document.getElementById('cfgState').innerHTML = linked
-    ? `Guardando en tu hoja <b>Diario DBT</b>${pend ? ` · ${pend} pendiente${pend>1?'s':''} de subir` : ''}`
-    : 'Tus registros se guardan solo en este navegador.';
+    ? (pend ? `⏳ ${pend} sin subir a la hoja` : '✓ Todo guardado en tu hoja')
+    : 'Solo en este dispositivo';
   updateGearDot();
 }
 document.getElementById('gearBtn').addEventListener('click', (ev)=>{
@@ -2398,7 +2402,7 @@ document.getElementById('cfgLinkGo').addEventListener('click', async (ev)=>{
   try{
     const r = pc ? await sheetApi('pairRedeem', { pair: pc.p, name: devName() }, { url: pc.u, token:'' })
                  : await sheetApi('setup', { name: devName() }, { url, token:'' });
-    lsSet(SHEET_CFG_KEY, { url: pc ? pc.u : url, token: r.token, sheetUrl: r.sheetUrl });
+    lsSet(SHEET_CFG_KEY, { url: pc ? pc.u : url, token: r.token, sheetUrl: r.sheetUrl, v2:1 });
     setPending([]);
     btn.textContent = 'Cargando tus registros…';
     await pullFromSheet();    // sube todo lo que la hoja no tiene, en tandas
@@ -2473,6 +2477,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · contraseña única (sincronizada con la hoja), huella/cara
    por dispositivo, recuperación por mail y datos cifrados
    ========================================================= */
+const APP_VERSION = '9', APP_DATE = '23/11/2026 19:45';
 const LOCK_KEY = 'diario_lock_v2';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'diario_sk_v1';
@@ -2513,28 +2518,31 @@ function setMode(mode, msg){
   lockMode = mode; lockErr.textContent = '';
   const cfg = lockCfg();
   const T = {
-    install: ['Instalá tu diario', 'Primero instalalo en este dispositivo. Después abrilo desde el ícono del corazón y conectalo ahí.', 'Instalar la app', 'Seguir sin instalar'],
-    connect: ['Bienvenida', 'Si ya usás el diario en otro dispositivo, escaneá el QR o pegá el código (en el otro: ⚙️ → Dispositivos conectados).', 'Conectar', 'Usar solo en este dispositivo'],
-    create:  ['Protegé tu diario', 'Elegí una contraseña. Va a ser la misma en todos tus dispositivos y te la pide al abrirlo y después de 10 minutos sin usarlo.', 'Guardar contraseña', ''],
-    enter:   ['Diario', 'Escribí tu contraseña para entrar.', 'Entrar', isLinked() ? 'Olvidé mi contraseña' : ''],
-    code:    ['Recuperar contraseña', '', 'Cambiar contraseña', 'Volver'],
+    install:   ['Instalá el Diario', 'Así lo abrís como una app, desde un ícono.', 'Instalar', 'Seguir en el navegador'],
+    installed: ['¡Listo, ya está instalada!', 'Abrí el Diario desde el ícono del corazón. Ya podés cerrar esta página.', '', 'Seguir en el navegador'],
+    connect:   ['Conectá este dispositivo', 'En tu otro dispositivo: ⚙️ → Dispositivos.', 'Conectar', 'Es mi primer dispositivo'],
+    create:    ['Creá tu contraseña', 'Es la misma para todos tus dispositivos.', 'Guardar', ''],
+    enter:     ['Diario', '', 'Entrar', isLinked() ? 'Me la olvidé' : ''],
+    code:      ['Revisá tu mail', '', 'Guardar contraseña nueva', 'Volver'],
   }[mode];
   L('lockTitle').textContent = T[0];
   L('lockMsg').textContent = msg || T[1];
-  L('lockGo').textContent = T[2]; L('lockGo').hidden = false;
+  L('lockGo').textContent = T[2]; L('lockGo').hidden = !T[2];
   L('lockAlt').textContent = T[3]; L('lockAlt').hidden = !T[3];
   lockCode.hidden = !(mode === 'connect' || mode === 'code');
-  lockCode.placeholder = mode === 'connect' ? 'Código de conexión' : 'Código del mail (ej. AB12-CD34)';
-  lockPw.hidden = mode === 'connect' || mode === 'install';
-  lockCode.hidden = lockCode.hidden || mode === 'install';
+  lockCode.placeholder = mode === 'connect' ? '…o pegá el código' : 'Código del mail';
+  lockPw.hidden = !(mode === 'create' || mode === 'enter' || mode === 'code');
+  lockCode.hidden = !(mode === 'connect' || mode === 'code');
   L('pwRules').hidden = !(mode === 'create' || mode === 'code'); if(!L('pwRules').hidden) renderPwRules();
-  L('lockShow').hidden = lockPw.hidden; lockPw.type = lockPw2.type = 'password'; L('lockShow').textContent = 'Mostrar contraseña';
+  L('lockShow').hidden = !(mode === 'create' || mode === 'code');   // al entrar no se muestra: protege lo que el navegador autocompleta lockPw.type = lockPw2.type = 'password'; L('lockShow').textContent = 'Mostrar contraseña';
   L('lockScan').hidden = mode !== 'connect'; stopScan();
   renderInstall();
   lockPw.placeholder = mode === 'code' ? 'Contraseña nueva' : 'Contraseña';
+  lockPw2.placeholder = 'Repetila';
   lockPw.autocomplete = mode === 'enter' ? 'current-password' : 'new-password';
   lockPw2.hidden = !(mode === 'create' || mode === 'code');
   L('lockBio').hidden = !(mode === 'enter' && cfg && cfg.bio);
+  L('lockBio').textContent = 'Entrar con huella';
   lockPw.value = lockPw2.value = lockCode.value = '';
   lockEl.classList.remove('off');
   if(mode !== 'install') setTimeout(()=> (mode === 'connect' || mode === 'code' ? lockCode : lockPw).focus(), 50);
@@ -2564,7 +2572,12 @@ async function finishUnlock(){
 }
 
 /* la contraseña de la hoja manda: si cambió en otro dispositivo, este se pone al día */
+async function ensureOwnKey(){
+  const c = getSheetCfg(); if(!c || c.v2 || !navigator.onLine) return;
+  try{ const r = await sheetApi('rekey', { name: devName() }); c.token = r.token; c.v2 = 1; lsSet(SHEET_CFG_KEY, c); }catch(_){}
+}
 async function reconcilePw(){
+  await ensureOwnKey();
   if(!isLinked() || !navigator.onLine) return;
   const cfg = lockCfg(); if(!cfg) return;
   const sp = await serverPw();
@@ -2587,20 +2600,21 @@ L('lockForm').addEventListener('submit', async ev=>{
   ev.preventDefault(); lockErr.textContent = '';
   const pw = lockPw.value;
   try{
-    if(lockMode === 'install'){ await doInstall(); return; }
+    if(lockMode === 'install'){ if(installedElsewhere){ tryOpenApp(); return; } await doInstall(); return; }
     if(lockMode === 'connect'){
       const c = parseConnCode(lockCode.value);
       if(!c){ lockErr.textContent = 'Ese código no es válido. Generá uno nuevo en tu otro dispositivo (⚙️ → Dispositivos conectados).'; return; }
       busy(true, 'Conectando…');
       const r = await sheetApi('pairRedeem', { pair: c.p, name: devName() }, { url: c.u, token:'' });
-      lsSet(SHEET_CFG_KEY, { url:c.u, token:r.token, sheetUrl:r.sheetUrl });
+      lsSet(SHEET_CFG_KEY, { url:c.u, token:r.token, sheetUrl:r.sheetUrl, v2:1 });
+      try{ localStorage.removeItem(PCODE_KEY); }catch(_){}
       const sp = await serverPw();
-      if(sp){ modeCfg = sp; setMode('enter', 'Conectado ✓ Escribí la contraseña que usás en tus otros dispositivos.'); }
+      if(sp){ modeCfg = sp; setMode('enter', '✓ Conectado. Escribí tu contraseña.'); }
       else setMode('create');
       return;
     }
     if(lockMode === 'create' || lockMode === 'code'){
-      if(!pwRulesOk(pw)){ renderPwRules(); lockErr.textContent = 'La contraseña tiene que cumplir todo lo de la lista.'; return; }
+      if(!pwRulesOk(pw)){ renderPwRules(); lockErr.textContent = 'Falta cumplir la lista.'; return; }
       if(pw !== lockPw2.value){ lockErr.textContent = 'Las dos contraseñas no coinciden.'; return; }
       busy(true, 'Guardando…');
       const salt = b64(rnd(16)), iter = 300000;
@@ -2620,7 +2634,7 @@ L('lockForm').addEventListener('submit', async ev=>{
       saveLockCfg({ salt, iter, hash:d.hash, ver });
       await useKeyRaw(d.raw);
       await finishUnlock();
-      if(lockMode !== 'code' && await bioAvailable()) setStatus('Contraseña guardada ✓ · En ⚙️ podés activar la huella o la cara.', 'ok');
+      if(lockMode !== 'code' && await bioAvailable()) setStatus('✓ Contraseña guardada. Podés activar la huella en ⚙️.', 'ok');
       return;
     }
     if(lockMode === 'enter'){
@@ -2636,19 +2650,19 @@ L('lockForm').addEventListener('submit', async ev=>{
   }catch(err){
     console.error(err);
     lockErr.textContent = navigator.onLine ? ('No se pudo: ' + err.message) : 'Sin internet. Probá de nuevo cuando tengas conexión.';
-  }finally{ busy(false); if(!unlocked) L('lockGo').textContent = { install:'Instalar la app', connect:'Conectar', create:'Guardar contraseña', enter:'Entrar', code:'Cambiar contraseña' }[lockMode]; }
+  }finally{ busy(false); if(!unlocked) L('lockGo').textContent = { install:'Instalar', connect:'Conectar', create:'Guardar', enter:'Entrar', code:'Guardar contraseña nueva' }[lockMode]; }
 });
 
 L('lockAlt').addEventListener('click', async ()=>{
   lockErr.textContent = '';
-  if(lockMode === 'install'){ setMode('connect'); return; }
+  if(lockMode === 'install' || lockMode === 'installed'){ try{ localStorage.setItem(SKIP_KEY, '1'); }catch(_){} startLock(); return; }
   if(lockMode === 'connect'){ setMode('create'); return; }
   if(lockMode === 'code'){ setMode('enter'); return; }
   if(lockMode === 'enter'){
-    if(!confirm('Te vamos a mandar un código a tu Gmail para elegir una contraseña nueva. La contraseña nueva va a valer en todos tus dispositivos.\n\nLo que escribiste sin internet y todavía no se subió a la hoja se pierde en este dispositivo. ¿Seguimos?')) return;
+    if(!confirm('¿Te mandamos un código a tu Gmail para crear una contraseña nueva?')) return;
     try{
       const r = await sheetApi('recover');
-      setMode('code', `Te mandamos un código a ${r.to}. Vence en 15 minutos. Escribilo y elegí una contraseña nueva.`);
+      setMode('code', `Te mandamos un código a ${r.to}. Vence en 15 minutos.`);
     }catch(err){ lockErr.textContent = navigator.onLine ? err.message : 'Necesitás internet para recibir el código.'; }
   }
 });
@@ -2675,7 +2689,7 @@ L('lockBio').addEventListener('click', async ()=>{
 async function renderBioItem(){
   const cfg = lockCfg(); const btn = L('cfgBio');
   btn.hidden = !(cfg && await bioAvailable());
-  if(!btn.hidden) btn.querySelector('span:last-child').firstChild.textContent = cfg.bio ? 'Dejar de usar huella o cara' : 'Usar huella o cara';
+  if(!btn.hidden) btn.querySelector('span:last-child').textContent = cfg.bio ? 'Desactivar huella' : 'Activar huella';
 }
 L('cfgBio').addEventListener('click', async ()=>{
   closeCfg();
@@ -2770,30 +2784,27 @@ function loadQr(){
   if(window.QRCode) return Promise.resolve();
   return qrLib || (qrLib = new Promise((ok, ko)=>{ const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }));
 }
-L('devNew').addEventListener('click', async ()=>{
-  const btn = L('devNew'); btn.disabled = true; btn.textContent = 'Generando…';
+let pairCode = '';
+async function newPairCode(){
+  const btn = L('devNew'); btn.disabled = true;
+  L('devExp').textContent = 'Generando…'; L('devQr').innerHTML = ''; pairCode = '';
   try{
     const r = await sheetApi('pairCreate');
-    const code = btoa(unescape(encodeURIComponent(JSON.stringify({ u: getSheetCfg().url, p: r.pair }))));
-    L('devCode').value = code;
-    L('devExp').textContent = 'Vence a las ' + new Date(r.exp).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
-    L('devShare').hidden = !navigator.share;
-    L('devQr').innerHTML = '';
-    await drawQr(L('devQr'), APP_URL + '#c=' + encodeURIComponent(code), 420);
-    btn.textContent = 'Generar otro';
-  }catch(err){ alert('No se pudo generar el código: ' + err.message); btn.textContent = 'Generar código'; }
+    pairCode = btoa(unescape(encodeURIComponent(JSON.stringify({ u: getSheetCfg().url, p: r.pair }))));
+    await drawQr(L('devQr'), APP_URL + '#c=' + encodeURIComponent(pairCode), 420);
+    L('devExp').textContent = 'Vence a las ' + new Date(r.exp).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' }) + ' · sirve una vez';
+  }catch(err){ L('devExp').textContent = navigator.onLine ? 'No se pudo generar: ' + err.message : 'Necesitás internet.'; }
   finally{ btn.disabled = false; }
-});
+}
+L('devNew').addEventListener('click', newPairCode);
 L('devCopy').addEventListener('click', async ()=>{
-  const v = L('devCode').value; if(!v){ L('devNew').click(); return; }
-  try{ await navigator.clipboard.writeText(v); L('devCopy').textContent = 'Copiado ✓'; setTimeout(()=> L('devCopy').textContent = 'Copiar', 2000); }
-  catch(_){ L('devCode').select(); }
+  if(!pairCode) return;
+  try{ await navigator.clipboard.writeText(pairCode); L('devCopy').textContent = 'Copiado ✓'; }
+  catch(_){ prompt('Copiá este código:', pairCode); }
+  setTimeout(()=> L('devCopy').textContent = 'Copiar código', 2000);
 });
-L('devShare').addEventListener('click', ()=>{ const v = L('devCode').value; if(v) navigator.share({ title:'Código para conectar mi Diario', text: v }).catch(()=>{}); });
 function openDevices(){
-  L('devCode').value = ''; L('devQr').innerHTML = ''; L('devExp').textContent = ''; L('devNew').textContent = 'Generar código';
-  L('devBg').classList.add('open'); renderDevices();
-  drawQr(L('devQrApp'), APP_URL, 240, '<p class="dev-hint" style="margin:0">Link de la app:<br><b>mfquiroga.github.io/diario</b></p>');
+  L('devBg').classList.add('open'); renderDevices(); newPairCode();
 }
 L('devClose').addEventListener('click', ()=> L('devBg').classList.remove('open'));
 L('devBg').addEventListener('click', ev=>{ if(ev.target === L('devBg')) L('devBg').classList.remove('open'); });
@@ -2815,7 +2826,8 @@ function renderInstall(){
   L('cfgInstall').hidden = !(!isStandalone() && !installedElsewhere && (installEvt || mobile));
 }
 window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); installEvt = e; renderInstall(); });
-window.addEventListener('appinstalled', ()=>{ installEvt = null; renderInstall(); });
+function tryOpenApp(){ try{ window.open(APP_URL, '_blank'); }catch(_){} }
+window.addEventListener('appinstalled', ()=>{ installEvt = null; installedElsewhere = true; renderInstall(); if(!unlocked){ setMode('installed'); setTimeout(tryOpenApp, 800); } else setStatus('✓ App instalada. Abrila desde el ícono del corazón.', 'ok'); });
 async function doInstall(){
   if(typeof closeCfg === 'function') closeCfg();
   if(installEvt){ installEvt.prompt(); await installEvt.userChoice.catch(()=>{}); installEvt = null; renderInstall(); return; }
@@ -2847,7 +2859,7 @@ let scanStream = null, scanTimer = null;
 function stopScan(){
   if(scanTimer){ clearTimeout(scanTimer); scanTimer = null; }
   if(scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
-  L('scanBox').hidden = true; L('lockScan').textContent = '📷 Escanear QR';
+  L('scanBox').hidden = true; L('lockScan').textContent = '📷 Escanear código';
 }
 function loadJsQr(){
   if(window.jsQR) return Promise.resolve();
@@ -2881,28 +2893,34 @@ L('lockScan').addEventListener('click', async ()=>{
   tick();
 });
 
+const PCODE_KEY = 'diario_pair_pending_v1', SKIP_KEY = 'diario_skip_install_v1';
 async function startLock(){
+  L('lockVer').textContent = L('cfgVer').textContent = 'Versión ' + APP_VERSION + ' · ' + APP_DATE;
+  const hc = location.hash.match(/#c=([^&]+)/);
+  if(hc){ lsSet(PCODE_KEY, { c: decodeURIComponent(hc[1]), exp: Date.now() + 15*60*1000 }); history.replaceState(null, '', location.pathname); }
   const cfg = lockCfg();
   const sk = (()=>{ try{ return sessionStorage.getItem(SESS_KEY); }catch(_){ return null; } })();
   if(cfg && sk && !idleTooLong()){
     try{ await useKeyRaw(unb64(sk)); await encGet(STORAGE_KEY); await finishUnlock(); return; }catch(_){ try{ sessionStorage.removeItem(SESS_KEY); }catch(__){} }
   }
   if(cfg){ setMode('enter'); return; }
-  if(isLinked() && navigator.onLine){
-    const sp = await serverPw();
-    if(sp){ modeCfg = sp; setMode('enter', 'Escribí la contraseña que usás en tus otros dispositivos.'); return; }
-    setMode('create'); return;
-  }
-  const hc0 = /#c=/.test(location.hash);
-  const mobile = isIOS || /Android/.test(navigator.userAgent);
   await detectInstalled();
-  if(!isLinked() && mobile && !isStandalone() && !(hc0 && !isIOS)){
-    setMode('install', installedElsewhere ? 'Ya tenés la app instalada en este dispositivo: abrila desde el ícono del corazón y conectala ahí.' : '');
+  const mobile = isIOS || /Android/.test(navigator.userAgent);
+  if(mobile && !isStandalone() && !localStorage.getItem(SKIP_KEY)){
+    const pend = lsGet(PCODE_KEY, null);
+    setMode('install', installedElsewhere ? 'Ya está instalada: abrila desde el ícono del corazón.'
+      : (isIOS && pend ? 'Así lo abrís como una app. Después abrila y escaneá el código otra vez.' : ''));
     return;
   }
-  setMode(isLinked() ? 'create' : 'connect');
-  const hc = location.hash.match(/#c=([^&]+)/);
-  if(hc && lockMode === 'connect'){ lockCode.value = decodeURIComponent(hc[1]); history.replaceState(null, '', location.pathname); L('lockGo').click(); }
+  if(isLinked() && navigator.onLine){
+    const sp = await serverPw();
+    if(sp){ modeCfg = sp; setMode('enter'); return; }
+    setMode('create'); return;
+  }
+  if(isLinked()){ setMode('create'); return; }
+  setMode('connect');
+  const pc = lsGet(PCODE_KEY, null);
+  if(pc && pc.exp > Date.now()){ lockCode.value = pc.c; L('lockGo').click(); }
 }
 
 async function init(){
@@ -2924,14 +2942,21 @@ async function init(){
   selectDay(MAX_DATE, false);
   renderStats();
   renderCfgMenu();
-  if(!ENTRIES.length && !isLinked()) setStatus('Tocá ⚙️ para conectar tu hoja o importar tu respaldo.');
+
 
   await pullFromSheet();
   syncPendingToSheet();
   window.addEventListener('online', ()=>{ syncPendingToSheet(); });
 }
 if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  const hadSW = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').then(r => r.update()).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(!hadSW) return;                                      // primera instalación: no hace falta recargar
+    const go = ()=> location.reload();
+    if(document.getElementById('composerBg').classList.contains('open')) setStatus('Hay una versión nueva: se aplica al cerrar esta ventana.');
+    else go();
+  });
 }
 startLock();
 </script>
