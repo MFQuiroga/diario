@@ -651,7 +651,7 @@ footer.credit{
 .lock-card input:focus{ outline:none; border-color:var(--accent); }
 .lock-card .btn-p,.lock-card .btn-g{ padding:12px 16px; }
 .lock-err{ color:#ff8a8a !important; min-height:18px; }
-.lock-help{ font-size:12px !important; }
+.lock-link{ background:none; border:0; color:var(--accent); font:500 13px 'Inter',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
 </style>
 </head>
 <body>
@@ -659,14 +659,15 @@ footer.credit{
   <form class="lock-card" id="lockForm" autocomplete="on">
     <img src="icon-192.png" alt="">
     <h2 id="lockTitle">Diario</h2>
-    <p id="lockMsg">Escribí tu contraseña para entrar.</p>
+    <p id="lockMsg">Cargando…</p>
     <input type="text" name="username" value="diario" autocomplete="username" hidden>
-    <input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password">
+    <input type="text" id="lockCode" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" hidden>
+    <input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden>
     <input type="password" id="lockPw2" placeholder="Repetí la contraseña" autocomplete="new-password" hidden>
-    <button type="submit" class="btn-p" id="lockGo">Entrar</button>
+    <button type="submit" class="btn-p" id="lockGo" hidden>Entrar</button>
     <button type="button" class="btn-g" id="lockBio" hidden>Entrar con huella o cara</button>
+    <button type="button" class="lock-link" id="lockAlt" hidden></button>
     <p class="lock-err" id="lockErr"></p>
-    <p class="lock-help" id="lockHelp">Si te olvidás la contraseña, pedile ayuda a Claude.</p>
   </form>
 </div>
 
@@ -1871,8 +1872,24 @@ async function idbSet(k, v){
   catch(e){ return false; }
 }
 const plainEntry = e => ({ date:e.date, dow:e.dow, mood:e.mood, time:e.time, text:e.text });
-async function loadStoredEntries(){ const v = await idbGet(STORAGE_KEY); return Array.isArray(v) ? v : null; }
-async function saveStoredEntries(){ storageAvailable = await idbSet(STORAGE_KEY, ENTRIES.map(plainEntry)); }
+/* --- cifrado: todo lo que se guarda en el dispositivo va cifrado con tu contraseña --- */
+let DATA_KEY = null, KEY_RAW = null;
+async function encSet(k, v){
+  if(!DATA_KEY) return false;
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, DATA_KEY, new TextEncoder().encode(JSON.stringify(v)));
+  return idbSet(k, { enc:1, iv, ct });
+}
+async function encGet(k){
+  const v = await idbGet(k);
+  if(v == null) return undefined;
+  if(!v.enc) return v;                       // datos viejos sin cifrar: se cifran al volver a guardar
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv: v.iv }, DATA_KEY, v.ct);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+async function wipeLocalData(){ for(const k of [STORAGE_KEY, PENDING_KEY, DRAFT_KEY, 'bio_key']) await idbSet(k, null); }
+async function loadStoredEntries(){ const v = await encGet(STORAGE_KEY); return Array.isArray(v) ? v : null; }
+async function saveStoredEntries(){ storageAvailable = await encSet(STORAGE_KEY, ENTRIES.map(plainEntry)); }
 
 /* =========================================================
    IMPORT NEW PDF EXPORT (client-side parsing, same format as MindDiary)
@@ -2230,7 +2247,7 @@ function setStatus(msg, kind){
 /* --- cola de pendientes: lo que todavía no llegó a la hoja --- */
 let pendingMem = [];
 function getPending(){ return pendingMem; }
-function setPending(list){ pendingMem = list; idbSet(PENDING_KEY, list.map(plainEntry)); }
+function setPending(list){ pendingMem = list; encSet(PENDING_KEY, list.map(plainEntry)); }
 function addPending(list){
   const p = pendingMem.slice(); const keys = new Set(p.map(entryKey));
   list.forEach(e=>{ if(!keys.has(entryKey(e))){ p.push(e); keys.add(entryKey(e)); } });
@@ -2341,6 +2358,7 @@ document.getElementById('cfgLinkGo').addEventListener('click', async (ev)=>{
     setPending([]);
     btn.textContent = 'Cargando tus registros…';
     await pullFromSheet();    // sube todo lo que la hoja no tiene, en tandas
+    await reconcilePw();
     closeCfg();
     setStatus(`Conectado: ${ENTRIES.length} registros en tu hoja ✓`, 'ok');
   }catch(err){
@@ -2364,11 +2382,11 @@ function renderMoodPick(){
   ).join('');
 }
 function updateCompSave(){ compSave.disabled = !(compMood && compText.value.trim()); }
-function saveDraft(){ lsSet(DRAFT_KEY, { date: compDate.value, time: compTime.value, mood: compMood, text: compText.value }); }
+function saveDraft(){ encSet(DRAFT_KEY, { date: compDate.value, time: compTime.value, mood: compMood, text: compText.value }); }
 const compDate = document.getElementById('compDate');
 const compTime = document.getElementById('compTime');
-function openComposer(){
-  const d = lsGet(DRAFT_KEY, null);
+async function openComposer(){
+  let d = null; try{ d = await encGet(DRAFT_KEY); }catch(_){}
   compDate.value = (d && d.date) || toISO(new Date());
   compTime.value = (d && d.time) || nowHHMM();
   compMood = (d && d.mood) || null;
@@ -2392,7 +2410,7 @@ compSave.addEventListener('click', async ()=>{
   if(ENTRIES.some(x=> entryKey(x) === entryKey(e))){ closeComposer(); return; }
   ENTRIES.push(e);
   ENTRIES.sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
-  try{ localStorage.removeItem(DRAFT_KEY); }catch(_){}
+  idbSet(DRAFT_KEY, null);
   closeComposer();
   refreshAll(true);
   const dt = parseISO(e.date); calMonth = new Date(dt.getFullYear(), dt.getMonth(), 1);
@@ -2408,109 +2426,256 @@ compSave.addEventListener('click', async ()=>{
    ========================================================= */
 
 /* =========================================================
-   BLOQUEO · contraseña + huella/cara (solo en este dispositivo)
+   BLOQUEO · contraseña única (sincronizada con la hoja), huella/cara
+   por dispositivo, recuperación por mail y datos cifrados
    ========================================================= */
-const LOCK_KEY = 'diario_lock_v1';
+const LOCK_KEY = 'diario_lock_v2';
 const LAST_KEY = 'diario_last_active_v1';
+const SESS_KEY = 'diario_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
 const lockEl = document.getElementById('lockScreen');
-const lockPw = document.getElementById('lockPw'), lockPw2 = document.getElementById('lockPw2');
-const lockErr = document.getElementById('lockErr'), lockBio = document.getElementById('lockBio');
-let unlocked = false, lastWrite = 0;
+const L = id => document.getElementById(id);
+const lockPw = L('lockPw'), lockPw2 = L('lockPw2'), lockCode = L('lockCode'), lockErr = L('lockErr');
+let unlocked = false, lastWrite = 0, lockMode = '', modeCfg = null, started = false;
 const b64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
 const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const rnd = n => crypto.getRandomValues(new Uint8Array(n));
 function lockCfg(){ return lsGet(LOCK_KEY, null); }
-async function pwHash(pw, salt, iter){
+function saveLockCfg(c){ lsSet(LOCK_KEY, c); }
+try{ localStorage.removeItem('diario_lock_v1'); localStorage.removeItem(DRAFT_KEY); localStorage.removeItem(LOCAL_EXTRA_KEY); }catch(_){}
+
+async function derive(pw, saltB64, iter){
   const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
-  return b64(await crypto.subtle.deriveBits({ name:'PBKDF2', hash:'SHA-256', salt, iterations:iter }, k, 256));
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name:'PBKDF2', hash:'SHA-256', salt: unb64(saltB64), iterations: iter }, k, 512));
+  return { hash: b64(bits.slice(0,32)), raw: bits.slice(32) };   // la primera mitad verifica, la segunda cifra
+}
+async function useKeyRaw(raw){
+  KEY_RAW = raw;
+  DATA_KEY = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt','decrypt']);
 }
 async function bioAvailable(){
   try{ return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); }catch(_){ return false; }
 }
+function idleTooLong(){ return Date.now() - Number(localStorage.getItem(LAST_KEY) || 0) > IDLE_MS; }
+function relock(){ try{ sessionStorage.removeItem(SESS_KEY); localStorage.setItem(LAST_KEY, '0'); }catch(_){} location.reload(); }
 function markActive(force){
   if(!unlocked) return;
-  if(idleTooLong()){ showLock(); return; }
+  if(idleTooLong()){ relock(); return; }
   const now = Date.now();
   if(force || now - lastWrite > 15000){ lastWrite = now; try{ localStorage.setItem(LAST_KEY, String(now)); }catch(_){} }
 }
-function idleTooLong(){ return Date.now() - Number(localStorage.getItem(LAST_KEY) || 0) > IDLE_MS; }
-async function showLock(){
-  unlocked = false;
-  document.querySelectorAll('.modal-bg.open').forEach(m=> m.classList.remove('open'));
-  if(typeof closeCfg === 'function') closeCfg();
+
+function setMode(mode, msg){
+  lockMode = mode; lockErr.textContent = '';
   const cfg = lockCfg();
-  const first = !cfg;
-  document.getElementById('lockTitle').textContent = first ? 'Protegé tu diario' : 'Diario';
-  document.getElementById('lockMsg').textContent = first
-    ? 'Elegí una contraseña. Te la va a pedir al abrirlo y después de 10 minutos sin usarlo.'
-    : 'Escribí tu contraseña para entrar.';
-  lockPw.value = ''; lockPw2.value = ''; lockErr.textContent = '';
-  lockPw2.hidden = !first;
-  lockPw.autocomplete = first ? 'new-password' : 'current-password';
-  document.getElementById('lockGo').textContent = first ? 'Guardar contraseña' : 'Entrar';
-  document.getElementById('lockHelp').hidden = first;
-  lockBio.hidden = !(cfg && cfg.cred);
+  const T = {
+    connect: ['Bienvenida', 'Si ya usás el diario en otro dispositivo, pegá el código de conexión (en el otro: ⚙️ → Conectar otro dispositivo).', 'Conectar', 'Usar solo en este dispositivo'],
+    create:  ['Protegé tu diario', 'Elegí una contraseña. Va a ser la misma en todos tus dispositivos y te la pide al abrirlo y después de 10 minutos sin usarlo.', 'Guardar contraseña', ''],
+    enter:   ['Diario', 'Escribí tu contraseña para entrar.', 'Entrar', isLinked() ? 'Olvidé mi contraseña' : ''],
+    code:    ['Recuperar contraseña', '', 'Cambiar contraseña', 'Volver'],
+  }[mode];
+  L('lockTitle').textContent = T[0];
+  L('lockMsg').textContent = msg || T[1];
+  L('lockGo').textContent = T[2]; L('lockGo').hidden = false;
+  L('lockAlt').textContent = T[3]; L('lockAlt').hidden = !T[3];
+  lockCode.hidden = !(mode === 'connect' || mode === 'code');
+  lockCode.placeholder = mode === 'connect' ? 'Código de conexión' : 'Código del mail (ej. AB12-CD34)';
+  lockPw.hidden = mode === 'connect';
+  lockPw.placeholder = mode === 'code' ? 'Contraseña nueva' : 'Contraseña';
+  lockPw.autocomplete = mode === 'enter' ? 'current-password' : 'new-password';
+  lockPw2.hidden = !(mode === 'create' || mode === 'code');
+  L('lockBio').hidden = !(mode === 'enter' && cfg && cfg.bio);
+  lockPw.value = lockPw2.value = lockCode.value = '';
   lockEl.classList.remove('off');
-  setTimeout(()=> lockPw.focus(), 50);
+  setTimeout(()=> (mode === 'connect' || mode === 'code' ? lockCode : lockPw).focus(), 50);
 }
-function hideLock(){ try{ localStorage.setItem(LAST_KEY, String(Date.now())); }catch(_){} lastWrite = Date.now(); unlocked = true; lockEl.classList.add('off'); renderBioItem(); }
-document.getElementById('lockForm').addEventListener('submit', async ev=>{
-  ev.preventDefault();
-  const pw = lockPw.value; const cfg = lockCfg();
-  if(!cfg){
-    if(pw.length < 4){ lockErr.textContent = 'Usá al menos 4 caracteres.'; return; }
-    if(pw !== lockPw2.value){ lockErr.textContent = 'Las dos contraseñas no coinciden.'; return; }
-    const salt = rnd(16), iter = 200000;
-    lsSet(LOCK_KEY, { salt: b64(salt), iter, hash: await pwHash(pw, salt, iter) });
-    hideLock();
-    if(await bioAvailable()) setStatus('Contraseña guardada ✓ · En ⚙️ podés activar la huella o la cara.', 'ok');
+function busy(on, txt){ L('lockGo').disabled = on; if(txt) L('lockGo').textContent = txt; }
+
+async function serverPw(){ try{ return (await sheetApi('pwGet')).pw; }catch(_){ return undefined; } }   // undefined = sin conexión
+
+async function finishUnlock(){
+  unlocked = true;
+  try{ localStorage.setItem(LAST_KEY, String(Date.now())); }catch(_){}
+  lastWrite = Date.now();
+  if(KEY_RAW){ try{ sessionStorage.setItem(SESS_KEY, b64(KEY_RAW)); }catch(_){} }
+  lockEl.classList.add('off');
+  renderBioItem();
+  if(!started){ started = true; await init(); await saveStoredEntries(); setPending(pendingMem.slice()); }   // re-guarda cifrado lo que hubiera sin cifrar
+  await reconcilePw();
+}
+
+/* la contraseña de la hoja manda: si cambió en otro dispositivo, este se pone al día */
+async function reconcilePw(){
+  if(!isLinked() || !navigator.onLine) return;
+  const cfg = lockCfg(); if(!cfg) return;
+  const sp = await serverPw();
+  if(sp === undefined) return;
+  if(!sp){
+    try{ const r = await sheetApi('pwSet', { pw:{ salt:cfg.salt, iter:cfg.iter, hash:cfg.hash } }); saveLockCfg(Object.assign(cfg, { ver:r.pw.ver })); }catch(_){}
     return;
   }
-  if(await pwHash(pw, unb64(cfg.salt), cfg.iter) === cfg.hash) hideLock();
-  else { lockErr.textContent = 'Contraseña incorrecta.'; lockPw.select(); }
-});
-lockBio.addEventListener('click', async ()=>{
-  const cfg = lockCfg(); if(!cfg || !cfg.cred) return;
+  if(sp.hash !== cfg.hash){
+    await syncPendingToSheet();                         // primero sube lo que falte
+    if(getPending().length) return;                     // sin poder subir: no se borra nada
+    await wipeLocalData();
+    saveLockCfg({ salt:sp.salt, iter:sp.iter, hash:sp.hash, ver:sp.ver });
+    alert('Tu contraseña cambió en otro dispositivo. Entrá con la contraseña nueva.');
+    relock();
+  }
+}
+
+L('lockForm').addEventListener('submit', async ev=>{
+  ev.preventDefault(); lockErr.textContent = '';
+  const pw = lockPw.value;
   try{
-    await navigator.credentials.get({ publicKey:{ challenge: rnd(32), allowCredentials:[{ type:'public-key', id: unb64(cfg.cred) }], userVerification:'required', timeout:60000 } });
-    hideLock();
-  }catch(_){ lockErr.textContent = 'No se pudo con la huella. Probá con la contraseña.'; }
+    if(lockMode === 'connect'){
+      const raw = lockCode.value.trim(); let c = null;
+      try{ const j = JSON.parse(decodeURIComponent(escape(atob(raw)))); if(j.u && j.t) c = { url:j.u, token:j.t }; }catch(_){}
+      if(!c){ lockErr.textContent = 'Ese código no es válido. Copialo de nuevo desde el otro dispositivo.'; return; }
+      busy(true, 'Conectando…');
+      const r = await sheetApi('setup', {}, c);
+      lsSet(SHEET_CFG_KEY, { url:c.url, token:r.token, sheetUrl:r.sheetUrl });
+      const sp = await serverPw();
+      if(sp){ modeCfg = sp; setMode('enter', 'Conectado ✓ Escribí la contraseña que usás en tus otros dispositivos.'); }
+      else setMode('create');
+      return;
+    }
+    if(lockMode === 'create' || lockMode === 'code'){
+      if(pw.length < 6){ lockErr.textContent = 'Usá al menos 6 caracteres.'; return; }
+      if(pw !== lockPw2.value){ lockErr.textContent = 'Las dos contraseñas no coinciden.'; return; }
+      busy(true, 'Guardando…');
+      const salt = b64(rnd(16)), iter = 300000;
+      const d = await derive(pw, salt, iter);
+      let ver = 0;
+      if(isLinked()){
+        const extra = { pw:{ salt, iter, hash:d.hash } };
+        if(lockMode === 'code') extra.code = lockCode.value.replace(/[^a-z0-9]/gi,'').toUpperCase();
+        try{ ver = (await sheetApi('pwSet', extra)).pw.ver; }
+        catch(err){
+          if(lockMode === 'code'){ lockErr.textContent = err.message; return; }
+          if(!navigator.onLine){ /* se sube después */ }
+          else { const sp = await serverPw(); if(sp){ modeCfg = sp; setMode('enter', 'Ya tenés una contraseña en tus otros dispositivos: escribí esa.'); return; } }
+        }
+      }
+      if(lockMode === 'code') await wipeLocalData();     // lo de este dispositivo se vuelve a bajar de la hoja
+      saveLockCfg({ salt, iter, hash:d.hash, ver });
+      await useKeyRaw(d.raw);
+      await finishUnlock();
+      if(lockMode !== 'code' && await bioAvailable()) setStatus('Contraseña guardada ✓ · En ⚙️ podés activar la huella o la cara.', 'ok');
+      return;
+    }
+    if(lockMode === 'enter'){
+      const cfg = modeCfg || lockCfg();
+      busy(true, 'Abriendo…');
+      const d = await derive(pw, cfg.salt, cfg.iter);
+      if(d.hash !== cfg.hash){ lockErr.textContent = 'Contraseña incorrecta.'; lockPw.select(); return; }
+      if(modeCfg){ saveLockCfg({ salt:cfg.salt, iter:cfg.iter, hash:cfg.hash, ver:cfg.ver }); modeCfg = null; }
+      await useKeyRaw(d.raw);
+      try{ await encGet(STORAGE_KEY); }catch(_){ await wipeLocalData(); }   // copia ilegible: se vuelve a bajar
+      await finishUnlock();
+    }
+  }catch(err){
+    console.error(err);
+    lockErr.textContent = navigator.onLine ? ('No se pudo: ' + err.message) : 'Sin internet. Probá de nuevo cuando tengas conexión.';
+  }finally{ busy(false); if(!unlocked) L('lockGo').textContent = { connect:'Conectar', create:'Guardar contraseña', enter:'Entrar', code:'Cambiar contraseña' }[lockMode]; }
+});
+
+L('lockAlt').addEventListener('click', async ()=>{
+  lockErr.textContent = '';
+  if(lockMode === 'connect'){ setMode('create'); return; }
+  if(lockMode === 'code'){ setMode('enter'); return; }
+  if(lockMode === 'enter'){
+    if(!confirm('Te vamos a mandar un código a tu Gmail para elegir una contraseña nueva. La contraseña nueva va a valer en todos tus dispositivos.\n\nLo que escribiste sin internet y todavía no se subió a la hoja se pierde en este dispositivo. ¿Seguimos?')) return;
+    try{
+      const r = await sheetApi('recover');
+      setMode('code', `Te mandamos un código a ${r.to}. Vence en 15 minutos. Escribilo y elegí una contraseña nueva.`);
+    }catch(err){ lockErr.textContent = navigator.onLine ? err.message : 'Necesitás internet para recibir el código.'; }
+  }
+});
+
+/* --- huella o cara (se activa en cada dispositivo) --- */
+const PRF_IN = s => ({ prf:{ eval:{ first: unb64(s) } } });
+async function prfKey(out){ return crypto.subtle.importKey('raw', out, 'AES-GCM', false, ['encrypt','decrypt']); }
+L('lockBio').addEventListener('click', async ()=>{
+  const cfg = lockCfg(); const bio = cfg && cfg.bio; if(!bio) return;
+  try{
+    const a = await navigator.credentials.get({ publicKey:{ challenge: rnd(32), allowCredentials:[{ type:'public-key', id: unb64(bio.cred) }],
+      userVerification:'required', timeout:60000, extensions: bio.mode === 'prf' ? PRF_IN(bio.prfSalt) : {} } });
+    if(bio.mode === 'prf'){
+      const out = a.getClientExtensionResults().prf.results.first;
+      const raw = new Uint8Array(await crypto.subtle.decrypt({ name:'AES-GCM', iv: unb64(bio.iv) }, await prfKey(out), unb64(bio.wrapped)));
+      await useKeyRaw(raw);
+    } else {
+      DATA_KEY = await idbGet('bio_key'); KEY_RAW = null;
+      if(!DATA_KEY) throw new Error('sin llave');
+    }
+    await finishUnlock();
+  }catch(err){ console.error(err); lockErr.textContent = 'No se pudo con la huella. Probá con la contraseña.'; }
 });
 async function renderBioItem(){
-  const cfg = lockCfg(); const btn = document.getElementById('cfgBio');
+  const cfg = lockCfg(); const btn = L('cfgBio');
   btn.hidden = !(cfg && await bioAvailable());
-  if(!btn.hidden) btn.querySelector('span:last-child').firstChild.textContent = cfg.cred ? 'Dejar de usar huella o cara' : 'Usar huella o cara';
+  if(!btn.hidden) btn.querySelector('span:last-child').firstChild.textContent = cfg.bio ? 'Dejar de usar huella o cara' : 'Usar huella o cara';
 }
-document.getElementById('cfgBio').addEventListener('click', async ()=>{
+L('cfgBio').addEventListener('click', async ()=>{
   closeCfg();
   const cfg = lockCfg(); if(!cfg) return;
-  if(cfg.cred){ delete cfg.cred; lsSet(LOCK_KEY, cfg); setStatus('Listo: ahora entrás solo con la contraseña.', 'ok'); renderBioItem(); return; }
+  if(cfg.bio){ delete cfg.bio; saveLockCfg(cfg); await idbSet('bio_key', null); setStatus('Listo: ahora entrás solo con la contraseña.', 'ok'); renderBioItem(); return; }
+  if(!KEY_RAW){ setStatus('Para activar la huella, entrá una vez con tu contraseña.', 'err'); return; }
   try{
+    const prfSalt = b64(rnd(32));
     const c = await navigator.credentials.create({ publicKey:{
       challenge: rnd(32), rp:{ name:'Diario' },
       user:{ id: rnd(16), name:'diario', displayName:'Diario' },
       pubKeyCredParams:[{ type:'public-key', alg:-7 }, { type:'public-key', alg:-257 }],
       authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required', residentKey:'discouraged' },
-      timeout:60000 } });
-    cfg.cred = b64(c.rawId); lsSet(LOCK_KEY, cfg);
+      timeout:60000, extensions:{ prf:{} } } });
+    const cred = b64(c.rawId);
+    let bio = null;
+    if(c.getClientExtensionResults().prf && c.getClientExtensionResults().prf.enabled){
+      try{
+        const a = await navigator.credentials.get({ publicKey:{ challenge: rnd(32), allowCredentials:[{ type:'public-key', id: c.rawId }],
+          userVerification:'required', timeout:60000, extensions: PRF_IN(prfSalt) } });
+        const out = a.getClientExtensionResults().prf.results.first;
+        const iv = rnd(12);
+        const wrapped = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, await prfKey(out), KEY_RAW);
+        bio = { cred, mode:'prf', prfSalt, iv: b64(iv), wrapped: b64(wrapped) };
+      }catch(_){ bio = null; }
+    }
+    if(!bio){ await idbSet('bio_key', DATA_KEY); bio = { cred, mode:'gate' }; }
+    cfg.bio = bio; saveLockCfg(cfg);
     setStatus('Huella o cara activada en este dispositivo ✓', 'ok');
-  }catch(_){ setStatus('No se pudo activar la huella en este dispositivo.', 'err'); }
+  }catch(err){ console.error(err); setStatus('No se pudo activar la huella en este dispositivo.', 'err'); }
   renderBioItem();
 });
-document.getElementById('cfgLockNow').addEventListener('click', ()=> showLock());
+
+L('cfgLockNow').addEventListener('click', relock);
 ['pointerdown','keydown','scroll','input','touchstart'].forEach(t=> document.addEventListener(t, ()=> markActive(), { passive:true, capture:true }));
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden) markActive(true);
-  else if(unlocked && idleTooLong()) showLock();
+  else if(unlocked && idleTooLong()) relock();
 });
-setInterval(()=>{ if(unlocked && !document.hidden && idleTooLong()) showLock(); }, 30000);
-if(lockCfg() && !idleTooLong()) hideLock(); else showLock();
+setInterval(()=>{ if(unlocked && !document.hidden && idleTooLong()) relock(); }, 30000);
+
+async function startLock(){
+  const cfg = lockCfg();
+  const sk = (()=>{ try{ return sessionStorage.getItem(SESS_KEY); }catch(_){ return null; } })();
+  if(cfg && sk && !idleTooLong()){
+    try{ await useKeyRaw(unb64(sk)); await encGet(STORAGE_KEY); await finishUnlock(); return; }catch(_){ try{ sessionStorage.removeItem(SESS_KEY); }catch(__){} }
+  }
+  if(cfg){ setMode('enter'); return; }
+  if(isLinked() && navigator.onLine){
+    const sp = await serverPw();
+    if(sp){ modeCfg = sp; setMode('enter', 'Escribí la contraseña que usás en tus otros dispositivos.'); return; }
+    setMode('create'); return;
+  }
+  setMode(isLinked() ? 'create' : 'connect');
+}
 
 async function init(){
   const stored = await loadStoredEntries();
   ENTRIES = stored || [];
-  pendingMem = (await idbGet(PENDING_KEY)) || [];
+  pendingMem = (await encGet(PENDING_KEY)) || [];
   ENTRIES.sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 
   buildIndices();
@@ -2535,7 +2700,7 @@ async function init(){
 if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
-init();
+startLock();
 </script>
 </body>
 </html>
