@@ -664,6 +664,16 @@ footer.credit{
 .dev-qr img,.dev-qr canvas{ background:#fff; padding:10px; border-radius:12px; width:210px !important; height:210px !important; }
 #devCode{ width:100%; box-sizing:border-box; padding:10px; border-radius:10px; background:var(--bg-deep); border:1px solid var(--line); color:var(--text-light); font:12px 'JetBrains Mono',monospace; resize:none; word-break:break-all; }
 #devCode:placeholder-shown,#devCode:empty{ display:none; }
+.pw-rules{ list-style:none; margin:0; padding:0; text-align:left; font-size:13px; color:var(--text-mute,#a9a3c4); display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; }
+.pw-rules li::before{ content:'○ '; }
+.pw-rules li.ok{ color:var(--mood-bien,#7ed6a5); }
+.pw-rules li.ok::before{ content:'✓ '; }
+.pw-rules li:last-child{ grid-column:1 / -1; }
+.scan-box video{ width:100%; max-height:300px; border-radius:14px; background:#000; object-fit:cover; }
+.scan-box p{ margin-top:8px !important; }
+.dev-qr-app{ display:flex; gap:14px; align-items:center; margin:0 0 14px; }
+.dev-qr-app img,.dev-qr-app canvas{ background:#fff; padding:8px; border-radius:10px; width:120px !important; height:120px !important; }
+.dev-qr-app:empty{ display:none; }
 .lock-link{ background:none; border:0; color:var(--accent); font:500 13px 'Inter',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
 </style>
 </head>
@@ -677,6 +687,12 @@ footer.credit{
     <input type="text" id="lockCode" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" hidden>
     <input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden>
     <input type="password" id="lockPw2" placeholder="Repetí la contraseña" autocomplete="new-password" hidden>
+    <ul class="pw-rules" id="pwRules" hidden>
+      <li data-r="len">Al menos 6 caracteres</li><li data-r="up">Una mayúscula</li><li data-r="lo">Una minúscula</li><li data-r="num">Un número</li><li data-r="sym">Un símbolo (por ej. ! ? # $ . -)</li>
+    </ul>
+    <button type="button" class="lock-link" id="lockShow" hidden>Mostrar contraseña</button>
+    <div class="scan-box" id="scanBox" hidden><video id="scanVideo" playsinline muted></video><p>Apuntá la cámara al QR que aparece en tu otro dispositivo (⚙️ → Dispositivos conectados).</p></div>
+    <button type="button" class="btn-g" id="lockScan" hidden>📷 Escanear QR</button>
     <button type="submit" class="btn-p" id="lockGo" hidden>Entrar</button>
     <button type="button" class="btn-g" id="lockBio" hidden>Entrar con huella o cara</button>
     <button type="button" class="lock-link" id="lockAlt" hidden></button>
@@ -707,7 +723,9 @@ footer.credit{
     <div id="devList" class="dev-list">Cargando…</div>
     <div class="dev-pair">
       <h3>Conectar otro dispositivo</h3>
-      <p class="dev-hint">En el otro dispositivo abrí <b>mfquiroga.github.io/diario</b>. Después <b>escaneá este QR con la cámara</b> o pegá el código. Sirve una sola vez y vence en 15 minutos.</p>
+      <p class="dev-hint"><b>Paso 1 · Instalá la app.</b> Escaneá este QR con la cámara del otro dispositivo: abre la página del diario sin escribir nada. Instalala desde ahí.</p>
+      <div class="dev-qr-app" id="devQrApp"></div>
+      <p class="dev-hint"><b>Paso 2 · Conectala.</b> Tocá «Generar código». En la app recién instalada tocá <b>📷 Escanear QR</b> y apuntá a este QR, o pegá el código. Sirve una sola vez y vence en 15 minutos.</p>
       <div id="devQr" class="dev-qr"></div>
       <textarea id="devCode" readonly rows="3"></textarea>
       <div class="actions">
@@ -2496,7 +2514,8 @@ function setMode(mode, msg){
   lockMode = mode; lockErr.textContent = '';
   const cfg = lockCfg();
   const T = {
-    connect: ['Bienvenida', 'Si ya usás el diario en otro dispositivo, pegá el código de conexión (en el otro: ⚙️ → Conectar otro dispositivo).', 'Conectar', 'Usar solo en este dispositivo'],
+    install: ['Instalá tu diario', 'Primero instalalo en este dispositivo. Después abrilo desde el ícono del corazón y conectalo ahí.', 'Instalar la app', 'Seguir sin instalar'],
+    connect: ['Bienvenida', 'Si ya usás el diario en otro dispositivo, escaneá el QR o pegá el código (en el otro: ⚙️ → Dispositivos conectados).', 'Conectar', 'Usar solo en este dispositivo'],
     create:  ['Protegé tu diario', 'Elegí una contraseña. Va a ser la misma en todos tus dispositivos y te la pide al abrirlo y después de 10 minutos sin usarlo.', 'Guardar contraseña', ''],
     enter:   ['Diario', 'Escribí tu contraseña para entrar.', 'Entrar', isLinked() ? 'Olvidé mi contraseña' : ''],
     code:    ['Recuperar contraseña', '', 'Cambiar contraseña', 'Volver'],
@@ -2507,15 +2526,29 @@ function setMode(mode, msg){
   L('lockAlt').textContent = T[3]; L('lockAlt').hidden = !T[3];
   lockCode.hidden = !(mode === 'connect' || mode === 'code');
   lockCode.placeholder = mode === 'connect' ? 'Código de conexión' : 'Código del mail (ej. AB12-CD34)';
-  lockPw.hidden = mode === 'connect';
+  lockPw.hidden = mode === 'connect' || mode === 'install';
+  lockCode.hidden = lockCode.hidden || mode === 'install';
+  L('pwRules').hidden = !(mode === 'create' || mode === 'code'); if(!L('pwRules').hidden) renderPwRules();
+  L('lockShow').hidden = lockPw.hidden; lockPw.type = lockPw2.type = 'password'; L('lockShow').textContent = 'Mostrar contraseña';
+  L('lockScan').hidden = mode !== 'connect'; stopScan();
+  renderInstall(); if(mode === 'install') L('lockInstall').hidden = true;
   lockPw.placeholder = mode === 'code' ? 'Contraseña nueva' : 'Contraseña';
   lockPw.autocomplete = mode === 'enter' ? 'current-password' : 'new-password';
   lockPw2.hidden = !(mode === 'create' || mode === 'code');
   L('lockBio').hidden = !(mode === 'enter' && cfg && cfg.bio);
   lockPw.value = lockPw2.value = lockCode.value = '';
   lockEl.classList.remove('off');
-  setTimeout(()=> (mode === 'connect' || mode === 'code' ? lockCode : lockPw).focus(), 50);
+  if(mode !== 'install') setTimeout(()=> (mode === 'connect' || mode === 'code' ? lockCode : lockPw).focus(), 50);
 }
+const PW_RULES = { len: s => s.length >= 6, up: s => /\p{Lu}/u.test(s), lo: s => /\p{Ll}/u.test(s), num: s => /\d/.test(s), sym: s => /[^\p{L}\d\s]/u.test(s) };
+function pwRulesOk(s){ return Object.values(PW_RULES).every(f => f(s)); }
+function renderPwRules(){ L('pwRules').querySelectorAll('li').forEach(li => li.classList.toggle('ok', PW_RULES[li.dataset.r](lockPw.value))); }
+lockPw.addEventListener('input', ()=>{ if(!L('pwRules').hidden) renderPwRules(); });
+L('lockShow').addEventListener('click', ()=>{
+  const show = lockPw.type === 'password';
+  lockPw.type = lockPw2.type = show ? 'text' : 'password';
+  L('lockShow').textContent = show ? 'Ocultar contraseña' : 'Mostrar contraseña';
+});
 function busy(on, txt){ L('lockGo').disabled = on; if(txt) L('lockGo').textContent = txt; }
 
 async function serverPw(){ try{ return (await sheetApi('pwGet')).pw; }catch(_){ return undefined; } }   // undefined = sin conexión
@@ -2555,6 +2588,7 @@ L('lockForm').addEventListener('submit', async ev=>{
   ev.preventDefault(); lockErr.textContent = '';
   const pw = lockPw.value;
   try{
+    if(lockMode === 'install'){ await doInstall(); return; }
     if(lockMode === 'connect'){
       const c = parseConnCode(lockCode.value);
       if(!c){ lockErr.textContent = 'Ese código no es válido. Generá uno nuevo en tu otro dispositivo (⚙️ → Dispositivos conectados).'; return; }
@@ -2567,7 +2601,7 @@ L('lockForm').addEventListener('submit', async ev=>{
       return;
     }
     if(lockMode === 'create' || lockMode === 'code'){
-      if(pw.length < 6){ lockErr.textContent = 'Usá al menos 6 caracteres.'; return; }
+      if(!pwRulesOk(pw)){ renderPwRules(); lockErr.textContent = 'La contraseña tiene que cumplir todo lo de la lista.'; return; }
       if(pw !== lockPw2.value){ lockErr.textContent = 'Las dos contraseñas no coinciden.'; return; }
       busy(true, 'Guardando…');
       const salt = b64(rnd(16)), iter = 300000;
@@ -2603,11 +2637,12 @@ L('lockForm').addEventListener('submit', async ev=>{
   }catch(err){
     console.error(err);
     lockErr.textContent = navigator.onLine ? ('No se pudo: ' + err.message) : 'Sin internet. Probá de nuevo cuando tengas conexión.';
-  }finally{ busy(false); if(!unlocked) L('lockGo').textContent = { connect:'Conectar', create:'Guardar contraseña', enter:'Entrar', code:'Cambiar contraseña' }[lockMode]; }
+  }finally{ busy(false); if(!unlocked) L('lockGo').textContent = { install:'Instalar la app', connect:'Conectar', create:'Guardar contraseña', enter:'Entrar', code:'Cambiar contraseña' }[lockMode]; }
 });
 
 L('lockAlt').addEventListener('click', async ()=>{
   lockErr.textContent = '';
+  if(lockMode === 'install'){ setMode('connect'); return; }
   if(lockMode === 'connect'){ setMode('create'); return; }
   if(lockMode === 'code'){ setMode('enter'); return; }
   if(lockMode === 'enter'){
@@ -2725,7 +2760,13 @@ L('devList').addEventListener('click', async ev=>{
   try{ await sheetApi('devRemove', { id: b.dataset.id }); if(me) await handleRevoked(); renderDevices(); }
   catch(err){ b.disabled = false; alert('No se pudo: ' + err.message); }
 });
+const APP_URL = 'https://mfquiroga.github.io/diario/';
 let qrLib = null;
+async function drawQr(el, text, size, after){
+  el.innerHTML = '';
+  try{ await loadQr(); new QRCode(el, { text, width:size, height:size, correctLevel: QRCode.CorrectLevel.L }); if(after) el.insertAdjacentHTML('beforeend', after); }
+  catch(_){ el.innerHTML = ''; }
+}
 function loadQr(){
   if(window.QRCode) return Promise.resolve();
   return qrLib || (qrLib = new Promise((ok, ko)=>{ const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }));
@@ -2739,8 +2780,7 @@ L('devNew').addEventListener('click', async ()=>{
     L('devExp').textContent = 'Vence a las ' + new Date(r.exp).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
     L('devShare').hidden = !navigator.share;
     L('devQr').innerHTML = '';
-    try{ await loadQr(); new QRCode(L('devQr'), { text: location.origin + location.pathname + '#c=' + encodeURIComponent(code), width: 420, height: 420, correctLevel: QRCode.CorrectLevel.L }); }
-    catch(_){ L('devQr').innerHTML = ''; }
+    await drawQr(L('devQr'), APP_URL + '#c=' + encodeURIComponent(code), 420);
     btn.textContent = 'Generar otro';
   }catch(err){ alert('No se pudo generar el código: ' + err.message); btn.textContent = 'Generar código'; }
   finally{ btn.disabled = false; }
@@ -2754,6 +2794,7 @@ L('devShare').addEventListener('click', ()=>{ const v = L('devCode').value; if(v
 function openDevices(){
   L('devCode').value = ''; L('devQr').innerHTML = ''; L('devExp').textContent = ''; L('devNew').textContent = 'Generar código';
   L('devBg').classList.add('open'); renderDevices();
+  drawQr(L('devQrApp'), APP_URL, 240, '<p class="dev-hint" style="margin:0">Link de la app:<br><b>mfquiroga.github.io/diario</b></p>');
 }
 L('devClose').addEventListener('click', ()=> L('devBg').classList.remove('open'));
 L('devBg').addEventListener('click', ev=>{ if(ev.target === L('devBg')) L('devBg').classList.remove('open'); });
@@ -2785,6 +2826,44 @@ L('lockInstall').addEventListener('click', doInstall);
 L('cfgInstall').addEventListener('click', doInstall);
 renderInstall();
 
+let scanStream = null, scanTimer = null;
+function stopScan(){
+  if(scanTimer){ clearTimeout(scanTimer); scanTimer = null; }
+  if(scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+  L('scanBox').hidden = true; L('lockScan').textContent = '📷 Escanear QR';
+}
+function loadJsQr(){
+  if(window.jsQR) return Promise.resolve();
+  return new Promise((ok, ko)=>{ const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
+}
+L('lockScan').addEventListener('click', async ()=>{
+  if(scanStream){ stopScan(); return; }
+  lockErr.textContent = '';
+  try{
+    scanStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false });
+  }catch(_){ lockErr.textContent = 'No pude usar la cámara. Revisá el permiso o pegá el código.'; return; }
+  const v = L('scanVideo'); v.srcObject = scanStream; await v.play().catch(()=>{});
+  L('scanBox').hidden = false; L('lockScan').textContent = 'Cancelar escaneo';
+  let det = null;
+  try{ if('BarcodeDetector' in window && (await BarcodeDetector.getSupportedFormats()).includes('qr_code')) det = new BarcodeDetector({ formats:['qr_code'] }); }catch(_){}
+  if(!det){ try{ await loadJsQr(); }catch(_){ stopScan(); lockErr.textContent = 'Sin internet no puedo leer el QR. Pegá el código.'; return; } }
+  const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently:true });
+  const tick = async ()=>{
+    if(!scanStream) return;
+    let txt = null;
+    try{
+      if(v.videoWidth){
+        if(det){ const r = await det.detect(v); if(r[0]) txt = r[0].rawValue; }
+        else { cv.width = v.videoWidth; cv.height = v.videoHeight; cx.drawImage(v, 0, 0); const img = cx.getImageData(0, 0, cv.width, cv.height); const r = jsQR(img.data, img.width, img.height); if(r) txt = r.data; }
+      }
+    }catch(_){}
+    if(txt && parseConnCode(txt)){ stopScan(); lockCode.value = txt; L('lockGo').click(); return; }
+    if(txt && !parseConnCode(txt)){ lockErr.textContent = 'Ese QR no es un código de conexión. Usá el del Paso 2.'; }
+    scanTimer = setTimeout(tick, 250);
+  };
+  tick();
+});
+
 async function startLock(){
   const cfg = lockCfg();
   const sk = (()=>{ try{ return sessionStorage.getItem(SESS_KEY); }catch(_){ return null; } })();
@@ -2797,6 +2876,9 @@ async function startLock(){
     if(sp){ modeCfg = sp; setMode('enter', 'Escribí la contraseña que usás en tus otros dispositivos.'); return; }
     setMode('create'); return;
   }
+  const hc0 = /#c=/.test(location.hash);
+  const mobile = isIOS || /Android/.test(navigator.userAgent);
+  if(!isLinked() && mobile && !isStandalone() && !(hc0 && !isIOS)){ setMode('install'); return; }
   setMode(isLinked() ? 'create' : 'connect');
   const hc = location.hash.match(/#c=([^&]+)/);
   if(hc && lockMode === 'connect'){ lockCode.value = decodeURIComponent(hc[1]); history.replaceState(null, '', location.pathname); L('lockGo').click(); }
