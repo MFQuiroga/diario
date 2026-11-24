@@ -893,8 +893,25 @@ footer.credit{
   .composer{ padding:14px 12px; border-radius:14px; }
   .rg-met{ gap:5px; } .rg-met div{ padding:8px 4px; }
 }
-/* Cómo estuve: solo Emociones y Tendencia */
-.stats-panel [data-sec=animo]{ display:none !important; }
+/* ---------- v21 ---------- */
+#cfgBio,#cfgPw,#cfgLockNow{ display:none !important; }
+.cfg-item small{ display:block; }
+.eye{ background:none; border:0; cursor:pointer; font-size:14px; padding:0 4px; position:relative; opacity:.45; }
+.eye.on{ opacity:1; }
+.eye:not(.on)::after{ content:""; position:absolute; left:3px; right:3px; top:50%; height:2px; background:#f2a19f; transform:rotate(-40deg); }
+.stats-panel.no-tend .eye{ display:none; }
+.mood-dots{ display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; }
+.mood-dots button{ display:flex; flex-direction:column; align-items:center; gap:2px; width:62px; padding:6px 0 4px; border-radius:14px; cursor:pointer;
+  background:var(--bg-panel-2); border:2px solid transparent; color:var(--text-muted); font:500 10.5px 'Inter',sans-serif; }
+.mood-dots button span{ width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; background:var(--c); filter:saturate(.55) brightness(.8); }
+.mood-dots button.on{ border-color:var(--c); color:var(--text-light); }
+.mood-dots button.on span{ filter:none; box-shadow:0 0 0 3px rgba(255,255,255,.18); }
+.upd-t{ width:100%; border-collapse:collapse; font-size:13px; margin:8px 0; }
+.upd-t th,.upd-t td{ text-align:left; padding:5px 6px; border-bottom:1px solid var(--line); }
+.pw-row{ display:flex; gap:10px; align-items:center; padding:10px 0; font-size:14px; color:var(--text-light); }
+.pw-row small{ display:block; color:var(--text-faint); font-size:11.5px; }
+.tt td .sc2{ display:block; line-height:1.25; }
+@media (max-width:420px){ .mood-dots{ gap:4px; } .mood-dots button{ width:calc(20% - 4px); } .mood-dots button span{ width:30px; height:30px; font-size:18px; } }
 .emo-stats{ border-top:0; padding-top:4px; margin-top:6px; }
 /* tabla de la semana: celdas chicas en una sola línea, más lugar para "Lo que hice" */
 .tt td{ white-space:nowrap; }
@@ -1043,7 +1060,7 @@ footer.credit{
     </div>
     <div class="import-shell">
       <input type="file" id="importInput" accept="application/pdf,.pdf,.csv,text/csv" hidden>
-      <button class="write-btn" id="writeBtn" title="Escribir una entrada nueva">
+      <button class="write-btn" id="writeBtn" title="Abrir «Mi día» de hoy para escribir">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         Escribir
       </button>
@@ -1053,11 +1070,13 @@ footer.credit{
       </button>
       <div class="cfg-menu" id="cfgMenu" role="menu">
         <div class="cfg-state" id="cfgState"></div>
+        <button class="cfg-item" id="cfgSync" data-linked title="Subir a tu hoja lo que falta y traer lo nuevo"><span class="ic">🔄</span><span>Sincronizar ahora<small id="cfgSyncSub"></small></span></button>
         <button class="cfg-item" id="authPill" hidden><span class="ic">🔄</span><span>Sincronizar ahora<small>Hay entradas guardadas acá que todavía no subieron a tu hoja</small></span></button>
         <button class="cfg-item" id="cfgLinkSheet" title="Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado."><span class="ic">📗</span><span>Enlazar a hoja de cálculo<small>Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado.</small></span></button>
         <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Activar huella</span></button>
         <button class="cfg-item" id="cfgDevices" data-linked><span class="ic">📱</span><span>Dispositivos<small>Sumar uno o desconectar uno perdido</small></span></button>
-        <button class="cfg-item" id="cfgPw" data-linked><span class="ic">🔑</span><span>Cambiar contraseña<small>Es la misma en todos tus dispositivos</small></span></button>
+        <button class="cfg-item" id="cfgPass" data-linked title="Huella, cambiar contraseña, pedirla o no en este dispositivo y bloquear"><span class="ic">🔑</span><span>Contraseña<small>Huella · cambiar · pedirla al abrir · bloquear</small></span></button>
+        <button class="cfg-item" id="cfgPw" data-linked><span class="ic">🔑</span><span>Cambiar contraseña</span></button>
         <button class="cfg-item" id="cfgLockNow" data-linked><span class="ic">🔒</span><span>Bloquear</span></button>
         <button class="cfg-item" id="cfgInstall" hidden><span class="ic">📲</span><span>Instalar app</span></button>
         <div class="cfg-sep" data-linked></div>
@@ -1065,9 +1084,9 @@ footer.credit{
         <button class="cfg-item" id="cfgImport" data-linked><span class="ic">⬆️</span><span>Importar respaldo<small>PDF o CSV de MindDiary</small></span></button>
         <button class="cfg-item" id="cfgCsv" data-linked><span class="ic">⬇️</span><span>Descargar copia (CSV)</span></button>
         <div class="cfg-sep" data-linked></div>
-        <button class="cfg-item" id="cfgChangeSheet" data-linked><span class="ic">🔁</span><span>Cambiar hoja<small>La hoja que dejás no se borra: queda en tu Google Drive.</small></span></button>
-        <button class="cfg-item" id="cfgLogout" data-linked><span class="ic">🚪</span><span>Cerrar sesión<small>Borra lo guardado en este dispositivo. Tu hoja no se toca.</small></span></button>
-        <div class="cfg-ver" id="cfgVer"></div>
+        <button class="cfg-item" id="cfgChangeSheet" data-linked><span class="ic">🔁</span><span>Cambiar hoja<small>Usar otra hoja de Google. La actual no se borra.</small></span></button>
+        <button class="cfg-item" id="cfgLogout" data-linked><span class="ic">🚪</span><span>Cerrar sesión<small>Cierra la sesión en este dispositivo y borra lo guardado acá. Tus datos siguen en tu hoja de Google.</small></span></button>
+        <button class="cfg-item" id="cfgUpdate" title="Bajar la última versión de Mimo (tus datos no se tocan)"><span class="ic">⬆️</span><span>Actualizar app<small id="cfgVer"></small></span></button>
       </div>
       <div class="import-status" id="importStatus"></div>
     </div>
@@ -1130,8 +1149,9 @@ footer.credit{
       </div>
 
       <div class="stat-tg" id="statTg" role="group" aria-label="Qué mostrar">
-        <button type="button" data-t="emo"><i></i>Emociones</button>
-        <button type="button" data-t="tend"><i></i>Tendencia</button>
+        <button type="button" data-t="animo" title="Mostrar u ocultar el ánimo"><i></i>Ánimo</button>
+        <button type="button" data-t="emo" title="Mostrar u ocultar las emociones"><i></i>Emociones</button>
+        <button type="button" data-t="tend" title="Mostrar u ocultar la tendencia"><i></i>Tendencia</button>
       </div>
       <div class="period-nav" id="periodNav">
         <button id="periodPrev">
@@ -1417,7 +1437,7 @@ function selectDay(iso, jumpCalendarIfNeeded, highlightSpansByEntryIndex){
     return `
     <div class="entry-card" data-idx="${idx}" style="border-left-color:${MOOD_COLOR[e.mood]}">
       <div class="ehead">
-        <span class="mood-pill" style="background:${MOOD_COLOR[e.mood]}"><span class="sw"></span>${penPill(e)}</span>${(e.otr||[]).length ? `<span class="otr">${escapeHtml(otrStr(e.otr))}</span>` : ''}
+        <span class="mood-pill" style="background:${MOOD_COLOR[e.mood]}"><span class="sw"></span>${MOOD_EMO[e.mood]||''} ${MOOD_LABEL[e.mood]||''}</span>${emosOf(e).length ? `<span class="otr">${escapeHtml(penPill(e))}</span>` : ''}
         <span class="eact"><span class="etime">${e.time}</span><button type="button" class="ib" title="Editar este pensamiento" aria-label="Editar este pensamiento" data-pe="${iso}|${idx}">✏️</button><button type="button" class="ib" title="Borrar este pensamiento" aria-label="Borrar este pensamiento" data-pd="${iso}|${idx}">🗑️</button></span>
       </div>
       <div class="etext">${renderEntryHtml(e, spans) || '<p style="opacity:.5">(sin texto)</p>'}</div>
@@ -1697,14 +1717,17 @@ function buildHorizonSeries(type, start, end, entries){
       const iso = toISO(d);
       const es = perDay.get(iso) || [];
       let avg = null, dom=null, min=null, max=null;
+      const dayN = window.RG ? RG.dayNum(iso) : null;
+      if(!es.length && dayN != null){ avg = min = max = dayN; dom = SCORE_MOOD[Math.round(dayN)]; }
       if(es.length){
         const scores = es.map(e=>MOOD_SCORE[e.mood]);
         avg = scores.reduce((s,v)=>s+v,0)/scores.length;
         min = Math.min(...scores); max = Math.max(...scores);
         const cc={}; es.forEach(e=>cc[e.mood]=(cc[e.mood]||0)+1);
         dom = Object.entries(cc).sort((a,b)=>b[1]-a[1])[0][0];
+        if(dayN != null) avg = dayN;
       }
-      points.push({ label: String(d.getDate()), date:new Date(d), avg, min, max, dom });
+      points.push({ label: String(d.getDate()), date:new Date(d), avg, min, max, dom, iso });
       d = addDays(d,1);
     }
   } else {
@@ -1725,7 +1748,7 @@ function buildHorizonSeries(type, start, end, entries){
         const cc={}; es.forEach(e=>cc[e.mood]=(cc[e.mood]||0)+1);
         dom = Object.entries(cc).sort((a,b)=>b[1]-a[1])[0][0];
       }
-      points.push({ label: MONTH_NAMES[mo].slice(0,3)+(type==='all'?` ${String(y).slice(2)}`:''), date:new Date(cursor), avg, min, max, dom });
+      points.push({ label: MONTH_NAMES[mo].slice(0,3)+(type==='all'?` ${String(y).slice(2)}`:''), date:new Date(cursor), avg, min, max, dom, ym: y + '-' + pad2(mo + 1) });
       cursor = addMonths(cursor,1);
     }
   }
@@ -1833,10 +1856,20 @@ function renderHorizon(points){
     return `<text x="${x}" y="${H-4}" font-size="9" fill="#6f6690" text-anchor="middle" font-family="Inter,sans-serif">${escapeHtml(p.label)}</text>`;
   }).join('');
 
+  // líneas de emociones (intensidad 0-5 por día) que se encendieron con el ojito
+  let emoLines = '';
+  if(window.RG) RG.eyesOn().forEach(([k, rgb, name]) => {
+    const yE = v => padT + (1 - v / 5) * (H - padT - padB);
+    const pts = points.map((p, i) => { const v = p.iso ? RG.emoVal(p.iso, k) : (p.ym ? RG.emoMonth(p.ym, k) : null); return v == null ? null : [padL + i * xStep, yE(v), v, p.label]; });
+    const seg = pts.filter(Boolean); if(!seg.length) return;
+    emoLines += `<polyline points="${seg.map(q => q[0] + ',' + q[1]).join(' ')}" fill="none" stroke="rgb(${rgb})" stroke-width="1.8" stroke-opacity=".9"/>` +
+      seg.map(q => `<circle cx="${q[0]}" cy="${q[1]}" r="2" fill="rgb(${rgb})"><title>${escapeHtml(name)} · ${escapeHtml(q[3])}: ${(+q[2]).toFixed(1)}</title></circle>`).join('');
+  });
   wrap.innerHTML = `
   <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
     ${gridLines}
     ${bandEls}
+    ${emoLines}
     ${paths}
     ${dots}
     ${labels}
@@ -1891,14 +1924,16 @@ function applyView(start, end){
   ['animo','emo','tend'].forEach(t => sp.classList.toggle('no-' + t, statsPeriodType !== 'all' && !STAT_ON[t]));
   document.querySelectorAll('#statTg button').forEach(b => b.classList.toggle('on', !!STAT_ON[b.dataset.t]));
   if(window.RG){
-    if(statsPeriodType === 'week') RG.weekView(start, end);
+    if(statsPeriodType === 'week'){ RG.weekView(start, end);
+      const s0 = toISO(start), e0 = toISO(end), tod = toISO(new Date());
+      if(!selectedDate || selectedDate < s0 || selectedDate > e0) selectDay(tod >= s0 && tod <= e0 ? tod : e0, true); }
     document.getElementById('emoStats').innerHTML = RG.emoStats(toISO(start), toISO(end));
   }
 }
 document.getElementById('statTg').addEventListener('click', ev=>{
   const b = ev.target.closest('button[data-t]'); if(!b) return;
   STAT_ON[b.dataset.t] = STAT_ON[b.dataset.t] ? 0 : 1;
-  if(!STAT_ON.emo && !STAT_ON.tend) STAT_ON[b.dataset.t] = 1;
+  if(!STAT_ON.animo && !STAT_ON.emo && !STAT_ON.tend) STAT_ON[b.dataset.t] = 1;
   try{ localStorage.setItem('mimo_stat_on', JSON.stringify(STAT_ON)); }catch(_){}
   renderStats();
 });
@@ -2038,21 +2073,25 @@ async function idbSet(k, v){
   try{ const db = await idb_(); await new Promise((ok,ko)=>{ const t = db.transaction('kv','readwrite'); t.objectStore('kv').put(v, k); t.oncomplete=ok; t.onerror=()=>ko(t.error); }); return true; }
   catch(e){ return false; }
 }
-const plainEntry = e => ({ date:e.date, dow:e.dow, mood:e.mood, time:e.time, text:e.text, emo:e.emo || '', int:+e.int || 0, otr:e.otr || [] });
+const plainEntry = e => ({ date:e.date, dow:e.dow, mood:e.mood, time:e.time, text:e.text, emos: emosOf(e) });
 /* emociones de la terapeuta: cada pensamiento lleva una principal + intensidad 1-5 (y otras); el ánimo se calcula */
 const EMO_DEF = [["trist","😢","Tristeza"],["verg","😳","Vergüenza"],["enojo","😠","Enojo"],["miedo","😨","Miedo"],["alegria","😊","Alegría"]];
 const emoInfo = k => EMO_DEF.find(x => x[0] === k) || ["","",""];
 const noAcc = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 const emoKey = t => { const x = EMO_DEF.find(e => noAcc(e[2]) === noAcc(t)); return x ? x[0] : ''; };
-function moodOf(emo, int){ int = +int || 1; if(emo === 'alegria') return int >= 4 ? 'Increible' : 'Bien'; return int <= 2 ? 'Mas o Menos' : int === 3 ? 'Mal' : 'Horrible'; }
+/* emociones de cada pensamiento: [{n:'Miedo', v:4}, …] (en la hoja: «Miedo (4), Culpa (3)»). Convierte las versiones viejas (emo/int/otr). */
+function emosOf(e){ if(Array.isArray(e.emos)) return e.emos.filter(o => o && o.n && +o.v);
+  return [ ...(e.emo ? [{ n: emoInfo(e.emo)[2], v: +e.int || 1 }] : []), ...((e.otr || []).filter(o => o && o.n && +o.v)) ]; }
+const cleanEmo = t => String(t || '').replace(/[,()]/g, '');
+const MOOD_EMO = { "Increible":"😄", "Bien":"🙂", "Mas o Menos":"😐", "Mal":"🙁", "Horrible":"😣" };
 const parseOtr = t => { const a = []; String(t || '').replace(/([^,()]+?)\s*\((\d)\)/g, (_, n, v) => { a.push({ n:n.trim(), v:+v }); }); return a; };
 const otrStr = a => (a || []).filter(o => o.n).map(o => o.n + ' (' + o.v + ')').join(', ');
 const colL = i => { let r = ''; i++; while(i){ const m = (i - 1) % 26; r = String.fromCharCode(65 + m) + r; i = Math.floor((i - 1) / 26); } return r; };
 function colsFrom(head){
   const ix = (n, d) => { const i = head.findIndex(h => h === n || h.startsWith(n + ' ')); return i < 0 ? d : i; };
-  return { date: ix('fecha',0), dow: ix('día',1), time: ix('hora',2), mood: ix('ánimo',3), text: ix('texto',4), saved: ix('guardado',5), emo: ix('emoción',-1), int: ix('intensidad',-1), otr: ix('otras emociones',-1) };
+  return { date: ix('fecha',0), dow: ix('día',1), time: ix('hora',2), mood: ix('ánimo',3), text: ix('texto',4), saved: ix('guardado',5), emos: ix('emociones',-1) };
 }
-function penPill(e){ return e.emo ? `${emoInfo(e.emo)[1]} ${emoInfo(e.emo)[2]} ${e.int}` : MOOD_LABEL[e.mood]; }
+function penPill(e){ return emosOf(e).map(o => { const k = emoKey(o.n); return (k ? emoInfo(k)[1] + ' ' : '') + o.n + ' ' + o.v; }).join(' · '); }
 /* --- cifrado: todo lo que se guarda en el dispositivo va cifrado con tu contraseña --- */
 let DATA_KEY = null, KEY_RAW = null;
 async function encSet(k, v){
@@ -2535,7 +2574,7 @@ function addPending(list){
   list.forEach(e=>{ if(!keys.has(entryKey(e))){ p.push(e); keys.add(entryKey(e)); } });
   setPending(p); updateGearDot();
 }
-let COLS = { date:0, dow:1, time:2, mood:3, text:4, saved:5, emo:-1, int:-1, otr:-1 };
+let COLS = { date:0, dow:1, time:2, mood:3, text:4, saved:5, emos:-1 };
 const pad2 = n => String(n).padStart(2,'0');
 function nowStamp(){ const d = new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes()); }
 /* la fecha va como fecha de verdad, que se ve año-mes-día */
@@ -2555,7 +2594,7 @@ async function appendRows(list){
 function rowCells(e, stamp){
   const width = Math.max(...Object.values(COLS)) + 1, v = new Array(width).fill('');
   v[COLS.date] = e.date; v[COLS.dow] = e.dow || csvDowFor(e.date); v[COLS.time] = e.time; v[COLS.mood] = e.mood; v[COLS.text] = e.text; v[COLS.saved] = stamp;
-  if(COLS.emo >= 0){ v[COLS.emo] = e.emo ? emoInfo(e.emo)[2] : ''; v[COLS.int] = e.emo ? (+e.int || '') : ''; v[COLS.otr] = otrStr(e.otr); }
+  if(COLS.emos >= 0) v[COLS.emos] = otrStr(emosOf(e));
   return { values: v.map((x, k) => k === COLS.date ? dateCell(x) : ({ userEnteredValue:{ stringValue: String(x == null ? '' : x) } })) };
 }
 const EDQ_KEY = 'mimo_edq_v1'; let EDQ = [];
@@ -2642,13 +2681,13 @@ async function pullFromSheet(){
     const head = (rows[0] || []).map(h => String(h).trim().toLowerCase());
     const ix = (n, d) => { const i = head.findIndex(h => h === n || h.startsWith(n + ' ')); return i < 0 ? d : i; };
     COLS = colsFrom(head);
-    if(COLS.emo < 0 && rows.length){ const n = head.length;
-      await gfetch(SHEETS + ME.sheetId + '/values/' + rng('Diario!' + colL(n) + '1:' + colL(n + 2) + '1') + '?valueInputOption=RAW', { method:'PUT', body:{ values:[['Emoción','Intensidad','Otras emociones']] } });
-      COLS.emo = n; COLS.int = n + 1; COLS.otr = n + 2; }
+    if(COLS.emos < 0 && rows.length){ const n = head.length;
+      await gfetch(SHEETS + ME.sheetId + '/values/' + rng('Diario!' + colL(n) + '1') + '?valueInputOption=RAW', { method:'PUT', body:{ values:[['Emociones']] } });
+      COLS.emos = n; }
     const sheetEntries = rows.slice(1).map(row => {
       const date = normDate(row[COLS.date]);
       return { date, dow: row[COLS.dow] || (date ? csvDowFor(date) : ''), time: normTime(row[COLS.time]), mood: String(row[COLS.mood] || '').trim(), text: String(row[COLS.text] || ''),
-        emo: COLS.emo >= 0 ? emoKey(row[COLS.emo]) : '', int: COLS.int >= 0 ? (+row[COLS.int] || 0) : 0, otr: COLS.otr >= 0 ? parseOtr(row[COLS.otr]) : [] };
+        emos: COLS.emos >= 0 ? parseOtr(row[COLS.emos]) : [] };
     }).filter(e => e.date && e.text.trim());
     const gone = new Set(EDQ.map(op => entryKey(op.old)));
     for(let k = sheetEntries.length - 1; k >= 0; k--) if(gone.has(entryKey(sheetEntries[k]))) sheetEntries.splice(k, 1);
@@ -2658,7 +2697,7 @@ async function pullFromSheet(){
     const byKey = new Map(ENTRIES.map(e => [entryKey(e), e]));
     sheetEntries.forEach(e=>{ const loc = byKey.get(entryKey(e));
       if(!loc){ ENTRIES.push(e); byKey.set(entryKey(e), e); added++; }
-      else if(e.emo && (loc.emo !== e.emo || +loc.int !== e.int || otrStr(loc.otr) !== otrStr(e.otr))){ loc.emo = e.emo; loc.int = e.int; loc.otr = e.otr; added++; } });
+      else if(e.emos.length && otrStr(emosOf(loc)) !== otrStr(e.emos)){ loc.emos = e.emos; delete loc.emo; delete loc.otr; added++; } });
     const missing = ENTRIES.filter(e => !sheetKeys.has(entryKey(e)));
     if(added){
       ENTRIES.sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
@@ -2943,8 +2982,25 @@ function renderCfgMenu(){
   L('cfgState').innerHTML = !linked ? 'Tu diario todavía no tiene hoja'
     : (ME ? escH(ME.email) + '<br>' : '') + (pend ? `⏳ ${pend} sin subir a tu hoja` : '✓ Todo guardado en tu hoja' + (ME && ME.sheetTitle ? ' «' + escH(ME.sheetTitle) + '»' : ''));
   if(linked){ renderInstall(); renderBioItem(); }
+  const np = pendCount(); L('cfgSyncSub').textContent = np ? `Faltan subir: ${np}` : 'Todo subido';
   updateGearDot();
 }
+function pendCount(){ return getPending().length + EDQ.length + (window.RG ? RG.pendN() : 0); }
+L('cfgSync').addEventListener('click', async ()=>{
+  closeCfg();
+  if(!navigator.onLine){ setStatus('Sin internet: se sube solo cuando vuelva la conexión.', 'err'); return; }
+  try{ if(!tokenOk()) await askToken(ME.email); }catch(_){ setStatus('Para subir a tu hoja, aceptá el permiso de Google.', 'err'); return; }
+  needAuth(false); setStatus('Sincronizando…');
+  await pullFromSheet(); if(window.RG) await RG.flush();
+  const np = pendCount(); setStatus(np ? `Quedan ${np} sin subir. Probá de nuevo en un rato.` : 'Todo sincronizado con tu hoja ✓', np ? 'err' : 'ok'); renderCfgMenu();
+});
+L('cfgUpdate').addEventListener('click', async ()=>{
+  closeCfg(); setStatus('Buscando la versión nueva…');
+  try{ if(navigator.serviceWorker){ for(const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); }
+       if(window.caches) for(const k of await caches.keys()) await caches.delete(k); }catch(_){}
+  location.replace(location.pathname + '?v=' + Date.now());
+});
+L('cfgPass').addEventListener('click', ()=>{ closeCfg(); if(window.RG) RG.passSheet(); });
 L('gearBtn').addEventListener('click', ev=>{ ev.stopPropagation(); renderCfgMenu(); cfgMenu.classList.toggle('open'); });
 document.addEventListener('click', ev=>{ if(!cfgMenu.contains(ev.target)) closeCfg(); });
 L('cfgLinkSheet').addEventListener('click', ()=>{ closeCfg(); openSheetCard(false); });
@@ -2990,7 +3046,7 @@ function renderKind(){
 function nowHHMM(){ const d = new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 const INT_W = ["","Muy poco","Poco","Moderado","Mucho","Muchísimo"];
 function renderMoodPick(){
-  compMood = compEmo && compInt ? moodOf(compEmo, compInt) : null;
+  compMood = null;
   document.getElementById('compMoods').innerHTML = EMO_DEF.map(([k, em, l]) =>
     `<button type="button" data-e="${k}" class="${k === compEmo ? 'on' : ''}" title="${l}" aria-label="${l}"><span>${em}</span>${l}</button>`).join('');
   document.getElementById('compInt').innerHTML = compEmo ? `<span class="ql">Intensidad</span><span class="ci">${[1,2,3,4,5].map(n => `<button type="button" data-i="${n}" class="${n <= compInt ? 'on' : ''}" title="${n} · ${INT_W[n]}" aria-label="Intensidad ${n}, ${INT_W[n]}">${n}</button>`).join('')}</span><span class="qm">${compInt ? compInt + ' · ' + INT_W[compInt].toLowerCase() : ''}</span>` : '';
@@ -3015,7 +3071,7 @@ document.getElementById('compKind').addEventListener('click', ev=>{
   if(compKind === 'pen') setTimeout(()=> compText.focus(), 50);
 });
 function closeComposer(){ compBg.classList.remove('open'); }
-document.getElementById('writeBtn').addEventListener('click', openComposer);
+document.getElementById('writeBtn').addEventListener('click', ()=>{ if(window.RG) RG.open(toISO(new Date()), 'dia'); });   // Escribir = «Mi día» de hoy
 document.getElementById('compCancel').addEventListener('click', closeComposer);
 compBg.addEventListener('click', ev=>{ if(ev.target === compBg) closeComposer(); });
 document.addEventListener('keydown', ev=>{ if(ev.key === 'Escape' && compBg.classList.contains('open')) closeComposer(); });
@@ -3051,7 +3107,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '20', APP_DATE = '24/11/2026 01:30';
+const APP_VERSION = '21', APP_DATE = '24/11/2026 03:00';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3599,6 +3655,7 @@ function fromRow(r){const o=blank();KEYS.forEach((k,i)=>{let v=r[i];if(v==null)v
  if(YN.includes(k)){o[k]=ynv(v);return}
  if(NUM.includes(k)){o[k]=+numv(v)||0;return}
  if(k==="sueno"||k==="agua"){o[k]=numv(v);return}
+ if(k==="animo"){const n=MN(v);o.animo=n==null?"":n;return}
  o[k]=String(v)});
  (CFG.extra||[]).forEach(x=>{const v=r[x.col];o[x.k]=x.t==="yn"?ynv(v):numv(v)});return o}
 function toRow(o,f){const t=new Date(),row=KEYS.map(k=>{
@@ -3658,20 +3715,50 @@ async function flush(){if(cfgDirty)await pushCfg();
  finally{flushing=false}}
 function touch(){if(!day)return;d.fecha=day;REG[day]=JSON.parse(JSON.stringify(d));if(!PEND.includes(day))PEND.push(day);save();clearTimeout(tmr);tmr=setTimeout(flush,2500)}
 
-function dayMood(k){const es=byDate.get(k);if(es&&es.length)return SCORE_MOOD[Math.round(es.reduce((s,e)=>s+(MOOD_SCORE[e.mood]||3),0)/es.length)];return REG[k]&&REG[k].animo||""}
+/* ánimo del día: número exacto 1-5 (Horrible 1 … Increíble 5), puede ser x.5 */
+function MN(v){if(v===""||v==null)return null;if(typeof v==="number")return v>=1&&v<=5?v:null;const t=String(v).trim();if(MOOD_SCORE[t])return MOOD_SCORE[t];const n=+t.replace(",",".");return n>=1&&n<=5?n:null}
+const hx=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function mColor(v){v=MN(v);if(v==null)return "";const lo=Math.floor(v),hi=Math.ceil(v),a=hx(MOOD_HEX[SCORE_MOOD[lo]]),b=hx(MOOD_HEX[SCORE_MOOD[hi]]);return "rgb("+a.map((x,i)=>Math.round(x+(b[i]-x)*(v-lo))).join(",")+")"}
+function mText(v){v=MN(v);if(v==null)return "";const lo=Math.floor(v),hi=Math.ceil(v);return lo===hi?MOOD_LABEL[SCORE_MOOD[lo]]:"Entre "+MOOD_LABEL[SCORE_MOOD[hi]]+" y "+MOOD_LABEL[SCORE_MOOD[lo]]}
+const dayNum=k=>REG[k]?MN(REG[k].animo):null;
+function dayMood(k){const n=dayNum(k);if(n!=null)return SCORE_MOOD[Math.round(n)];const es=byDate.get(k);if(es&&es.length)return SCORE_MOOD[Math.round(es.reduce((s,e)=>s+(MOOD_SCORE[e.mood]||3),0)/es.length)];return ""}
+function dayColor(k){const n=dayNum(k);if(n!=null)return mColor(n);const m=dayMood(k);return m?MOOD_HEX[m]:""}
+/* resumen automático: ánimo = (más alto + más bajo)/2 de los pensamientos; emociones = lo más alto. Lo tocado a mano (CFG.man[fecha]) no se recalcula solo. */
+const AUTOK=["animo","trist","verg","enojo","miedo","alegria","otras"];
+function autoOf(k){const ps=byDate.get(k)||[];if(!ps.length)return null;const sc=ps.map(e=>MOOD_SCORE[e.mood]).filter(Boolean);
+ const a={animo:sc.length?(Math.max(...sc)+Math.min(...sc))/2:"",otras:[]};EMOS.forEach(([e])=>a[e]=0);
+ ps.forEach(e=>emosOf(e).forEach(o=>{const q=emoKey(o.n);if(q)a[q]=Math.max(a[q],+o.v||0);else{const x=a.otras.find(y=>y.n.toLowerCase()===o.n.toLowerCase());if(x)x.v=Math.max(x.v,+o.v);else a.otras.push({n:o.n,v:+o.v})}}));return a}
+function manOf(k){CFG.man=CFG.man||{};if(CFG.man[k])return Object.assign({},CFG.man[k]);const x=REG[k],m={};
+ if(x){if(MN(x.animo)!=null)m.animo=1;EMOS.forEach(([e])=>{if(+x[e])m[e]=1});if((x.otras||[]).some(o=>o.n))m.otras=1}return m}
+const fv=(x,f)=>f==="otras"?otrStr(x.otras):f==="animo"?String(MN(x.animo)??""):String(+x[f]||0);
+let updA=null;
+function autoDay(k,ask){const a=autoOf(k);if(!a)return;const x=REG[k]?JSON.parse(JSON.stringify(REG[k])):blank();x.habs=x.habs||[];x.otras=x.otras||[];
+ const m=manOf(k),diff=[];let ch=!REG[k];
+ AUTOK.forEach(f=>{if(fv(x,f)===fv(a,f))return;if(m[f])diff.push(f);else{x[f]=f==="otras"?a.otras:a[f];ch=true}});
+ const rec=!(CFG.man&&CFG.man[k]);CFG.man[k]=m;if(rec){cfgDirty=true}
+ if(ch){x.fecha=k;REG[k]=x;if(!PEND.includes(k))PEND.push(k)}
+ if(ch||rec){save();clearTimeout(tmr);tmr=setTimeout(flush,1500)}
+ if(d&&day===k&&ch)d=JSON.parse(JSON.stringify(REG[k]));
+ if(diff.length&&ask){updA={k,a,diff};askUpd()}}
+function markMan(f){if(!day)return;const m=manOf(day);m[f]=1;CFG.man[day]=m;cfgDirty=true}
+const showF=(x,f)=>f==="animo"?(mText(x.animo)||"–"):f==="otras"?(otrStr(x.otras)||"–"):String(+x[f]||0);
+const FN={animo:"Ánimo del día",otras:"Otras emociones"};EMOS.forEach(e=>FN[e[0]]=e[1]+" "+e[2]);
+function askUpd(){const{k,a,diff}=updA,x=REG[k];
+ sheet("¿Actualizo el resumen del día?",`<p class="hint2">Ya habías cambiado a mano el resumen de este día. Con tus pensamientos quedaría así:</p><table class="upd-t"><tr><th></th><th>Ahora</th><th>Quedaría</th></tr>${diff.map(f=>`<tr><td>${FN[f]}</td><td>${esc(showF(x,f))}</td><td><b>${esc(showF(a,f))}</b></td></tr>`).join("")}</table><div class="actions"><button type="button" class="btn-g" data-skx="1">Dejar como está</button><button type="button" class="btn-p" id="updOk">Actualizar</button></div>`,fmt(k))}
 
 /* --- controles: siempre a la izquierda, lo que significa a la derecha --- */
 const dots=(k,v,attr,label,from)=>`<div class="ci">${[0,1,2,3,4,5].slice(from||0).map(n=>`<button type="button" class="${n===0?(v===0?"z on":"z"):(n<=v?"on":"")}" data-${attr}="${k}|${n}" title="${n} · ${WORDS[n]}" aria-label="${label}: ${n}, ${WORDS[n]}">${n}</button>`).join("")}</div>`;
 function circ(k,label,v,attr){v=+v||0;return `<div class="q"><div class="qn">${label}</div>${dots(k,v,attr,label)}<div class="qm">${v} · ${WORDS[v].toLowerCase()}</div></div>`}
 function yn(k,label,help,good){const cN=good?"r":"g",cS=good?"g":"r";return `<div class="q"><div class="qn">${label}${help?`<small class="hl">${help}</small>`:""}</div><span class="seg"><button type="button" class="${d[k]==="NO"?"on "+cN:""}" data-yn="${k}|NO">NO</button><button type="button" class="${d[k]==="SÍ"?"on "+cS:""}" data-yn="${k}|SÍ">SÍ</button></span><div class="qm"></div></div>`}
 function stepper(k,label,unit,st){return `<div class="q"><div class="qn">${label}</div><span class="step">${ib("−","Restar "+st,`data-st="${k}|-${st}"`)}<input type="number" min="0" step="${st}" value="${d[k]}" data-num="${k}" aria-label="${label}">${ib("+","Sumar "+st,`data-st="${k}|${st}"`)}</span><div class="qm">${unit}</div></div>`}
-function moodRow(){return `<div class="rg-moods">${MOODS.slice().reverse().map(m=>`<button type="button" data-am="${m}" class="${d.animo===m?"on":""}" style="--c:${MOOD_HEX[m]}">${MOOD_LABEL[m]}</button>`).join("")}</div>`}
+function moodPick(cur,attr){return `<div class="mood-dots">${MOODS.map(m=>`<button type="button" data-${attr}="${MOOD_SCORE[m]}" class="${cur===MOOD_SCORE[m]?"on":""}" style="--c:${MOOD_HEX[m]}" title="${MOOD_LABEL[m]}" aria-label="${MOOD_LABEL[m]}"><span>${MOOD_EMO[m]}</span>${MOOD_LABEL[m]}</button>`).join("")}</div>`}
+function moodRow(){const n=MN(d.animo);return (n!=null?`<div class="hint2">Ahora: <span class="mood-pill" style="background:${mColor(n)}">${mText(n)}</span></div>`:"")+moodPick(n,"am")}
 const ACC={suicImp:"suicAcc",hostImp:"hostAcc",sexImp:"sexAcc"};
 const riskS=()=>+d.suicImp>0||d.suicAcc==="SÍ", riskP=()=>d.inex==="SÍ"||d.pas==="SÍ"||d.act==="SÍ";
 const risk=()=>+d.suicImp>0||d.suicAcc==="SÍ"||d.inex==="SÍ"||d.pas==="SÍ"||d.act==="SÍ";
 function crisisRow(show){if(!show)return "";
  return `<div class="crisis">${ib("📋 Plan de crisis","Abrir tu plan de crisis","data-cr=\"plan\"","wide")}${ib("📞 Mi psicóloga",CFG.psi?"Llamar a tu psicóloga ("+CFG.psi+")":"Cargar el teléfono de tu psicóloga","data-cr=\"psi\"","wide")}${ib("🚑 "+esc(CFG.emerName.replace(/^Emergencias\s*/i,"")||"Emergencias"),CFG.emer?"Llamar a "+esc(CFG.emerName)+" ("+CFG.emer+")":"Cargar el teléfono de "+esc(CFG.emerName),"data-cr=\"emer\"","wide")}${ib("☎️ Líneas gratis","Ver las líneas de ayuda gratuitas","data-cr=\"lineas\"","wide")}</div>`}
-function penTag(e){return e.emo?`${emoInfo(e.emo)[1]} ${emoInfo(e.emo)[2]} ${e.int}`:MOOD_LABEL[e.mood]}
+function penTag(e){const p=penPill(e);return (MOOD_EMO[e.mood]||"")+" "+(MOOD_LABEL[e.mood]||"")+(p?` <span class="hint2">· ${esc(p)}</span>`:"")}
 function penList(){const ps=byDate.get(day)||[];
  return `<div class="mod">Pensamientos del día</div>${ps.map((e,i)=>`<div class="pen"><i style="background:${MOOD_HEX[e.mood]}"></i><div class="pt"><b style="color:${MOOD_HEX[e.mood]}">${penTag(e)}</b> · ${e.time}<p>${esc(e.text)}</p></div>${ib("✏️","Editar este pensamiento",`data-pe="${day}|${i}"`)}${ib("🗑️","Borrar este pensamiento",`data-pd="${day}|${i}"`)}</div>`).join("")||`<div class="hint2">Todavía no hay pensamientos este día.</div>`}${ib("＋ Agregar pensamiento","Escribir un pensamiento nuevo en este día",`data-pn="${day}"`,"wide add")}`}
 const PSI_VE=["sueno","agua","ejer","sol","mens"];
@@ -3686,7 +3773,7 @@ function body(c){switch(c.id){
  case"host":return `${circ("hostImp","Impulso",d.hostImp,"c")}${+d.hostImp?yn("hostAcc","Acción"):""}`;
  case"sexo":return `${circ("sexImp","Impulso",d.sexImp,"c")}${+d.sexImp?yn("sexAcc","Acción"):""}`;
  case"scroll":return `${circ("scrImp","Impulso",d.scrImp,"c")}<div class="q"><div class="qn">Tiempo</div><span class="rg-row"><input type="number" min="0" max="24" value="${d.scrH}" data-num="scrH" aria-label="Horas"> h <input type="number" min="0" max="59" step="5" value="${d.scrM}" data-num="scrM" aria-label="Minutos"> min</span><div class="qm"></div></div>`;
- case"emo":return (Object.keys(pensMax(day)).length?`<div class="hint2" style="margin-bottom:4px">Precargada con lo más alto de tus pensamientos del día. Corregila si hace falta.</div>`:"")+EMOS.map(e=>circ(e[0],e[1]+" "+e[2],d[e[0]],"c")).join("")+d.otras.map((o,n)=>`<div class="q"><div class="qn"><input type="text" list="rgEmos" value="${esc(o.n)}" data-on="${n}" placeholder="Otra emoción"></div>${dots(n,o.v,"oc","Otra emoción")}<div class="qm">${o.v} · ${WORDS[o.v].toLowerCase()} ${ib("🗑️","Quitar esta emoción",`data-del="${n}"`,"mini")}</div></div>`).join("")+(d.otras.length<6?ib("＋ Otra emoción","Sumar otra emoción","id=\"rgAddEmo\"","wide add"):"")+`<datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia"].map(x=>`<option value="${x}">`).join("")}</datalist>`;
+ case"emo":return ((byDate.get(day)||[]).length?`<div class="hint2" style="margin-bottom:4px">Se completa sola con lo más alto de tus pensamientos del día. Si la cambiás, queda como la pusiste.</div>`:"")+EMOS.map(e=>circ(e[0],e[1]+" "+e[2],d[e[0]],"c")).join("")+d.otras.map((o,n)=>`<div class="q"><div class="qn"><input type="text" list="rgEmos" value="${esc(o.n)}" data-on="${n}" placeholder="Otra emoción"></div>${dots(n,o.v,"oc","Otra emoción")}<div class="qm">${o.v} · ${WORDS[o.v].toLowerCase()} ${ib("🗑️","Quitar esta emoción",`data-del="${n}"`,"mini")}</div></div>`).join("")+(d.otras.length<6?ib("＋ Otra emoción","Sumar otra emoción","id=\"rgAddEmo\"","wide add"):"")+`<datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia"].map(x=>`<option value="${x}">`).join("")}</datalist>`;
  case"cuerpo":return bodyCard();
  case"hab":{const h=d.habs.length?`<div class="used-list">${d.habs.map((x,n)=>`<div class="u"><div><b>${esc(x.h)}</b> · ${x.p} – ${ESC[x.p]}${x.c?`<br><span class="hint2">${esc(x.c)}</span>`:""}</div>${ib("✏️","Editar",`data-eh="${n}"`)}</div>`).join("")}</div>`:"";
   return h+[...new Set(SK.map(s=>s[0]))].map(m=>`<div class="mod">${m}</div><div class="chips">${SK.map((s,n)=>s[0]===m?`<button type="button" class="chip ${d.habs.some(x=>x.h===s[1])?"used":""}" data-sk="${n}">${s[1]}</button>`:"").join("")}</div>`).join("")}
@@ -3701,11 +3788,9 @@ function render(){const c=CARDS[ci];
  $("rgDots").innerHTML=CARDS.map((x,n)=>`<button type="button" class="${n===ci?"on":""}" data-go="${n}">${x.tab}</button>`).join("");
  $("rgBody").innerHTML=body(c);$("rgTool").innerHTML=c.id==="cuerpo"?ib(bodyEdit?"✓ Listo":"⚙️ Editar campos",bodyEdit?"Terminar de editar":"Ocultar, agregar, renombrar o borrar campos","data-be=\"1\"","wide"):"";$("rgPrev").style.visibility=ci?"visible":"hidden";$("rgNext").textContent=ci===CARDS.length-1?"Guardar":"Siguiente";
  const on=$("rgDots").querySelector(".on");if(on&&on.scrollIntoView)on.scrollIntoView({block:"nearest",inline:"center"})}
-function pensMax(k){const m={};(byDate.get(k)||[]).forEach(e=>{if(e.emo)m[e.emo]=Math.max(m[e.emo]||0,+e.int||0);(e.otr||[]).forEach(o=>{if(o.n)m["o:"+o.n]=Math.max(m["o:"+o.n]||0,+o.v||0)})});return m}
-function prefill(){const m=pensMax(day);let ch=false;EMOS.forEach(([e])=>{if((m[e]||0)>(+d[e]||0)){d[e]=m[e];ch=true}});
- Object.keys(m).filter(x=>x.startsWith("o:")).forEach(x=>{const n=x.slice(2),o=d.otras.find(y=>y.n.toLowerCase()===n.toLowerCase());if(!o){d.otras.push({n,v:m[x]});ch=true}else if(o.v<m[x]){o.v=m[x];ch=true}});return ch}
-function open(k,card,mood){day=k;d=REG[k]?JSON.parse(JSON.stringify(REG[k])):blank();d.habs=d.habs||[];d.otras=d.otras||[];
- const ch=prefill();if(mood)d.animo=mood;if(mood||(ch&&REG[k]))touch();ci=Math.max(0,CARDS.findIndex(c=>c.id===card));bodyEdit=false;infoOpen=false;$("rgSk").hidden=true;render();$("regBg").classList.add("open");$("rgCard").scrollTop=0}
+function pensMax(k){const m={};(byDate.get(k)||[]).forEach(e=>emosOf(e).forEach(o=>{const q=emoKey(o.n)||"o:"+o.n;m[q]=Math.max(m[q]||0,+o.v||0)}));return m}
+function open(k,card){autoDay(k,false);day=k;d=REG[k]?JSON.parse(JSON.stringify(REG[k])):blank();d.habs=d.habs||[];d.otras=d.otras||[];
+ ci=Math.max(0,CARDS.findIndex(c=>c.id===card));bodyEdit=false;infoOpen=false;$("rgSk").hidden=true;render();$("regBg").classList.add("open");$("rgCard").scrollTop=0}
 function close(){$("regBg").classList.remove("open");flush();redraw()}
 
 /* --- ventanita (habilidad, teléfonos, campos, pensamientos, confirmaciones) --- */
@@ -3723,11 +3808,15 @@ function planSheet(edit){const p=CFG.plan||"";
 function linesSheet(){sheet("Líneas de ayuda gratuitas",LINEAS.map(([n,t])=>`<a class="line" href="tel:${t}">📞 <b>${n}</b><span>${t}</span></a>`).join(""))}
 /* pensamientos */
 let penOld=null,PN=null;
-function pnEmo(){return `<div class="emo-pick">${EMOS.map(([k,em,l])=>`<button type="button" data-pk="${k}" class="${PN.emo===k?"on":""}" title="${l}"><span>${em}</span>${l}</button>`).join("")}</div><div class="q"><div class="qn">Intensidad</div>${dots("int",PN.int,"pi","Intensidad",1)}<div class="qm">${PN.int?PN.int+" · "+WORDS[PN.int].toLowerCase():""}</div></div>${PN.otr.map((o,n)=>`<div class="q"><div class="qn"><input type="text" list="rgEmos" value="${esc(o.n)}" data-pon="${n}" placeholder="Otra emoción"></div>${dots(n,o.v,"po","Otra emoción",1)}<div class="qm">${ib("🗑️","Quitar esta emoción",`data-pod="${n}"`,"mini")}</div></div>`).join("")}${ib("＋ Otra emoción","Sumar otra emoción a este pensamiento","data-poa=\"1\"","wide add")}`}
-function penSheet(k,i){const e=i==null?null:(byDate.get(k)||[])[i];penOld=e;PN={emo:e&&e.emo||"",int:e&&+e.int||0,otr:JSON.parse(JSON.stringify(e&&e.otr||[]))};
- sheet(e?"Editar pensamiento":"Nuevo pensamiento",`<div class="rg-row2"><input type="date" id="pnDate" value="${e?e.date:k}"><input type="time" id="pnTime" value="${e?e.time:nowHHMM()}"></div>${e&&!e.emo?`<div class="hint2">Antes: ${MOOD_LABEL[e.mood]}. Elegí la emoción principal.</div>`:""}<div id="pnEmo">${pnEmo()}</div><datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia","Calma","Frustración","Rechazada"].map(x=>`<option value="${x}">`).join("")}</datalist><textarea id="pnText" style="min-height:140px" placeholder="Qué pasó, qué sentiste y por qué…">${e?esc(e.text):""}</textarea><div class="err2" id="pnErr"></div><div class="actions">${e?ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide"):""}<button type="button" class="btn-p" id="pnOk">Guardar</button></div>`)}
+function pnEmo(){return `<div class="mod" style="margin-top:4px">¿Qué emociones sentiste?</div>${EMOS.map(([k,em,l])=>{const v=PN.std[k]||0;return `<div class="q"><div class="qn">${em} ${l}</div>${dots(k,v,"pi",l)}<div class="qm">${v?v+" · "+WORDS[v].toLowerCase():""}</div></div>`}).join("")}${PN.otr.map((o,n)=>`<div class="q"><div class="qn"><input type="text" list="rgEmos" value="${esc(o.n)}" data-pon="${n}" placeholder="Otra emoción"></div>${dots(n,o.v,"po","Otra emoción",1)}<div class="qm">${ib("🗑️","Quitar esta emoción",`data-pod="${n}"`,"mini")}</div></div>`).join("")}${ib("＋ Otra emoción","Sumar otra emoción a este pensamiento","data-poa=\"1\"","wide add")}<div class="mod">¿Cómo estuvo tu ánimo?</div>${moodPick(MOOD_SCORE[PN.mood]||null,"pm")}`}
+function penSheet(k,i){const e=i==null?null:(byDate.get(k)||[])[i];penOld=e;PN={mood:e&&e.mood||"",std:{},otr:[]};
+ if(e)emosOf(e).forEach(o=>{const q=emoKey(o.n);if(q)PN.std[q]=+o.v;else PN.otr.push({n:o.n,v:+o.v})});
+ sheet(e?"Editar pensamiento":"Nuevo pensamiento",`<div class="rg-row2"><input type="date" id="pnDate" value="${e?e.date:k}"><input type="time" id="pnTime" value="${e?e.time:nowHHMM()}"></div><textarea id="pnText" style="min-height:140px" placeholder="Qué pasó, qué sentiste y por qué…">${e?esc(e.text):""}</textarea><div id="pnEmo">${pnEmo()}</div><datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia","Calma","Frustración","Rechazada"].map(x=>`<option value="${x}">`).join("")}</datalist><div class="err2" id="pnErr"></div><div class="actions">${e?ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide"):""}<button type="button" class="btn-p" id="pnOk">Guardar</button></div>`)}
 function penDel(k,i){const e=(byDate.get(k)||[])[i];if(!e)return;penOld=e;
  sheet("¿Borrar este pensamiento?",`<div class="pen"><i style="background:${MOOD_HEX[e.mood]}"></i><div class="pt"><b style="color:${MOOD_HEX[e.mood]}">${penTag(e)}</b> · ${fmt(e.date)} ${e.time}<p>${esc(e.text.slice(0,240))}${e.text.length>240?"…":""}</p></div></div><p class="hint2">Se borra de este dispositivo y de tu hoja. No se puede deshacer.</p><div class="actions"><button type="button" class="btn-g" data-skx="1">Cancelar</button><button type="button" class="btn-p danger" id="pnDelOk">🗑️ Borrar</button></div>`)}
+function afterPen(k,k2){if(k2&&k2!==k)autoDay(k2,false);autoDay(k,true);if(bg.classList.contains("open")&&d&&!bg.classList.contains("solo"))render();redraw()}
+function passSheet(){const bio=$("cfgBio"),keep=!(ME&&ME.keep);
+ sheet("🔑 Contraseña",`${bio&&!bio.hidden?ib("👆 "+esc(bio.querySelector("span:last-child").textContent),"Entrar con la huella o la cara en este dispositivo","data-pwa=\"cfgBio\"","wide"):""}${ib("🔑 Cambiar contraseña","Es la misma en todos tus dispositivos","data-pwa=\"cfgPw\"","wide")}<label class="pw-row"><input type="checkbox" id="pwKeep" ${keep?"checked":""}><span>Pedir la contraseña al abrir en este dispositivo<small>Si la sacás, no te la pide hasta que toques «Bloquear ahora».</small></span></label>${ib("🔒 Bloquear ahora","Cerrar con contraseña ya mismo","data-pwa=\"cfgLockNow\"","wide")}`)}
 /* campos de Cuerpo */
 const used=k=>Object.keys(REG).filter(f=>{const v=REG[f][k];return v!==""&&v!=null});
 function setField(k,patch){const ex=(CFG.extra||[]).find(x=>x.k===k);if(ex)Object.assign(ex,patch);else CFG.body[k]=Object.assign(CFG.body[k]||{},patch);pushCfg()}
@@ -3751,7 +3840,7 @@ function week(ds){const reg=ds.filter(k=>REG[k]).map(k=>[k,REG[k]]);
   return ps.length?pl+`<span class="hint3">Sin resumen · tocá para cargarlo</span>`:"–"}});
  g("Conductas · (impulso) acción");
  [["Suicidio/CASIS","suicImp","suicAcc","suic"],["Comport. hostil","hostImp","hostAcc","host"],["Sexo / hombres","sexImp","sexAcc","sexo"]].forEach(c=>R.push({cd:c[3],l:c[0],c:x=>x?`(${x[c[1]]}) ${SN(x,c[2])}`+(c[1]==="suicImp"&&x.suicAcc==="SÍ"&&x.suicDet?`<div class="det">${esc(x.suicDet)}</div>`:""):"–"}));
- R.push({cd:"scroll",l:"Scrollear",c:x=>x?`(${x.scrImp}) ${(+x.scrH||0)}:${pad2(+x.scrM||0)} h`:"–"});
+ R.push({cd:"scroll",l:"Scrollear",c:x=>x?`<span class="sc2">(${x.scrImp})</span><span class="sc2">${(+x.scrH||0)}:${pad2(+x.scrM||0)} h</span>`:"–"});
  if(reg.some(([,x])=>["inex","pas","act"].some(p=>x[p]==="SÍ"))){g("Para mi psicóloga");[["Inexistencia","inex"],["Ideación pasiva","pas"],["Ideación activa","act"]].forEach(p=>R.push({cd:"pens",l:p[0],c:x=>SN(x,p[1])}))}
  g("Emociones (0-5)");
  EMOS.forEach(e=>R.push({cd:"emo",em:1,l:e[1],t:e[2],c:x=>x?x[e[0]]:"–",st:x=>{if(!x)return"";const v=+x[e[0]]||0;return `background:rgba(${EC[e[0]]},${(v/5*.9).toFixed(2)});${v>=4?"color:#fff;font-weight:700":""}`}}));
@@ -3766,23 +3855,23 @@ function week(ds){const reg=ds.filter(k=>REG[k]).map(k=>[k,REG[k]]);
  const C=R.filter(r=>!r.g),groups=[];let cur=null;R.forEach(r=>{if(r.g){cur={t:r.g,n:0};groups.push(cur)}else{if(!cur){cur={t:"",n:0};groups.push(cur)}cur.n++}});
  const tod=toISO(new Date()),falta=ds.filter(k=>k<=tod&&!REG[k]).map(short),pocaAgua=reg.filter(([,x])=>x.agua!==""&&+x.agua<2).map(([k])=>short(k)),pocoSueno=reg.filter(([,x])=>x.sueno!==""&&+x.sueno<6).map(([k])=>short(k)),sinSol=reg.filter(([,x])=>x.sol==="NO").length;
  const alerts=[falta.length?`📅 Falta cargar: <b>${falta.join(", ")}</b>`:"",pocaAgua.length?`💧 Menos de 2 litros: <b>${pocaAgua.join(", ")}</b>`:"",pocoSueno.length?`😴 Menos de 6 h de sueño: <b>${pocoSueno.join(", ")}</b>`:""].filter(Boolean).map(x=>`<div class="warn">${x}</div>`).join("");
- const dot=k=>{const m=dayMood(k);return `<i class="md" style="${m?"background:"+MOOD_HEX[m]:""}"></i>`};
+ const dot=k=>{const c=dayColor(k);return `<i class="md" style="${c?"background:"+c:""}" title="${esc(mText(dayNum(k))||MOOD_LABEL[dayMood(k)]||"")}"></i>`};
  const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(r=>`<th class="${r.em?"em":""}" title="${r.t||r.l}">${r.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(r=>`<td class="${r.cls||""}" data-ed="${r.cd}|${k}" style="${r.st?r.st(REG[k]):""}">${r.c(REG[k],k)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
- return `${alerts}<div class="rg-met"><div><b>${avg(x=>x.sueno)}</b>😴 h sueño (prom.)</div><div><b>${avg(x=>x.agua)}</b>💧 litros (prom.)</div><div><b>${Math.floor(scr/60)}:${pad2(scr%60)}</b>📱 h de scroll</div><div><b>${sinSol}</b>☀️ días sin sol</div></div><div class="tw">${t}</div>`}
+ return `<div class="rg-met"><div><b>${avg(x=>x.sueno)}</b>😴 h sueño (prom.)</div><div><b>${avg(x=>x.agua)}</b>💧 litros (prom.)</div><div><b>${Math.floor(scr/60)}:${pad2(scr%60)}</b>📱 h de scroll</div><div><b>${sinSol}</b>☀️ días sin sol</div></div><div class="tw">${t}</div>`}
 function weekView(start,end){const ds=[];for(let x=new Date(start);x<=end;x=addDays(x,1))ds.push(toISO(x));$("weekView").innerHTML=week(ds)}
 
-function emoStats(s,e){const ks=[...new Set([...Object.keys(REG),...allDates.filter(k=>(byDate.get(k)||[]).some(x=>x.emo))])].filter(k=>k>=s&&k<=e).sort();
+function emoStats(s,e){const ks=[...new Set([...Object.keys(REG),...allDates.filter(k=>(byDate.get(k)||[]).some(x=>emosOf(x).length))])].filter(k=>k>=s&&k<=e).sort();
  const val=(k,x)=>REG[k]?+REG[k][x]||0:(pensMax(k)[x]||0);
  if(!ks.length)return `<div class="htitle">Emociones</div><div class="rg-empty">Sin registros en este período.</div>`;
  const rows=EMOS.map(x=>{const v=ks.map(k=>val(k,x[0])),a=v.reduce((p,q)=>p+q,0)/v.length,n=v.filter(q=>q>0).length;
-  return `<div class="mood-bar-row" title="${n} de ${ks.length} días"><div class="mname">${x[1]} ${x[2]}</div><div class="track"><div class="fill" style="width:${a/5*100}%;background:rgb(${EC[x[0]]})"></div></div><div class="mcount">${a.toFixed(1)}</div></div>`}).join("");
+  const on=!!EYES[x[0]];return `<div class="mood-bar-row" title="${n} de ${ks.length} días"><div class="mname">${x[1]} ${x[2]}</div><div class="track"><div class="fill" style="width:${a/5*100}%;background:rgb(${EC[x[0]]})"></div></div><div class="mcount">${a.toFixed(1)}</div><button type="button" class="eye ${on?"on":""}" data-eye="${x[0]}" title="${on?"Se ve en la Tendencia: tocá para ocultarla":"Tocá para ver "+x[2]+" en la Tendencia"}" aria-label="${x[2]} en la Tendencia">👁️</button></div>`}).join("");
  const ot={};ks.forEach(k=>((REG[k]&&REG[k].otras)||[]).forEach(o=>{if(o.n)ot[o.n]=(ot[o.n]||0)+1}));
  const top=Object.entries(ot).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,c])=>`${esc(n)} ×${c}`).join(" · ");
  return `<div class="htitle">Emociones <small>(promedio 0-5)</small></div>${rows}${top?`<div class="rg-days" style="margin-top:6px">Otras: ${top}</div>`:""}`}
 
 function dayCard(k){const x=REG[k];
  if(!x)return `<button type="button" class="rg-add" data-rgopen="${k}" title="Cargar el registro de este día">📋 Cargar el resumen del día</button>`;
- return `<div class="rg-day"><div class="rg-dh"><b>📋 Resumen del día</b>${x.animo?`<span class="mood-pill" style="background:${MOOD_HEX[x.animo]}">${MOOD_LABEL[x.animo]}</span>`:""}${ib("✏️","Editar el resumen del día",`data-rgopen="${k}"`)}</div>${x.notas?`<div class="rg-notas">${esc(x.notas)}</div>`:""}<div class="rg-emo">${EMOS.map(e=>e[1]+" "+x[e[0]]).join("  ")}${(x.otras||[]).filter(o=>o.n).map(o=>` · ${esc(o.n)} (${o.v})`).join("")}</div></div>`}
+ return `<div class="rg-day"><div class="rg-dh"><b>📋 Resumen del día</b>${MN(x.animo)!=null?`<span class="mood-pill" style="background:${mColor(x.animo)}">${mText(x.animo)}</span>`:""}${ib("✏️","Editar el resumen del día",`data-rgopen="${k}"`)}</div>${x.notas?`<div class="rg-notas">${esc(x.notas)}</div>`:""}<div class="rg-emo">${EMOS.map(e=>e[1]+" "+x[e[0]]).join("  ")}${(x.otras||[]).filter(o=>o.n).map(o=>` · ${esc(o.n)} (${o.v})`).join("")}</div></div>`}
 
 function redraw(){if(typeof renderStats==="function"&&statsAnchor){renderStats();if(selectedDate)selectDay(selectedDate,false)}}
 
@@ -3790,10 +3879,12 @@ function redraw(){if(typeof renderStats==="function"&&statsAnchor){renderStats()
 document.body.insertAdjacentHTML("beforeend",`<div class="modal-bg" id="regBg"><div class="composer reg" id="rgCard" role="dialog" aria-labelledby="rgH"><div class="rg-dtop"><div class="rg-dots" id="rgDots"></div>${ib("✕","Cerrar","id=\"rgClose\"","x")}</div><div class="rg-date" id="rgDate"></div><h2 id="rgH"></h2><div class="rg-info" id="rgInfo" hidden></div><p class="rg-sub" id="rgSub"></p><div id="rgBody"></div><div class="actions"><button type="button" class="btn-g" id="rgPrev">Anterior</button><span id="rgTool"></span><button type="button" class="btn-p" id="rgNext">Siguiente</button></div><div class="rg-sk" id="rgSk" hidden></div></div></div>`);
 const bg=$("regBg");
 bg.addEventListener("input",e=>{const t=e.target;
- if(t.id==="rgComo"&&sk){sk.c=t.value;return}if(t.dataset.pon!=null&&PN){PN.otr[+t.dataset.pon].n=t.value;return}if(!d||$("rgSk").contains(t))return;
+ if(t.id==="rgComo"&&sk){sk.c=t.value;return}if(t.id==="pwKeep"){ME.keep=!t.checked;putProfile(ME);setStatus(t.checked?"Te va a pedir la contraseña al abrir ✓":"En este dispositivo no te pide la contraseña hasta que toques Bloquear","ok");return}
+ if((t.dataset.pon!=null||t.dataset.on!=null)&&/[,()]/.test(t.value)){const c=t.selectionStart;t.value=cleanEmo(t.value);try{t.setSelectionRange(c-1,c-1)}catch(_){}}
+ if(t.dataset.pon!=null&&PN){PN.otr[+t.dataset.pon].n=t.value;return}if(!d||$("rgSk").contains(t))return;
  if(t.id==="rgNotas")d.notas=t.value;else if(t.id==="rgDet")d.suicDet=t.value;
  else if(t.dataset.num)d[t.dataset.num]=t.value===""?"":Math.max(0,+t.value);
- else if(t.dataset.on!==undefined)d.otras[+t.dataset.on].n=t.value;else return;touch()});
+ else if(t.dataset.on!==undefined){d.otras[+t.dataset.on].n=t.value;markMan("otras")}else return;touch()});
 async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b){if(e.target===bg){if(!$("rgSk").hidden)closeSheet();else close()}return}const s=b.dataset;
  if(b.id==="rgClose")return close();
  if(s.skx)return closeSheet();
@@ -3802,13 +3893,15 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(b.id==="rgNext"){if(ci<CARDS.length-1){ci++;render();$("rgCard").scrollTop=0;return}
   const tp=isLinked()&&navigator.onLine&&!tokenOk()&&gisReady()?askToken(ME.email).catch(()=>null):null;touch();bg.classList.remove("open");redraw();if(tp)await tp;clearTimeout(tmr);await flush();return}
  if(s.go!=null){ci=+s.go;bodyEdit=false;render();$("rgCard").scrollTop=0;return}
- if(s.c){const[k,n]=s.c.split("|");d[k]=+n;if(ACC[k]&&!+n)d[ACC[k]]="NO";touch();render();return}
- if(s.oc){const[i,n]=s.oc.split("|");d.otras[+i].v=+n;touch();render();return}
+ if(s.c){const[k,n]=s.c.split("|");d[k]=+n;if(ACC[k]&&!+n)d[ACC[k]]="NO";if(AUTOK.includes(k))markMan(k);touch();render();return}
+ if(s.oc){const[i,n]=s.oc.split("|");d.otras[+i].v=+n;markMan("otras");touch();render();return}
  if(s.yn){const[k,v]=s.yn.split("|");d[k]=d[k]===v&&["inex","pas","act"].includes(k)?"":v;touch();render();return}
  if(s.st){const[k,v]=s.st.split("|");d[k]=Math.round(Math.max(0,(+d[k]||0)+(+v))*100)/100;touch();render();return}
- if(s.am){d.animo=d.animo===s.am?"":s.am;touch();render();return}
+ if(s.am){const n=+s.am;d.animo=MN(d.animo)===n?"":n;markMan("animo");touch();render();return}
  if(b.id==="rgAddEmo"){d.otras.push({n:"",v:0});touch();render();return}
- if(s.del!=null){d.otras.splice(+s.del,1);touch();render();return}
+ if(s.del!=null){d.otras.splice(+s.del,1);markMan("otras");touch();render();return}
+ if(b.id==="updOk"&&updA){const{k,a,diff}=updA,x=REG[k],m=manOf(k);diff.forEach(f=>{x[f]=f==="otras"?a.otras:a[f];delete m[f]});CFG.man[k]=m;cfgDirty=true;if(!PEND.includes(k))PEND.push(k);save();updA=null;closeSheet();if(d&&day===k){d=JSON.parse(JSON.stringify(x));render()}redraw();flush();return}
+ if(s.pwa){closeSheet();document.getElementById(s.pwa).click();return}
  if(s.sk!=null)return openSkill(+s.sk);
  if(s.eh!=null)return openSkill(SK.findIndex(x=>x[1]===d.habs[+s.eh].h));
  if(s.sc!=null){sk.p=+s.sc;$("rgSk").querySelectorAll("[data-sc]").forEach(x=>x.classList.toggle("on",+x.dataset.sc===sk.p));$("rgScErr").textContent="";return}
@@ -3823,16 +3916,17 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(s.pn!=null)return penSheet(s.pn,null);
  if(s.pe){const[k,i]=s.pe.split("|");return penSheet(k,+i)}
  if(s.pd){const[k,i]=s.pd.split("|");return penDel(k,+i)}
- if(s.pk){PN.emo=s.pk;if(!PN.int)PN.int=3;$("pnEmo").innerHTML=pnEmo();return}
- if(s.pi){PN.int=+s.pi.split("|")[1];$("pnEmo").innerHTML=pnEmo();return}
+ if(s.pi){const[k,n]=s.pi.split("|");PN.std[k]=+n;$("pnEmo").innerHTML=pnEmo();return}
+ if(s.pm){const m=SCORE_MOOD[+s.pm];PN.mood=PN.mood===m?"":m;$("pnEmo").innerHTML=pnEmo();$("pnErr").textContent="";return}
  if(s.po){const[i,n]=s.po.split("|");PN.otr[+i].v=+n;$("pnEmo").innerHTML=pnEmo();return}
  if(s.poa){PN.otr.push({n:"",v:1});$("pnEmo").innerHTML=pnEmo();return}
  if(s.pod!=null){PN.otr.splice(+s.pod,1);$("pnEmo").innerHTML=pnEmo();return}
  if(b.id==="pnOk"){const date=$("pnDate").value,time=$("pnTime").value||nowHHMM(),text=$("pnText").value.trim();
-  if(!PN.emo||!PN.int||!text||!date){$("pnErr").textContent=!PN.emo?"Elegí la emoción principal":!PN.int?"Elegí la intensidad":"Escribí el pensamiento";return}
-  const ne={date,dow:csvDowFor(date),time,emo:PN.emo,int:PN.int,otr:PN.otr.filter(o=>o.n.trim()),mood:moodOf(PN.emo,PN.int),text};closeSheet();
-  if(penOld)await updateEntry(penOld,ne);else await addEntry(ne);if(bg.classList.contains("open")&&d)render();return}
- if(b.id==="pnDelOk"){closeSheet();await updateEntry(penOld,null);if(bg.classList.contains("open")&&d)render();return}
+  if(!text||!date||!PN.mood){$("pnErr").textContent=!text?"Escribí el pensamiento":!date?"Elegí la fecha":"Elegí cómo estuvo tu ánimo";return}
+  const emos=[...EMOS.filter(([k])=>+PN.std[k]).map(([k,,l])=>({n:l,v:+PN.std[k]})),...PN.otr.map(o=>({n:cleanEmo(o.n).trim(),v:+o.v})).filter(o=>o.n&&o.v)];
+  const ne={date,dow:csvDowFor(date),time,mood:PN.mood,text,emos},old=penOld;closeSheet();
+  if(old)await updateEntry(old,ne);else await addEntry(ne);afterPen(date,old&&old.date);return}
+ if(b.id==="pnDelOk"){const old=penOld;closeSheet();await updateEntry(old,null);afterPen(old.date);return}
  /* campos de Cuerpo */
  if(s.be){bodyEdit=!bodyEdit;render();return}
  if(s.bp){const f=fields().find(x=>x.k===s.bp);setField(s.bp,{psi:seen(f)?0:1});render();return}
@@ -3855,7 +3949,11 @@ document.addEventListener("click",e=>{if(bg.contains(e.target))return;
  const td=e.target.closest("#weekView td[data-ed]");if(td&&!e.target.closest("details")){const[c,k]=td.dataset.ed.split("|");open(k,c)}},true);
 window.addEventListener("online",()=>flush());
 
-return {load,pull,flush,open,pensMax,weekView,emoStats,dayCard,dayMood,penSheet,get REG(){return REG},_seed:o=>{REG=o}};
+const EYE_K="mimo_eyes_v1";let EYES=(()=>{try{return JSON.parse(localStorage.getItem(EYE_K))||{}}catch(_){return{}}})();
+function emoVal(k,e){if(REG[k])return +REG[k][e]||0;const m=pensMax(k);return (byDate.get(k)||[]).length?(m[e]||0):null}
+function emoMonth(ym,e){const v=[...new Set([...Object.keys(REG),...allDates])].filter(k=>k.startsWith(ym)).map(k=>emoVal(k,e)).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-eye]");if(!b)return;EYES[b.dataset.eye]=EYES[b.dataset.eye]?0:1;try{localStorage.setItem(EYE_K,JSON.stringify(EYES))}catch(_){}renderStats()});
+return {load,pull,flush,open,pensMax,weekView,emoStats,dayCard,dayMood,dayNum,dayColor,penSheet,passSheet,emoVal,emoMonth,eyesOn:()=>EMOS.filter(x=>EYES[x[0]]).map(x=>[x[0],EC[x[0]],x[2]]),pendN:()=>PEND.length+(cfgDirty?1:0),get REG(){return REG},_seed:o=>{REG=o}};
 })();
 
 </script>
