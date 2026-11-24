@@ -283,7 +283,7 @@ header.top .titles p .n{ color:var(--accent-2); font-weight:600; }
   overflow:hidden;
 }
 .cal-cell.empty{ background:transparent; }
-.cal-cell.has-entries{ cursor:pointer; }
+.cal-cell{ cursor:pointer; }
 .cal-cell.has-entries:hover{ border-color:var(--accent); }
 .cal-cell.selected{ border-color:var(--accent-2); box-shadow:0 0 0 2px rgba(194,179,251,.25); }
 .cal-cell.today{ box-shadow: inset 0 0 0 1.5px var(--accent-2); }
@@ -911,6 +911,19 @@ footer.credit{
 .pw-row{ display:flex; gap:10px; align-items:center; padding:10px 0; font-size:14px; color:var(--text-light); }
 .pw-row small{ display:block; color:var(--text-faint); font-size:11.5px; }
 .tt td .sc2{ display:block; line-height:1.25; }
+/* tabla de la semana: conductas del mismo ancho (crecen hacia abajo), sin barra horizontal, encabezado fijo */
+.tt{ table-layout:auto; }
+.tt td.c4,.tt th.c4{ width:68px; min-width:68px; max-width:68px; white-space:normal !important; word-break:normal; overflow-wrap:anywhere; }
+.tt thead th,.tt thead td{ background-image:linear-gradient(var(--bg-panel-3),var(--bg-panel-3)); background-color:var(--bg-panel); }
+.tt thead tr.gr td{ background-image:none; }
+.tt td.nt{ min-width:200px; width:auto; }
+.tt th,.tt td{ padding:4px 4px; }
+.tt{ border-collapse:separate; border-spacing:0; }
+.tt thead{ position:sticky; top:var(--hdrH,0px); z-index:3; }
+.tt thead tr.gr td{ background:var(--bg-deep); }
+.tw{ overflow:visible; }
+.grid.v-week .week-view{ margin-left:-6px; margin-right:-6px; }
+@media (max-width:900px){ .tw{ overflow:auto; max-height:78vh; } .tt{ --hdrH:0px; } }
 @media (max-width:420px){ .mood-dots{ gap:4px; } .mood-dots button{ width:calc(20% - 4px); } .mood-dots button span{ width:30px; height:30px; font-size:18px; } }
 .emo-stats{ border-top:0; padding-top:4px; margin-top:6px; }
 /* tabla de la semana: celdas chicas en una sola línea, más lugar para "Lo que hice" */
@@ -1165,7 +1178,7 @@ footer.credit{
 
       <div class="stat-big" data-sec="animo">
         <div class="num" id="statCount">0</div>
-        <div class="lbl">pensamientos<br>en el período</div>
+        <div class="lbl">registros anímicos<br>en el período</div>
       </div>
       <div class="coverage" id="statCoverage" data-sec="animo"></div>
 
@@ -1394,8 +1407,8 @@ function renderCalendar(){
         cnt.textContent = entries.length;
         cell.appendChild(cnt);
       }
-      cell.addEventListener('click', ()=> selectDay(iso, true));
     }
+    cell.addEventListener('click', ()=> selectDay(iso, true));
     grid.appendChild(cell);
   }
 }
@@ -1428,7 +1441,8 @@ function selectDay(iso, jumpCalendarIfNeeded, highlightSpansByEntryIndex){
   subEl.textContent = entries.length ? `${entries.length} pensamiento${entries.length>1?'s':''}` : '';
 
   if(!entries.length){
-    entriesWrap.innerHTML = regCard(iso) + '<div class="empty-day">Sin pensamientos este día.</div>';
+    entriesWrap.innerHTML = (window.RG && RG.REG[iso]) ? regCard(iso) + '<div class="empty-day">Sin registros anímicos este día.</div>'
+      : '<div class="empty-day">No hay registros para este día.</div>' + regCard(iso);
     return;
   }
 
@@ -1760,11 +1774,11 @@ let showDailyRange = true;
 function renderHorizonLegend(){
   const el = document.getElementById('horizonLegend');
   el.innerHTML = showDailyRange
-    ? `<span><i class="dot" style="background:#fff"></i> Promedio</span>
+    ? `<span><i class="dot" style="background:linear-gradient(90deg,#7a4fc9,#e0524f,#dfb43a,#9ccc65,#1e8449)"></i> Promedio (color del ánimo)</span>
        <span><i style="background:rgba(151,132,240,.35)"></i> Rango del día</span>
        <span><i class="dot" style="background:var(--range-peak)"></i> Pico del día</span>
        <span><i class="dot" style="background:var(--range-valley)"></i> Mínimo del día</span>`
-    : `<span><i class="dot" style="background:#fff"></i> Promedio</span>`;
+    : `<span><i class="dot" style="background:linear-gradient(90deg,#7a4fc9,#e0524f,#dfb43a,#9ccc65,#1e8449)"></i> Promedio (color del ánimo)</span>`;
 }
 
 function renderHorizon(points){
@@ -1835,7 +1849,7 @@ function renderHorizon(points){
       d += `Q ${x0} ${y0} ${mx} ${(y0+y1)/2} `;
     }
     d += `T ${seg[seg.length-1][0]} ${seg[seg.length-1][1]}`;
-    return `<path d="${d}" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="2.2" stroke-linecap="round"/>`;
+    return `<path d="${d}" fill="none" stroke="url(#avgGrad)" stroke-width="2.6" stroke-linecap="round"/>`;
   }).join('');
 
   const dots = points.map((p,i)=>{
@@ -1844,7 +1858,7 @@ function renderHorizon(points){
     const y = yFor(p.avg);
     const col = p.dom ? MOOD_HEX[p.dom] : '#c2b3fb';
     const rangeTxt = (showDailyRange && p.min!==null && p.min!==p.max) ? ` · rango ${p.min}–${p.max}` : '';
-    return `<circle cx="${x}" cy="${y}" r="2.8" fill="${col}" stroke="var(--bg-panel)" stroke-width="1"><title>${escapeHtml(p.label)}: ${p.avg.toFixed(1)}${rangeTxt}</title></circle>`;
+    return `<circle cx="${x}" cy="${y}" r="6" fill="transparent"><title>${escapeHtml(p.label)}: ${p.avg.toFixed(1)}${rangeTxt}</title></circle>`;
   }).join('');
 
   // x labels: show a manageable subset
@@ -1867,6 +1881,8 @@ function renderHorizon(points){
   });
   wrap.innerHTML = `
   <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <defs><linearGradient id="avgGrad" gradientUnits="userSpaceOnUse" x1="${padL}" y1="0" x2="${padL + Math.max(1, n - 1) * xStep}" y2="0">${
+      points.map((p, i) => p.avg === null ? '' : `<stop offset="${(n > 1 ? i / (n - 1) : 0).toFixed(4)}" stop-color="${p.dom ? MOOD_HEX[p.dom] : '#c2b3fb'}"/>`).join('')}</linearGradient></defs>
     ${gridLines}
     ${bandEls}
     ${emoLines}
@@ -1950,7 +1966,7 @@ function renderYearPixels(){
       if(dt.getMonth() !== m){ h += '<span class="x"></span>'; continue; }
       const iso = toISO(dt), es = byDate.get(iso), t = iso === todayISO ? ' t' : '';
       const mood = window.RG ? RG.dayMood(iso) : (es && es.length ? SCORE_MOOD[Math.round(es.reduce((s, e) => s + (MOOD_SCORE[e.mood] || 3), 0) / es.length)] : '');
-      if(!mood){ h += `<span class="c${t}"></span>`; continue; }
+      if(!mood){ h += `<button class="c${t}" data-d="${iso}" title="${d}/${m + 1} · sin registros" aria-label="${d}/${m + 1} sin registros"></button>`; continue; }
       h += `<button class="c${t}" data-d="${iso}" style="background:${MOOD_COLOR[mood]}" title="${d}/${m + 1} · ${MOOD_LABEL[mood]}" aria-label="${d}/${m + 1} ${MOOD_LABEL[mood]}"></button>`;
     }
   }
@@ -2982,7 +2998,7 @@ function renderCfgMenu(){
   L('cfgState').innerHTML = !linked ? 'Tu diario todavía no tiene hoja'
     : (ME ? escH(ME.email) + '<br>' : '') + (pend ? `⏳ ${pend} sin subir a tu hoja` : '✓ Todo guardado en tu hoja' + (ME && ME.sheetTitle ? ' «' + escH(ME.sheetTitle) + '»' : ''));
   if(linked){ renderInstall(); renderBioItem(); }
-  const np = pendCount(); L('cfgSyncSub').textContent = np ? `Faltan subir: ${np}` : 'Todo subido';
+  const np = pendCount(); L('cfgSyncSub').textContent = `Faltan subir: ${np}`; L('cfgSync').hidden = !linked || !np;   // solo si falta algo
   updateGearDot();
 }
 function pendCount(){ return getPending().length + EDQ.length + (window.RG ? RG.pendN() : 0); }
@@ -3107,7 +3123,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '21', APP_DATE = '24/11/2026 03:00';
+const APP_VERSION = '22', APP_DATE = '24/11/2026 01:40';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3835,12 +3851,10 @@ function week(ds){const reg=ds.filter(k=>REG[k]).map(k=>[k,REG[k]]);
  const scr=reg.reduce((a,[,x])=>a+(+x.scrH||0)*60+(+x.scrM||0),0);
  const SN=(x,f,good)=>!x||!x[f]?"–":`<b class="${(x[f]==="SÍ")===!!good?"no":"si"}">${x[f]}</b>`;
  const R=[],g=t=>R.push({g:t});
- R.push({cd:"dia",l:"Lo que hice",cls:"nt",c:(x,k)=>{const ps=byDate.get(k)||[];const pl=ps.length?`<div class="rg-pens">${ps.map((e,i)=>`<p><i style="background:${MOOD_HEX[e.mood]}"></i>${esc(e.text.length>140?e.text.slice(0,140)+"…":e.text)} ${ib("✏️","Editar este pensamiento",`data-pe="${k}|${i}"`,"mini")}${ib("🗑️","Borrar este pensamiento",`data-pd="${k}|${i}"`,"mini")}</p>`).join("")}</div>`:"";
-  if(x&&x.notas)return `<div class="nn">${esc(x.notas)}</div>`+(ps.length?`<details class="pd"><summary>${ps.length} pensamiento${ps.length>1?"s":""}</summary>${pl}</details>`:"");
-  return ps.length?pl+`<span class="hint3">Sin resumen · tocá para cargarlo</span>`:"–"}});
+ R.push({cd:"dia",l:"Lo que hice",cls:"nt",c:x=>x&&x.notas?`<div class="nn">${esc(x.notas)}</div>`:"–"});
  g("Conductas · (impulso) acción");
- [["Suicidio/CASIS","suicImp","suicAcc","suic"],["Comport. hostil","hostImp","hostAcc","host"],["Sexo / hombres","sexImp","sexAcc","sexo"]].forEach(c=>R.push({cd:c[3],l:c[0],c:x=>x?`(${x[c[1]]}) ${SN(x,c[2])}`+(c[1]==="suicImp"&&x.suicAcc==="SÍ"&&x.suicDet?`<div class="det">${esc(x.suicDet)}</div>`:""):"–"}));
- R.push({cd:"scroll",l:"Scrollear",c:x=>x?`<span class="sc2">(${x.scrImp})</span><span class="sc2">${(+x.scrH||0)}:${pad2(+x.scrM||0)} h</span>`:"–"});
+ [["Suicidio/<wbr>CASIS","suicImp","suicAcc","suic"],["Comport. hostil","hostImp","hostAcc","host"],["Sexo / hombres","sexImp","sexAcc","sexo"]].forEach(c=>R.push({cd:c[3],l:c[0],t:c[0].replace("<wbr>",""),cls:"c4",c:x=>x?`(${x[c[1]]}) ${SN(x,c[2])}`+(c[1]==="suicImp"&&x.suicAcc==="SÍ"&&x.suicDet?`<div class="det">${esc(x.suicDet)}</div>`:""):"–"}));
+ R.push({cd:"scroll",l:"Scrollear",cls:"c4",c:x=>x?`<span class="sc2">(${x.scrImp})</span><span class="sc2">${(+x.scrH||0)}:${pad2(+x.scrM||0)} h</span>`:"–"});
  if(reg.some(([,x])=>["inex","pas","act"].some(p=>x[p]==="SÍ"))){g("Para mi psicóloga");[["Inexistencia","inex"],["Ideación pasiva","pas"],["Ideación activa","act"]].forEach(p=>R.push({cd:"pens",l:p[0],c:x=>SN(x,p[1])}))}
  g("Emociones (0-5)");
  EMOS.forEach(e=>R.push({cd:"emo",em:1,l:e[1],t:e[2],c:x=>x?x[e[0]]:"–",st:x=>{if(!x)return"";const v=+x[e[0]]||0;return `background:rgba(${EC[e[0]]},${(v/5*.9).toFixed(2)});${v>=4?"color:#fff;font-weight:700":""}`}}));
@@ -3856,9 +3870,9 @@ function week(ds){const reg=ds.filter(k=>REG[k]).map(k=>[k,REG[k]]);
  const tod=toISO(new Date()),falta=ds.filter(k=>k<=tod&&!REG[k]).map(short),pocaAgua=reg.filter(([,x])=>x.agua!==""&&+x.agua<2).map(([k])=>short(k)),pocoSueno=reg.filter(([,x])=>x.sueno!==""&&+x.sueno<6).map(([k])=>short(k)),sinSol=reg.filter(([,x])=>x.sol==="NO").length;
  const alerts=[falta.length?`📅 Falta cargar: <b>${falta.join(", ")}</b>`:"",pocaAgua.length?`💧 Menos de 2 litros: <b>${pocaAgua.join(", ")}</b>`:"",pocoSueno.length?`😴 Menos de 6 h de sueño: <b>${pocoSueno.join(", ")}</b>`:""].filter(Boolean).map(x=>`<div class="warn">${x}</div>`).join("");
  const dot=k=>{const c=dayColor(k);return `<i class="md" style="${c?"background:"+c:""}" title="${esc(mText(dayNum(k))||MOOD_LABEL[dayMood(k)]||"")}"></i>`};
- const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(r=>`<th class="${r.em?"em":""}" title="${r.t||r.l}">${r.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(r=>`<td class="${r.cls||""}" data-ed="${r.cd}|${k}" style="${r.st?r.st(REG[k]):""}">${r.c(REG[k],k)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+ const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(r=>`<th class="${r.em?"em":""} ${r.cls==="c4"?"c4":""}" title="${r.t||r.l}">${r.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(r=>`<td class="${r.cls||""}" data-ed="${r.cd}|${k}" style="${r.st?r.st(REG[k]):""}">${r.c(REG[k],k)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
  return `<div class="rg-met"><div><b>${avg(x=>x.sueno)}</b>😴 h sueño (prom.)</div><div><b>${avg(x=>x.agua)}</b>💧 litros (prom.)</div><div><b>${Math.floor(scr/60)}:${pad2(scr%60)}</b>📱 h de scroll</div><div><b>${sinSol}</b>☀️ días sin sol</div></div><div class="tw">${t}</div>`}
-function weekView(start,end){const ds=[];for(let x=new Date(start);x<=end;x=addDays(x,1))ds.push(toISO(x));$("weekView").innerHTML=week(ds)}
+function weekView(start,end){const hd=document.querySelector('header.top');document.documentElement.style.setProperty('--hdrH',(hd&&getComputedStyle(hd).position==='sticky'?hd.offsetHeight:0)+'px');const ds=[];for(let x=new Date(start);x<=end;x=addDays(x,1))ds.push(toISO(x));$("weekView").innerHTML=week(ds);const gr=$("weekView").querySelector("tr.gr");if(gr)$("weekView").style.setProperty("--grH",gr.offsetHeight+"px")}
 
 function emoStats(s,e){const ks=[...new Set([...Object.keys(REG),...allDates.filter(k=>(byDate.get(k)||[]).some(x=>emosOf(x).length))])].filter(k=>k>=s&&k<=e).sort();
  const val=(k,x)=>REG[k]?+REG[k][x]||0:(pensMax(k)[x]||0);
