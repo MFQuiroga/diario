@@ -689,10 +689,32 @@ footer.credit{
   .import-shell{ position:sticky; top:0; z-index:55; justify-content:space-between; flex-wrap:wrap;
     margin:0 -14px 22px; padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
     background:var(--bg-deep); border-bottom:1px solid var(--line); box-shadow:0 6px 14px rgba(0,0,0,.25); }
-  .import-shell .write-btn{ order:1; } .import-shell .gear-btn{ order:3; } .import-shell .auth-pill{ order:2; flex:1 1 auto; }
-  .import-shell .import-status{ order:4; flex-basis:100%; }
+  .import-shell{ align-items:center; }
+  .import-shell .write-btn{ order:1; } .import-shell .gear-btn{ order:2; margin-left:auto; }
+  .import-shell .import-status{ order:3; flex-basis:100%; }
+  .import-shell .import-status:empty{ display:none; }
   .cfg-menu{ top:calc(100% + 4px); max-height:calc(100dvh - 90px); overflow-y:auto; }
 }
+.keep-wrap{ display:flex; gap:9px; align-items:flex-start; text-align:left; margin:4px 2px 10px; font-size:13.5px; cursor:pointer; color:var(--text-light); }
+.keep-wrap[hidden]{ display:none; }
+.keep-wrap input{ accent-color:var(--accent); width:17px; height:17px; margin:1px 0 0; flex:none; }
+.keep-wrap small{ display:block; font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+.nav-bar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 14px; margin:0 0 18px; padding:12px 14px;
+  background:var(--bg-panel); border:1px solid var(--line); border-radius:16px; }
+.nav-bar .period-nav{ margin:0; flex:1 1 180px; justify-content:center; }
+.nav-bar .period-nav .label{ min-width:120px; text-align:center; color:var(--text-light); font-weight:600; }
+.stats-head{ margin-bottom:6px; }
+.ypx-wrap{ margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+.ypx{ display:grid; grid-template-columns:20px repeat(12,minmax(0,1fr)); gap:3px; max-width:360px; margin:12px auto 10px; }
+.ypx > *{ aspect-ratio:1; border-radius:4px; border:0; padding:0; min-width:0; }
+.ypx .h{ aspect-ratio:auto; display:flex; align-items:center; justify-content:center; font:600 10px 'Inter',sans-serif; color:var(--text-faint); }
+.ypx .d{ justify-content:flex-end; padding-right:4px; }
+.ypx .c{ background:var(--bg-panel-2); }
+.ypx button.c{ cursor:pointer; }
+.ypx button.c:hover{ outline:2px solid var(--text-light); outline-offset:-1px; }
+.ypx .x{ background:transparent; }
+.ypx .t{ outline:2px solid var(--accent-2); outline-offset:-1px; }
+@media (max-width:600px){ .nav-bar{ padding:10px; } .nav-bar .period-tabs{ flex:1 1 100%; justify-content:space-between; } }
 .dev-row .ren{ color:var(--text-light); }
 .dev-tools{ display:flex; justify-content:flex-end; margin:8px 0 0; }
 .dev-row.new{ animation:devNew 2.4s ease; }
@@ -751,6 +773,7 @@ footer.credit{
     <div class="lock-pick" id="lockPick" hidden></div>
     <div class="pw-wrap"><input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden><button type="button" class="eye" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button></div>
     <div class="pw-wrap"><input type="password" id="lockPw2" placeholder="Repetila" autocomplete="new-password" hidden><button type="button" class="eye" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button></div>
+    <label class="keep-wrap" id="keepWrap" hidden><input type="checkbox" id="keepOn"><span>Mantener abierto en este dispositivo<small>No te pide la contraseña hasta que cierres la app o toques Bloquear</small></span></label>
     <ul class="pw-rules" id="pwRules" hidden>
       <li data-r="len">6 o más caracteres</li><li data-r="up">Una mayúscula</li><li data-r="lo">Una minúscula</li><li data-r="ns">Un número o símbolo</li>
     </ul>
@@ -845,6 +868,7 @@ footer.credit{
       </button>
       <div class="cfg-menu" id="cfgMenu" role="menu">
         <div class="cfg-state" id="cfgState"></div>
+        <button class="cfg-item" id="authPill" hidden><span class="ic">🔄</span><span>Sincronizar ahora<small>Hay entradas guardadas acá que todavía no subieron a tu hoja</small></span></button>
         <button class="cfg-item" id="cfgLinkSheet" title="Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado."><span class="ic">📗</span><span>Enlazar a hoja de cálculo<small>Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado.</small></span></button>
         <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Activar huella</span></button>
         <button class="cfg-item" id="cfgDevices" data-linked><span class="ic">📱</span><span>Dispositivos<small>Sumar uno o desconectar uno perdido</small></span></button>
@@ -860,11 +884,11 @@ footer.credit{
         <button class="cfg-item" id="cfgLogout" data-linked><span class="ic">🚪</span><span>Cerrar sesión<small>Borra lo guardado en este dispositivo. Tu hoja no se toca.</small></span></button>
         <div class="cfg-ver" id="cfgVer"></div>
       </div>
-      <button class="auth-pill" id="authPill" hidden>🔄 Tocá para conectar con Google y guardar en tu hoja</button>
       <div class="import-status" id="importStatus"></div>
     </div>
   </header>
 
+  <div class="nav-bar" id="navBar"></div>
   <div class="grid">
     <!-- LEFT: Calendar + Day detail -->
     <div class="panel">
@@ -948,6 +972,12 @@ footer.credit{
       <div class="insight-line" id="insightLine"></div>
 
       <div class="period-summary" id="periodSummary"></div>
+
+      <div class="ypx-wrap">
+        <div class="htitle">Mi año en cuadraditos · <span id="ypxYear"></span></div>
+        <div class="ypx" id="ypx"></div>
+        <div class="legend ypx-legend" id="ypxLegend"></div>
+      </div>
     </div>
   </div>
 
@@ -1756,7 +1786,33 @@ function renderStats(){
   renderHorizon(points);
   renderInsight(entries, counts, statsPeriodType);
   renderPeriodSummary(entries);
+  renderYearPixels();
 }
+const SCORE_MOOD = { 5:'Increible', 4:'Bien', 3:'Mas o Menos', 2:'Mal', 1:'Horrible' };
+function renderYearPixels(){
+  const el = document.getElementById('ypx'); if(!el) return;
+  const y = statsPeriodType === 'all' ? calMonth.getFullYear() : statsAnchor.getFullYear();
+  document.getElementById('ypxYear').textContent = y;
+  let h = '<span></span>' + 'EFMAMJJASOND'.split('').map(c => `<span class="h">${c}</span>`).join('');
+  for(let d = 1; d <= 31; d++){
+    h += `<span class="h d">${d}</span>`;
+    for(let m = 0; m < 12; m++){
+      const dt = new Date(y, m, d);
+      if(dt.getMonth() !== m){ h += '<span class="x"></span>'; continue; }
+      const iso = toISO(dt), es = byDate.get(iso), t = iso === todayISO ? ' t' : '';
+      if(!es || !es.length){ h += `<span class="c${t}"></span>`; continue; }
+      const mood = SCORE_MOOD[Math.round(es.reduce((s, e) => s + (MOOD_SCORE[e.mood] || 3), 0) / es.length)];
+      h += `<button class="c${t}" data-d="${iso}" style="background:${MOOD_COLOR[mood]}" title="${d}/${m + 1} · ${MOOD_LABEL[mood]}" aria-label="${d}/${m + 1} ${MOOD_LABEL[mood]}"></button>`;
+    }
+  }
+  el.innerHTML = h;
+  document.getElementById('ypxLegend').innerHTML = document.getElementById('legend').innerHTML;
+}
+document.getElementById('ypx').addEventListener('click', ev=>{
+  const b = ev.target.closest('button[data-d]'); if(!b) return;
+  selectDay(b.dataset.d, true); syncStatsFromCal();
+  const dd = document.getElementById('dayDetail'); if(dd && dd.scrollIntoView) dd.scrollIntoView({ behavior:'smooth', block:'start' });
+});
 
 /* =========================================================
    AI INTERPRETATION ("Interpretar detonantes con más detalle")
@@ -1924,12 +1980,32 @@ function onInterpretClick(){
   runAiInterpretation();
 }
 
+/* un solo navegador: mueve calendario y estadísticas juntos */
+function syncCalFromStats(){
+  if(statsPeriodType === 'all') return;
+  const a = statsAnchor;
+  if(statsPeriodType === 'year'){ if(calMonth.getFullYear() !== a.getFullYear()) calMonth = new Date(a.getFullYear(), calMonth.getMonth(), 1); }
+  else calMonth = new Date(a.getFullYear(), a.getMonth(), 1);
+  renderCalendar();
+}
+function syncStatsFromCal(){
+  if(statsPeriodType === 'all') return;
+  const sel = selectedDate && parseISO(selectedDate);
+  const d = sel && sel.getFullYear() === calMonth.getFullYear() && sel.getMonth() === calMonth.getMonth() ? sel : new Date(calMonth);
+  statsAnchor = statsPeriodType === 'week' ? d : new Date(d.getFullYear(), d.getMonth(), 1);
+  renderStats();
+}
+(function buildNavBar(){
+  const nb = document.getElementById('navBar'), nav = document.querySelector('.cal-nav');
+  nb.append(document.getElementById('periodTabs'), document.getElementById('periodNav'), nav);
+  ['prevMonth','nextMonth'].forEach(id => document.getElementById(id).hidden = true);
+})();
 document.getElementById('periodTabs').addEventListener('click', (ev)=>{
   const btn = ev.target.closest('button[data-p]');
   if(!btn) return;
   statsPeriodType = btn.dataset.p;
   statsAnchor = parseISO(selectedDate) || new Date(latestDate);
-  renderStats();
+  renderStats(); syncCalFromStats();
 });
 document.getElementById('rangeSwitch').addEventListener('click', function(){
   showDailyRange = !showDailyRange;
@@ -1940,13 +2016,13 @@ document.getElementById('periodPrev').addEventListener('click', ()=>{
   if(statsPeriodType==='week') statsAnchor = addDays(statsAnchor,-7);
   else if(statsPeriodType==='month') statsAnchor = addMonths(statsAnchor,-1);
   else if(statsPeriodType==='year') statsAnchor = new Date(statsAnchor.getFullYear()-1, statsAnchor.getMonth(),1);
-  renderStats();
+  renderStats(); syncCalFromStats();
 });
 document.getElementById('periodNext').addEventListener('click', ()=>{
   if(statsPeriodType==='week') statsAnchor = addDays(statsAnchor,7);
   else if(statsPeriodType==='month') statsAnchor = addMonths(statsAnchor,1);
   else if(statsPeriodType==='year') statsAnchor = new Date(statsAnchor.getFullYear()+1, statsAnchor.getMonth(),1);
-  renderStats();
+  renderStats(); syncCalFromStats();
 });
 
 /* =========================================================
@@ -1956,15 +2032,15 @@ document.getElementById('prevMonth').addEventListener('click', ()=>{ calMonth = 
 document.getElementById('nextMonth').addEventListener('click', ()=>{ calMonth = addMonths(calMonth,1); renderCalendar(); });
 document.getElementById('gotoToday').addEventListener('click', ()=>{
   calMonth = new Date(latestDate.getFullYear(), latestDate.getMonth(),1);
-  selectDay(MAX_DATE, true);
+  selectDay(MAX_DATE, true); syncStatsFromCal();
 });
 monthSelect.addEventListener('change', ()=>{
   calMonth = new Date(Number(yearSelect.value), Number(monthSelect.value), 1);
-  renderCalendar();
+  renderCalendar(); syncStatsFromCal();
 });
 yearSelect.addEventListener('change', ()=>{
   calMonth = new Date(Number(yearSelect.value), Number(monthSelect.value), 1);
-  renderCalendar();
+  renderCalendar(); syncStatsFromCal();
 });
 
 /* =========================================================
@@ -2525,7 +2601,7 @@ async function syncPendingToSheet(extra){
   const p = getPending().slice().sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
   if(!p.length) return;
   if(!navigator.onLine){ setStatus('Sin internet: quedó guardado en este dispositivo y se sube después.'); return; }
-  if(!tokenOk()){ needAuth(true); setStatus('Guardado en este dispositivo. Tocá 🔄 para subirlo a tu hoja.'); return; }
+  if(!tokenOk()){ needAuth(true); setStatus('Guardado en este dispositivo ✓ Se sube solo a tu hoja.', 'ok'); return; }
   syncing = true;
   try{
     for(let i=0; i<p.length; i+=300){ await appendRows(p.slice(i, i+300)); setPending(p.slice(i+300)); }
@@ -2918,6 +2994,7 @@ document.getElementById('compMoods').addEventListener('click', ev=>{
 });
 [compText, compDate, compTime].forEach(el=> el.addEventListener('input', ()=>{ updateCompSave(); saveDraft(); }));
 compSave.addEventListener('click', async ()=>{
+  const tp = isLinked() && navigator.onLine && !tokenOk() && typeof gisReady === 'function' && gisReady() ? askToken(ME.email).catch(()=>null) : null;
   const e = { date: compDate.value, dow: csvDowFor(compDate.value), mood: compMood, time: compTime.value || nowHHMM(), text: compText.value.trim() };
   if(ENTRIES.some(x=> entryKey(x) === entryKey(e))){ closeComposer(); return; }
   ENTRIES.push(e);
@@ -2929,6 +3006,7 @@ compSave.addEventListener('click', async ()=>{
   renderCalendar(); selectDay(e.date, false);
   await saveStoredEntries();
   setStatus(isLinked() ? 'Guardando en la hoja…' : 'Guardado en este navegador ✓', isLinked() ? '' : 'ok');
+  if(tp) await tp;
   await syncPendingToSheet([e]);
   if(isLinked() && !getPending().length) setStatus('Guardado en la hoja ✓', 'ok');
 });
@@ -2937,7 +3015,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '14', APP_DATE = '23/11/2026 22:30';
+const APP_VERSION = '15', APP_DATE = '23/11/2026 23:10';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -2962,7 +3040,7 @@ async function useKeyRaw(raw){
 async function bioAvailable(){
   try{ return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); }catch(_){ return false; }
 }
-function idleTooLong(){ return Date.now() - Number(localStorage.getItem(LAST_KEY) || 0) > IDLE_MS; }
+function idleTooLong(){ if(ME && ME.keep) return false; return Date.now() - Number(localStorage.getItem(LAST_KEY) || 0) > IDLE_MS; }
 function relock(){ try{ sessionStorage.removeItem(SESS_KEY); localStorage.setItem(LAST_KEY, '0'); }catch(_){} location.reload(); }
 function markActive(force){
   if(!unlocked) return;
@@ -2998,6 +3076,7 @@ function setMode(mode, msg){
   const pwMode = mode === 'create' || mode === 'enter' || mode === 'reset';
   lockPw.hidden = !pwMode;
   lockPw2.hidden = L('pwRules').hidden = !(mode === 'create' || mode === 'reset');
+  L('keepWrap').hidden = !pwMode; L('keepOn').checked = !!(ME && ME.keep);
   lockEl.querySelectorAll('.pw-wrap .eye').forEach(b => b.hidden = !(mode === 'create' || mode === 'reset'));   // al entrar no se muestra: protege lo que autocompleta el navegador
   if(!L('pwRules').hidden) renderPwRules();
   [lockPw, lockPw2].forEach(i => { i.type = 'password'; i.nextElementSibling.classList.remove('on'); });
@@ -3041,6 +3120,8 @@ async function finishUnlock(){
   try{ localStorage.setItem(LAST_KEY, String(Date.now())); }catch(_){}
   lastWrite = Date.now();
   if(KEY_RAW){ try{ sessionStorage.setItem(SESS_KEY, JSON.stringify({ email: ME.email, k: b64(KEY_RAW) })); }catch(_){} }
+  if(!L('keepWrap').hidden) ME.keep = L('keepOn').checked;
+  L('keepWrap').hidden = true;
   ME.last = Date.now(); putProfile(ME);
   lockEl.classList.add('off'); document.body.classList.remove('nosheet'); closeSheetCard();
   renderBioItem();
@@ -3232,7 +3313,7 @@ L('cfgBio').addEventListener('click', async ()=>{
   renderBioItem();
 });
 
-L('cfgLockNow').addEventListener('click', relock);
+L('cfgLockNow').addEventListener('click', ()=>{ if(ME){ ME.keep = false; putProfile(ME); } relock(); });
 function closePw(){ L('pwBg').classList.remove('open'); ['pwOld','pwNew','pwNew2'].forEach(i => L(i).value = ''); L('pwErr').textContent = ''; }
 L('cfgPw').addEventListener('click', ()=>{ closeCfg(); L('pwUser').value = ME ? ME.email : ''; L('pwBg').classList.add('open'); setTimeout(()=> L('pwOld').focus(), 50); });
 L('pwCancel').addEventListener('click', closePw);
