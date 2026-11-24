@@ -995,7 +995,7 @@ footer.credit{
     <p id="lockMsg">Cargando…</p>
     <input type="text" name="username" id="lockUser" value="" autocomplete="username" hidden>
     <div class="lock-pick" id="lockPick" hidden></div>
-    <div class="pw-wrap"><input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden><button type="button" class="eye" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button></div>
+    <div class="pw-wrap"><input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" readonly hidden><button type="button" class="eye" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button></div>
     <div class="pw-wrap"><input type="password" id="lockPw2" placeholder="Repetila" autocomplete="new-password" hidden><button type="button" class="eye" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button></div>
     <label class="keep-wrap" id="keepWrap" hidden><input type="checkbox" id="keepOn"><span>Mantener abierto en este dispositivo<small>No te pide la contraseña hasta que cierres la app o toques Bloquear</small></span></label>
     <ul class="pw-rules" id="pwRules" hidden>
@@ -3147,7 +3147,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '29', APP_DATE = '24/11/2026 02:45';
+const APP_VERSION = '30', APP_DATE = '24/11/2026 02:50';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3223,6 +3223,7 @@ function setMode(mode, msg){
   L('lockBio').hidden = !(mode === 'enter' && cfg && cfg.bio);
   L('lockBio').textContent = 'Entrar con huella';
   lockPw.value = lockPw2.value = '';
+  if(mode === 'enter') pwArm(); else lockPw.readOnly = false;
   L('lockPick').hidden = mode !== 'pick';
   if(mode === 'pick') L('lockPick').innerHTML = profiles().map(p => `<button type="button" class="pick-row" data-email="${escH(p.email)}">${p.picture ? `<img src="${escH(p.picture)}" alt="" referrerpolicy="no-referrer">` : '<span class="pick-ini">' + escH((p.name || p.email)[0].toUpperCase()) + '</span>'}<span>${escH(p.name || p.email)}<small>${escH(p.email)}</small></span></button>`).join('');
   lockLinks({
@@ -3242,6 +3243,10 @@ function setMode(mode, msg){
 const PW_RULES = { len: s => s.length >= 6, up: s => /\p{Lu}/u.test(s), lo: s => /\p{Ll}/u.test(s), ns: s => /[^\p{L}\s]/u.test(s) };
 function pwRulesOk(s){ return Object.values(PW_RULES).every(f => f(s)); }
 function renderPwRules(){ L('pwRules').querySelectorAll('li').forEach(li => li.classList.toggle('ok', PW_RULES[li.dataset.r](lockPw.value))); }
+/* que el navegador no la escriba sola al abrir: el campo arranca bloqueado y se habilita cuando ella lo toca o escribe (ahí puede elegir la guardada) */
+const pwArm = ()=>{ lockPw.readOnly = true; };
+const pwOpen = ()=>{ if(lockPw.readOnly){ lockPw.readOnly = false; } };
+['pointerdown','touchstart','keydown'].forEach(t => lockPw.addEventListener(t, pwOpen, { passive:true }));
 lockPw.addEventListener('input', ()=>{ if(!L('pwRules').hidden) renderPwRules(); });
 document.querySelectorAll('.pw-wrap .eye').forEach(b => b.addEventListener('click', ()=>{
   const inp = b.previousElementSibling, show = inp.type === 'password';
