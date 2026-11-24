@@ -1,6 +1,6 @@
 /* Mimo · service worker: siempre intenta lo más nuevo (red primero) y usa la copia solo sin internet */
-const CACHE = 'diario-v22';
-const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon.svg'];
+const CACHE = 'diario-v23';
+const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon.svg', './semana.js'];
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(()=>{})); });
 self.addEventListener('activate', e => e.waitUntil((async () => {
   for(const k of await caches.keys()) if(k !== CACHE) await caches.delete(k);

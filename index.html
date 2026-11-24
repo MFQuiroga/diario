@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="semana.js"></script>
 <style>
 :root{
   --bg-deep:#191726;
@@ -911,6 +912,8 @@ footer.credit{
 .pw-row{ display:flex; gap:10px; align-items:center; padding:10px 0; font-size:14px; color:var(--text-light); }
 .pw-row small{ display:block; color:var(--text-faint); font-size:11.5px; }
 .tt td .sc2{ display:block; line-height:1.25; }
+.wk-tools{ display:flex; justify-content:flex-end; margin:0 0 8px; }
+.ib[disabled]{ opacity:.3; cursor:default; }
 /* tabla de la semana: conductas del mismo ancho (crecen hacia abajo), sin barra horizontal, encabezado fijo */
 .tt{ table-layout:auto; }
 .tt td.c4,.tt th.c4{ width:68px; min-width:68px; max-width:68px; white-space:normal !important; word-break:normal; overflow-wrap:anywhere; }
@@ -1089,6 +1092,7 @@ footer.credit{
         <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Activar huella</span></button>
         <button class="cfg-item" id="cfgDevices" data-linked><span class="ic">📱</span><span>Dispositivos<small>Sumar uno o desconectar uno perdido</small></span></button>
         <button class="cfg-item" id="cfgPass" data-linked title="Huella, cambiar contraseña, pedirla o no en este dispositivo y bloquear"><span class="ic">🔑</span><span>Contraseña<small>Huella · cambiar · pedirla al abrir · bloquear</small></span></button>
+        <button class="cfg-item" id="cfgShare" data-linked title="Copiar el link para tu terapeuta y elegir cuántos días ve"><span class="ic">👩‍⚕️</span><span>Link para mi terapeuta<small>Copiar el link · elegir cuántos días ve</small></span></button>
         <button class="cfg-item" id="cfgPw" data-linked><span class="ic">🔑</span><span>Cambiar contraseña</span></button>
         <button class="cfg-item" id="cfgLockNow" data-linked><span class="ic">🔒</span><span>Bloquear</span></button>
         <button class="cfg-item" id="cfgInstall" hidden><span class="ic">📲</span><span>Instalar app</span></button>
@@ -3017,6 +3021,7 @@ L('cfgUpdate').addEventListener('click', async ()=>{
   location.replace(location.pathname + '?v=' + Date.now());
 });
 L('cfgPass').addEventListener('click', ()=>{ closeCfg(); if(window.RG) RG.passSheet(); });
+L('cfgShare').addEventListener('click', ()=>{ closeCfg(); if(window.RG) RG.shareSheet(); });
 L('gearBtn').addEventListener('click', ev=>{ ev.stopPropagation(); renderCfgMenu(); cfgMenu.classList.toggle('open'); });
 document.addEventListener('click', ev=>{ if(!cfgMenu.contains(ev.target)) closeCfg(); });
 L('cfgLinkSheet').addEventListener('click', ()=>{ closeCfg(); openSheetCard(false); });
@@ -3123,7 +3128,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '22', APP_DATE = '24/11/2026 01:40';
+const APP_VERSION = '23', APP_DATE = '24/11/2026 02:30';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3778,7 +3783,7 @@ function penTag(e){const p=penPill(e);return (MOOD_EMO[e.mood]||"")+" "+(MOOD_LA
 function penList(){const ps=byDate.get(day)||[];
  return `<div class="mod">Pensamientos del día</div>${ps.map((e,i)=>`<div class="pen"><i style="background:${MOOD_HEX[e.mood]}"></i><div class="pt"><b style="color:${MOOD_HEX[e.mood]}">${penTag(e)}</b> · ${e.time}<p>${esc(e.text)}</p></div>${ib("✏️","Editar este pensamiento",`data-pe="${day}|${i}"`)}${ib("🗑️","Borrar este pensamiento",`data-pd="${day}|${i}"`)}</div>`).join("")||`<div class="hint2">Todavía no hay pensamientos este día.</div>`}${ib("＋ Agregar pensamiento","Escribir un pensamiento nuevo en este día",`data-pn="${day}"`,"wide add")}`}
 const PSI_VE=["sueno","agua","ejer","sol","mens"];
-const seen=f=>f.psi!=null?!!f.psi:PSI_VE.includes(f.k);
+const seen=f=>{const c=Semana.all(CFG).find(x=>x.k===(f.k==="mens"?"ciclo":f.k));return !!c&&!c.del&&!c.np};
 function bodyCard(){const fs=fields(),head="";
  if(bodyEdit)return fs.filter(f=>!f.del).map(f=>`<div class="q fe ${f.hid?"off":""}"><div class="qn">${esc(f.l)} <small class="hl">${f.t==="yn"?"Sí / No":"Número"}</small></div><div class="fbtn">${ib(f.hid?"🙈":"👁️",f.hid?"Oculto para vos: tocá para volver a mostrarlo":"Lo ves vos: tocá para ocultarlo (los datos quedan)",`data-bh="${f.k}"`)}${ib("👤",seen(f)?"Tu psicóloga lo ve: tocá para que no lo vea":"Tu psicóloga no lo ve: tocá para que lo vea",`data-bp="${f.k}"`,seen(f)?"psi on":"psi")}${ib("✏️","Cambiar el nombre",`data-br="${f.k}"`)}${ib("🗑️","Borrar el campo",`data-bd="${f.k}"`)}</div><div class="qm"></div></div>`).join("")+ib("＋ Agregar campo","Sumar un campo nuevo","data-ba=\"1\"","wide add")+(fs.some(f=>f.del&&!f.x)?`<div class="hint2" style="margin-top:8px">Borrados: ${fs.filter(f=>f.del&&!f.x).map(f=>`<button type="button" class="lnk" data-bu="${f.k}" title="Volver a usar este campo">${esc(f.l)}</button>`).join(", ")}</div>`:"");
  return head+live().filter(f=>!f.hid).map(f=>f.t==="num"?stepper(f.k,esc(f.l),f.u||"número",f.st||.5):yn(f.k,esc(f.l),"",f.g!==0&&(f.g||f.x))).join("")+circ("terapia","Impulso de dejar terapia",d.terapia,"c")}
@@ -3846,32 +3851,22 @@ function toast2(t){setStatus(t,"ok")}
 
 /* --- vista Semana: últimos 8 días, igual a la de la psicóloga --- */
 function cycleDay(k){const ks=Object.keys(REG).filter(x=>REG[x].mens==="SÍ").sort();let s0=null;for(const s of ks){if(s>k)break;const p=dt(s);p.setDate(p.getDate()-1);const pk=toISO(p);if(!(REG[pk]&&REG[pk].mens==="SÍ"))s0=s}if(!s0)return"";const n=Math.round((dt(k)-dt(s0))/864e5)+1;return n>60?"":n}
-function week(ds){const reg=ds.filter(k=>REG[k]).map(k=>[k,REG[k]]);
- const avg=f=>{const v=reg.map(([,x])=>f(x)).filter(v=>v!==""&&v!=null&&!isNaN(v));return v.length?Math.round(v.reduce((a,b)=>a+ +b,0)/v.length*10)/10:"–"};
- const scr=reg.reduce((a,[,x])=>a+(+x.scrH||0)*60+(+x.scrM||0),0);
- const SN=(x,f,good)=>!x||!x[f]?"–":`<b class="${(x[f]==="SÍ")===!!good?"no":"si"}">${x[f]}</b>`;
- const R=[],g=t=>R.push({g:t});
- R.push({cd:"dia",l:"Lo que hice",cls:"nt",c:x=>x&&x.notas?`<div class="nn">${esc(x.notas)}</div>`:"–"});
- g("Conductas · (impulso) acción");
- [["Suicidio/<wbr>CASIS","suicImp","suicAcc","suic"],["Comport. hostil","hostImp","hostAcc","host"],["Sexo / hombres","sexImp","sexAcc","sexo"]].forEach(c=>R.push({cd:c[3],l:c[0],t:c[0].replace("<wbr>",""),cls:"c4",c:x=>x?`(${x[c[1]]}) ${SN(x,c[2])}`+(c[1]==="suicImp"&&x.suicAcc==="SÍ"&&x.suicDet?`<div class="det">${esc(x.suicDet)}</div>`:""):"–"}));
- R.push({cd:"scroll",l:"Scrollear",cls:"c4",c:x=>x?`<span class="sc2">(${x.scrImp})</span><span class="sc2">${(+x.scrH||0)}:${pad2(+x.scrM||0)} h</span>`:"–"});
- if(reg.some(([,x])=>["inex","pas","act"].some(p=>x[p]==="SÍ"))){g("Para mi psicóloga");[["Inexistencia","inex"],["Ideación pasiva","pas"],["Ideación activa","act"]].forEach(p=>R.push({cd:"pens",l:p[0],c:x=>SN(x,p[1])}))}
- g("Emociones (0-5)");
- EMOS.forEach(e=>R.push({cd:"emo",em:1,l:e[1],t:e[2],c:x=>x?x[e[0]]:"–",st:x=>{if(!x)return"";const v=+x[e[0]]||0;return `background:rgba(${EC[e[0]]},${(v/5*.9).toFixed(2)});${v>=4?"color:#fff;font-weight:700":""}`}}));
- R.push({cd:"emo",l:"Otras",cls:"hb",c:x=>x?((x.otras||[]).filter(o=>o.n).map(o=>`${esc(o.n)} (${o.v})`).join("<br>")||"–"):"–"});
- if(reg.some(([,x])=>(x.habs||[]).length)){g("Habilidades");R.push({cd:"hab",l:"Habilidades",cls:"hb",c:x=>x&&(x.habs||[]).length?x.habs.map(h=>`${esc(h.h)} (${h.p})`).join("<br>"):"–"})}
- g("Cuerpo");
- R.push({cd:"cuerpo",em:1,l:"😴",t:"Sueño",c:x=>x&&x.sueno!==""?x.sueno+" h":"–",st:x=>x&&x.sueno!==""&&+x.sueno<6?"color:var(--mood-mal);font-weight:700":""});
- R.push({cd:"cuerpo",em:1,l:"💧",t:"Agua",c:x=>x&&x.agua!==""?x.agua+" L":"–",st:x=>x&&x.agua!==""&&+x.agua<2?"color:var(--mood-mal);font-weight:700":""});
- R.push({cd:"cuerpo",em:1,l:"🏃‍♀️",t:"Ejercicio",c:x=>SN(x,"ejer",1)});
- R.push({cd:"cuerpo",em:1,l:"☀️",t:"Sol",c:x=>SN(x,"sol",1)});
- R.push({cd:"cuerpo",em:1,l:"🩸",t:"Día del ciclo",c:(x,k)=>{const c=cycleDay(k);return c===""?"–":c},st:x=>x&&x.mens==="SÍ"?"background:rgba(226,75,74,.28);color:var(--mood-mal);font-weight:700":""});
- const C=R.filter(r=>!r.g),groups=[];let cur=null;R.forEach(r=>{if(r.g){cur={t:r.g,n:0};groups.push(cur)}else{if(!cur){cur={t:"",n:0};groups.push(cur)}cur.n++}});
- const tod=toISO(new Date()),falta=ds.filter(k=>k<=tod&&!REG[k]).map(short),pocaAgua=reg.filter(([,x])=>x.agua!==""&&+x.agua<2).map(([k])=>short(k)),pocoSueno=reg.filter(([,x])=>x.sueno!==""&&+x.sueno<6).map(([k])=>short(k)),sinSol=reg.filter(([,x])=>x.sol==="NO").length;
- const alerts=[falta.length?`📅 Falta cargar: <b>${falta.join(", ")}</b>`:"",pocaAgua.length?`💧 Menos de 2 litros: <b>${pocaAgua.join(", ")}</b>`:"",pocoSueno.length?`😴 Menos de 6 h de sueño: <b>${pocoSueno.join(", ")}</b>`:""].filter(Boolean).map(x=>`<div class="warn">${x}</div>`).join("");
- const dot=k=>{const c=dayColor(k);return `<i class="md" style="${c?"background:"+c:""}" title="${esc(mText(dayNum(k))||MOOD_LABEL[dayMood(k)]||"")}"></i>`};
- const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(r=>`<th class="${r.em?"em":""} ${r.cls==="c4"?"c4":""}" title="${r.t||r.l}">${r.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(r=>`<td class="${r.cls||""}" data-ed="${r.cd}|${k}" style="${r.st?r.st(REG[k]):""}">${r.c(REG[k],k)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
- return `<div class="rg-met"><div><b>${avg(x=>x.sueno)}</b>😴 h sueño (prom.)</div><div><b>${avg(x=>x.agua)}</b>💧 litros (prom.)</div><div><b>${Math.floor(scr/60)}:${pad2(scr%60)}</b>📱 h de scroll</div><div><b>${sinSol}</b>☀️ días sin sol</div></div><div class="tw">${t}</div>`}
+function week(ds){return `<div class="wk-tools">${ib("⚙️ Editar columnas","Ver, renombrar, ordenar, sacar o agregar columnas y elegir cuáles ve tu terapeuta","data-wcol=\"1\"","wide")}</div>`+Semana.render({days:ds,REG,cfg:CFG,who:"me",dayColor,dayTitle:k=>mText(dayNum(k))||MOOD_LABEL[dayMood(k)]||"",today:toISO(new Date())})}
+/* --- columnas del resumen semanal (CFG.week) --- */
+function W_(){CFG.week=CFG.week||{};["del","hid","np","l"].forEach(x=>CFG.week[x]=CFG.week[x]||{});return CFG.week}
+function colDone(){pushCfg();colSheet();redraw()}
+function moveCol(k,dir){const A=Semana.all(CFG).filter(c=>!c.del),i=A.findIndex(c=>c.k===k),j=i+dir;if(i<0||j<0||j>=A.length||A[j].g!==A[i].g)return;[A[i],A[j]]=[A[j],A[i]];W_().order=A.map(c=>c.k)}
+function colSheet(){const A=Semana.all(CFG),on=A.filter(c=>!c.del),off=A.filter(c=>c.del);let h="",g0=null;
+ on.forEach(c=>{if(c.g!==g0){g0=c.g;h+=`<div class="mod">${Semana.GROUPS[c.g]||"Resumen"}</div>`+(c.g==="psi"?`<div class="hint2">Aparecen solo si algún día de la semana está en SÍ.</div>`:"")}
+  const sib=on.filter(x=>x.g===c.g),j=sib.indexOf(c);
+  h+=`<div class="q fe ${c.hid?"off":""}"><div class="qn">${esc(c.name)}</div><div class="fbtn">${ib(c.hid?"🙈":"👁️",c.hid?"Vos no la ves: tocá para verla":"La ves vos: tocá para ocultarla",`data-wh="${c.k}"`)}${ib("👤",c.np?"Tu terapeuta no la ve: tocá para que la vea":"Tu terapeuta la ve: tocá para que no la vea",`data-wp="${c.k}"`,c.np?"psi":"psi on")}${ib("✏️","Cambiar el nombre",`data-wl="${c.k}"`)}${ib("↑","Mover antes (a la izquierda)",`data-wu="${c.k}" ${j?"":"disabled"}`)}${ib("↓","Mover después (a la derecha)",`data-wd="${c.k}" ${j<sib.length-1?"":"disabled"}`)}${ib("🗑️","Sacar de la tabla (tus datos no se borran)",`data-wx="${c.k}"`)}</div><div class="qm"></div></div>`});
+ if(off.length)h+=`<div class="mod">Agregar a la tabla</div><div class="chips">${off.map(c=>`<button type="button" class="chip" data-wa="${c.k}" title="Agregar «${esc(c.name)}» a la tabla">＋ ${esc(c.name)}</button>`).join("")}</div>`;
+ sheet("Columnas del resumen semanal",`<p class="hint2">👁️ la ves vos · 👤 la ve tu terapeuta · ↑↓ cambia el orden dentro de su grupo. Sacar una columna no borra tus datos.</p>${h}`)}
+/* --- link para la terapeuta (CFG.share = {t, days}) --- */
+const tok=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);return btoa(String.fromCharCode(...a)).replace(/[+/=]/g,c=>({"+":"-","/":"_","=":""}[c]))};
+function shareUrl(){const s=CFG.share||{},u=s.url||"";return u&&s.t?u+"?t="+s.t:""}
+function shareSheet(){CFG.share=CFG.share||{};const s=CFG.share;if(!s.t){s.t=tok();s.days=s.days||8;pushCfg()}const u=shareUrl(),d=s.days||8,from=fmt(toISO(addDays(new Date(),-(d-1))));
+ sheet("👩‍⚕️ Link para tu terapeuta",u?`<p class="hint2">Es siempre el mismo: mandáselo una sola vez. Ve solo el resumen semanal (sin tus pensamientos) y no puede cambiar nada.</p><div class="mod">¿Cuántos días puede ver?</div><div class="rg-moods">${[8,15,22,29].map((n,i)=>`<button type="button" data-shd="${n}" class="${d===n?"on":""}" style="--c:var(--accent)" title="${i+1} semana${i?"s":""} más hoy (${n} días)">${i+1} sem. + hoy</button>`).join("")}</div><p class="hint2">Ve desde el <b>${from}</b> hasta hoy (${d} días). Cada día se corre solo.</p><div class="actions"><button type="button" class="btn-p" data-shc="1">📋 Copiar link</button></div><p class="hint2" style="margin-top:16px">Si el link le llega a otra persona, cortalo: el actual deja de andar y se crea uno nuevo para mandarle a tu terapeuta.</p>${ib("✂️ Cortar acceso y crear link nuevo","El link actual deja de funcionar","data-shn=\"1\"","wide")}`:`<p class="hint2">Falta la dirección de tu página de Apps Script (termina en /exec).</p><label class="fl">Dirección<input type="url" id="rgShUrl" placeholder="https://script.google.com/macros/s/…/exec"></label><div class="actions"><button type="button" class="btn-p" data-shu="1">Guardar</button></div>`)}
 function weekView(start,end){const hd=document.querySelector('header.top');document.documentElement.style.setProperty('--hdrH',(hd&&getComputedStyle(hd).position==='sticky'?hd.offsetHeight:0)+'px');const ds=[];for(let x=new Date(start);x<=end;x=addDays(x,1))ds.push(toISO(x));$("weekView").innerHTML=week(ds);const gr=$("weekView").querySelector("tr.gr");if(gr)$("weekView").style.setProperty("--grH",gr.offsetHeight+"px")}
 
 function emoStats(s,e){const ks=[...new Set([...Object.keys(REG),...allDates.filter(k=>(byDate.get(k)||[]).some(x=>emosOf(x).length))])].filter(k=>k>=s&&k<=e).sort();
@@ -3916,6 +3911,19 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(s.del!=null){d.otras.splice(+s.del,1);markMan("otras");touch();render();return}
  if(b.id==="updOk"&&updA){const{k,a,diff}=updA,x=REG[k],m=manOf(k);diff.forEach(f=>{x[f]=f==="otras"?a.otras:a[f];delete m[f]});CFG.man[k]=m;cfgDirty=true;if(!PEND.includes(k))PEND.push(k);save();updA=null;closeSheet();if(d&&day===k){d=JSON.parse(JSON.stringify(x));render()}redraw();flush();return}
  if(s.pwa){closeSheet();document.getElementById(s.pwa).click();return}
+ if(s.wh){const W=W_();W.hid[s.wh]=W.hid[s.wh]?0:1;return colDone()}
+ if(s.wp){const W=W_();W.np[s.wp]=W.np[s.wp]?0:1;return colDone()}
+ if(s.wu){moveCol(s.wu,-1);return colDone()}
+ if(s.wd){moveCol(s.wd,1);return colDone()}
+ if(s.wx){W_().del[s.wx]=1;return colDone()}
+ if(s.wa){const W=W_();W.del[s.wa]=0;W.hid[s.wa]=0;return colDone()}
+ if(s.wl){const c=Semana.all(CFG).find(x=>x.k===s.wl);sheet("Cambiar nombre",`<label class="fl">Nombre<input type="text" id="rgWName" value="${esc(c.name)}"></label><div class="actions">${W_().l[s.wl]?ib("↺ Nombre original","Volver al nombre de siempre",`data-wlr="${s.wl}"`,"wide"):""}<button type="button" class="btn-p" data-wls="${s.wl}">Guardar</button></div>`);return}
+ if(s.wls){const v=$("rgWName").value.trim();if(v)W_().l[s.wls]=v;return colDone()}
+ if(s.wlr){delete W_().l[s.wlr];return colDone()}
+ if(s.shu){const v=$("rgShUrl").value.trim().replace(/\?.*$/,"");if(/^https:\/\/script\.google\.com\/.+\/exec$/.test(v)){CFG.share.url=v;pushCfg();shareSheet()}return}
+ if(s.shd){CFG.share.days=+s.shd;pushCfg();return shareSheet()}
+ if(s.shc){const u=shareUrl();pushCfg();try{await navigator.clipboard.writeText(u);toast2(navigator.onLine?"Link copiado ✓ Pegalo en el chat con tu terapeuta":"Link copiado. Ojo: sin internet, empieza a andar cuando se sincronice")}catch(_){prompt("Copiá el link:",u)}return}
+ if(s.shn){if(!confirm("¿Cortar el acceso?\n\nEl link actual deja de funcionar y se crea uno nuevo que tenés que mandarle a tu terapeuta."))return;CFG.share.t=tok();pushCfg();shareSheet();toast2("Listo: el link viejo ya no anda. Copiá el nuevo y mandáselo.");return}
  if(s.sk!=null)return openSkill(+s.sk);
  if(s.eh!=null)return openSkill(SK.findIndex(x=>x[1]===d.habs[+s.eh].h));
  if(s.sc!=null){sk.p=+s.sc;$("rgSk").querySelectorAll("[data-sc]").forEach(x=>x.classList.toggle("on",+x.dataset.sc===sk.p));$("rgScErr").textContent="";return}
@@ -3943,7 +3951,7 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(b.id==="pnDelOk"){const old=penOld;closeSheet();await updateEntry(old,null);afterPen(old.date);return}
  /* campos de Cuerpo */
  if(s.be){bodyEdit=!bodyEdit;render();return}
- if(s.bp){const f=fields().find(x=>x.k===s.bp);setField(s.bp,{psi:seen(f)?0:1});render();return}
+ if(s.bp){const f=fields().find(x=>x.k===s.bp),k=s.bp==="mens"?"ciclo":s.bp,W=W_();if(seen(f))W.np[k]=1;else{W.del[k]=0;W.np[k]=0}pushCfg();render();redraw();return}
  if(s.bh){const f=fields().find(x=>x.k===s.bh);setField(s.bh,{hid:f.hid?0:1});render();return}
  if(s.br){const f=fields().find(x=>x.k===s.br);sheet("Cambiar nombre",`<label class="fl">Nombre<input type="text" id="rgFName" value="${esc(f.l)}"></label><div class="actions"><button type="button" class="btn-p" data-brs="${s.br}">Guardar</button></div>`);return}
  if(s.brs){const v=$("rgFName").value.trim();if(v)setField(s.brs,{l:v});closeSheet();render();return}
@@ -3960,6 +3968,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&bg.classList.contai
 document.addEventListener("click",e=>{if(bg.contains(e.target))return;
  const pb=e.target.closest("[data-pe],[data-pd],[data-pn]");if(pb){e.stopPropagation();onClick(e);return}
  const o=e.target.closest("[data-rgopen]");if(o){open(o.dataset.rgopen,"dia");return}
+ if(e.target.closest("[data-wcol]")){colSheet();return}
  const td=e.target.closest("#weekView td[data-ed]");if(td&&!e.target.closest("details")){const[c,k]=td.dataset.ed.split("|");open(k,c)}},true);
 window.addEventListener("online",()=>flush());
 
@@ -3967,7 +3976,7 @@ const EYE_K="mimo_eyes_v1";let EYES=(()=>{try{return JSON.parse(localStorage.get
 function emoVal(k,e){if(REG[k])return +REG[k][e]||0;const m=pensMax(k);return (byDate.get(k)||[]).length?(m[e]||0):null}
 function emoMonth(ym,e){const v=[...new Set([...Object.keys(REG),...allDates])].filter(k=>k.startsWith(ym)).map(k=>emoVal(k,e)).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-eye]");if(!b)return;EYES[b.dataset.eye]=EYES[b.dataset.eye]?0:1;try{localStorage.setItem(EYE_K,JSON.stringify(EYES))}catch(_){}renderStats()});
-return {load,pull,flush,open,pensMax,weekView,emoStats,dayCard,dayMood,dayNum,dayColor,penSheet,passSheet,emoVal,emoMonth,eyesOn:()=>EMOS.filter(x=>EYES[x[0]]).map(x=>[x[0],EC[x[0]],x[2]]),pendN:()=>PEND.length+(cfgDirty?1:0),get REG(){return REG},_seed:o=>{REG=o}};
+return {shareSheet,colSheet,load,pull,flush,open,pensMax,weekView,emoStats,dayCard,dayMood,dayNum,dayColor,penSheet,passSheet,emoVal,emoMonth,eyesOn:()=>EMOS.filter(x=>EYES[x[0]]).map(x=>[x[0],EC[x[0]],x[2]]),pendN:()=>PEND.length+(cfgDirty?1:0),get REG(){return REG},_seed:o=>{REG=o}};
 })();
 
 </script>
