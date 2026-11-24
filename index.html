@@ -809,6 +809,63 @@ footer.credit{
 .err2{ color:#f2a19f; font-size:12.5px; min-height:16px; }
 @media (max-width:420px){ .ci{ gap:7px; } .ci button{ width:36px; height:36px; } .kind-pick{ grid-template-columns:1fr; } }
 
+/* ---------- v19: fichas más prolijas ---------- */
+.ib{ display:inline-flex; align-items:center; justify-content:center; gap:5px; min-width:30px; height:30px; padding:0 6px; border-radius:9px; border:1px solid var(--line); background:var(--bg-panel-2); color:var(--text-light); cursor:pointer; font:500 12.5px 'Inter',sans-serif; flex:none; }
+.ib:hover{ border-color:var(--accent); }
+.ib.wide{ padding:0 12px; height:34px; }
+.ib.add{ border-style:dashed; color:var(--accent-2); margin-top:10px; }
+.ib.x{ border-radius:50%; width:32px; height:32px; }
+.ib.info{ margin-left:8px; width:26px; min-width:26px; height:26px; border-radius:50%; font-size:14px; vertical-align:3px; color:var(--accent-2); }
+.ib.mini{ min-width:22px; height:22px; font-size:11px; padding:0 3px; border-radius:6px; vertical-align:middle; opacity:.75; }
+.rg-top h2{ margin:2px 0 6px; display:flex; align-items:center; }
+.rg-info{ background:var(--bg-panel-2); border-radius:12px; padding:10px 12px; font-size:13px; color:var(--text-muted); margin:0 0 10px; line-height:1.5; }
+.rg-info p{ margin:0 0 6px; } .rg-info p:last-child{ margin:0; } .rg-info b{ color:var(--text-light); }
+.rg-info[hidden]{ display:none; }
+.rg-sub{ margin:0 0 4px; }
+.reg .q{ display:flex; align-items:center; gap:14px; padding:9px 0; flex-wrap:wrap; border-top:1px solid rgba(58,53,84,.55); }
+.reg .q:first-child{ border-top:0; }
+.reg .qt{ flex:1 1 150px; font-size:14px; line-height:1.35; color:var(--text-light); font-weight:500; }
+.reg .qt small{ color:var(--text-muted); font-weight:400; }
+.reg .qt small.hl{ display:block; font-size:11.5px; color:var(--text-faint); margin-top:2px; }
+.reg .qt input[type=text]{ width:calc(100% - 44px); }
+.ci{ gap:6px; flex:none; }
+.ci button{ width:30px; height:30px; font-size:12px; }
+.ci button.z{ border-style:dashed; }
+.ci button.z.on{ background:var(--bg-panel-3); border:2px solid var(--accent); color:var(--accent-2); }
+.seg{ flex:none; } .seg button{ padding:6px 14px; font-size:12.5px; }
+.step{ flex:none; gap:6px; }
+.reg input[type=tel], .reg input[type=date], .reg input[type=time]{ padding:8px 10px; border-radius:10px; background:var(--bg-deep); border:1px solid var(--line); color:var(--text-light); font:14px 'Inter',sans-serif; color-scheme:dark; }
+.rg-row{ align-items:center; gap:6px; font-size:13px; color:var(--text-muted); flex:none; } .rg-row input{ width:58px; }
+.reg textarea.det{ min-height:64px; margin:2px 0 4px; }
+.crisis{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-top:12px; }
+.crisis .ib{ height:auto; min-height:38px; padding:6px 4px; font-size:12px; line-height:1.2; white-space:normal; text-align:center; background:rgba(224,82,79,.12); border-color:rgba(224,82,79,.4); }
+.pen{ display:flex; gap:8px; align-items:flex-start; background:var(--bg-panel-2); border-radius:12px; padding:9px 10px; margin-bottom:6px; }
+.pen > i{ width:8px; height:8px; border-radius:50%; margin-top:6px; flex:none; }
+.pen .pt{ flex:1; min-width:0; font-size:12.5px; }
+.pen .pt p{ margin:3px 0 0; white-space:pre-wrap; color:var(--text-muted); font-size:13px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.rg-tools{ display:flex; justify-content:flex-end; margin-bottom:4px; }
+.reg .q.fe{ gap:6px; } .reg .q.fe.off .qt{ opacity:.45; }
+.lnk{ background:none; border:0; color:var(--accent-2); text-decoration:underline; cursor:pointer; font:inherit; padding:0; }
+.fl{ display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--text-muted); margin:8px 0; }
+.fl input{ padding:9px 10px; border-radius:10px; background:var(--bg-deep); border:1px solid var(--line); color:var(--text-light); font:14px 'Inter',sans-serif; }
+.rg-row2{ display:flex; gap:8px; margin-bottom:10px; }
+.line{ display:flex; justify-content:space-between; gap:10px; align-items:center; padding:12px; border-radius:12px; background:var(--bg-panel-2); margin-bottom:8px; color:var(--text-light); text-decoration:none; }
+.line span{ color:#f2a19f; font-weight:600; white-space:nowrap; }
+.call{ display:block; text-align:center; text-decoration:none; margin:6px 0 12px; padding:12px; }
+.plan{ white-space:pre-wrap; background:var(--bg-panel-2); border-radius:12px; padding:12px; line-height:1.5; }
+.btn-p.danger{ background:var(--mood-mal); border-color:var(--mood-mal); }
+.rg-sk .actions{ display:flex; justify-content:flex-end; gap:8px; margin-top:12px; align-items:center; }
+.rg-sk .actions .ib.wide{ margin-right:auto; }
+.modal-bg.solo .reg{ padding:0; background:none; border:0; box-shadow:none; }
+.modal-bg.solo .reg > :not(.rg-sk){ display:none !important; }
+.modal-bg.solo .rg-sk{ position:static; border:1px solid var(--line); max-height:92vh; }
+.tt td.nt{ white-space:normal; } .tt .nn{ white-space:pre-line; }
+.tt details.pd summary{ cursor:pointer; font-size:11px; color:var(--accent-2); margin-top:4px; }
+.hint3{ font-size:10.5px; color:var(--accent-2); }
+.tt tr.hoy th{ color:var(--accent-2); }
+.eact{ display:flex; gap:6px; align-items:center; }
+.entry-card .ib{ color:var(--ink); background:rgba(255,255,255,.45); border-color:rgba(44,37,54,.18); min-width:28px; height:28px; }
+@media (max-width:420px){ .ci{ gap:4px; } .ci button{ width:26px; height:26px; font-size:11px; } .reg .q{ gap:10px; } .reg .qt{ flex-basis:100px; font-size:13.5px; } .crisis .ib{ flex-direction:column; gap:2px; font-size:10.5px; padding:6px 2px; } }
 </style>
 </head>
 <body>
@@ -1287,7 +1344,7 @@ function selectDay(iso, jumpCalendarIfNeeded, highlightSpansByEntryIndex){
     <div class="entry-card" data-idx="${idx}" style="border-left-color:${MOOD_COLOR[e.mood]}">
       <div class="ehead">
         <span class="mood-pill" style="background:${MOOD_COLOR[e.mood]}"><span class="sw"></span>${MOOD_LABEL[e.mood]}</span>
-        <span class="etime">${e.time}</span>
+        <span class="eact"><span class="etime">${e.time}</span><button type="button" class="ib" title="Editar este pensamiento" aria-label="Editar este pensamiento" data-pe="${iso}|${idx}">✏️</button><button type="button" class="ib" title="Borrar este pensamiento" aria-label="Borrar este pensamiento" data-pd="${iso}|${idx}">🗑️</button></span>
       </div>
       <div class="etext">${renderEntryHtml(e, spans) || '<p style="opacity:.5">(sin texto)</p>'}</div>
     </div>`;
@@ -1494,8 +1551,8 @@ searchClear.addEventListener('click', ()=>{
    ========================================================= */
 function getPeriodRange(type, anchor){
   if(type==='week'){
-    const s = addDays(anchor, -((anchor.getDay()+3)%7));   // semana de jueves a miércoles, como el registro
-    const e = addDays(s,6);
+    const e = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate());   // últimos 8 días, contando el de hoy
+    const s = addDays(e,-7);
     return {start:s, end:e};
   }
   if(type==='month'){
@@ -1760,7 +1817,7 @@ function applyView(start, end){
   ['animo','emo','tend'].forEach(t => sp.classList.toggle('no-' + t, statsPeriodType !== 'all' && !STAT_ON[t]));
   document.querySelectorAll('#statTg button').forEach(b => b.classList.toggle('on', !!STAT_ON[b.dataset.t]));
   if(window.RG){
-    if(statsPeriodType === 'week') RG.weekView(start);
+    if(statsPeriodType === 'week') RG.weekView(start, end);
     document.getElementById('emoStats').innerHTML = RG.emoStats(toISO(start), toISO(end));
   }
 }
@@ -1820,7 +1877,7 @@ document.getElementById('periodTabs').addEventListener('click', (ev)=>{
   const btn = ev.target.closest('button[data-p]');
   if(!btn) return;
   statsPeriodType = btn.dataset.p;
-  statsAnchor = parseISO(selectedDate) || new Date(latestDate);
+  statsAnchor = statsPeriodType === 'week' ? new Date() : (parseISO(selectedDate) || new Date(latestDate));
   renderStats(); syncCalFromStats();
 });
 document.getElementById('rangeSwitch').addEventListener('click', function(){
@@ -1849,6 +1906,7 @@ document.getElementById('nextMonth').addEventListener('click', ()=>{ calMonth = 
 document.getElementById('gotoToday').addEventListener('click', ()=>{
   calMonth = new Date(latestDate.getFullYear(), latestDate.getMonth(),1);
   selectDay(MAX_DATE, true); syncStatsFromCal();
+  if(statsPeriodType === 'week'){ statsAnchor = new Date(); renderStats(); }
 });
 monthSelect.addEventListener('change', ()=>{
   calMonth = new Date(Number(yearSelect.value), Number(monthSelect.value), 1);
@@ -1880,7 +1938,7 @@ function refreshAll(keepSelection){
   calMonth = new Date(targetDt.getFullYear(), targetDt.getMonth(), 1);
   renderCalendar();
   selectDay(targetDate, false);
-  if(!keepSelection){ statsAnchor = new Date(latestDate); statsPeriodType = 'week'; }
+  if(!keepSelection){ statsAnchor = new Date(); statsPeriodType = 'week'; }
   renderStats();
 }
 
@@ -2410,6 +2468,56 @@ async function appendRows(list){
     { updateCells:{ start:{ sheetId:gid, rowIndex:1, columnIndex:0 }, fields:'userEnteredValue,userEnteredFormat.numberFormat', rows } }
   ] } });
 }
+function rowCells(e, stamp){
+  const width = Math.max(...Object.values(COLS)) + 1, v = new Array(width).fill('');
+  v[COLS.date] = e.date; v[COLS.dow] = e.dow || csvDowFor(e.date); v[COLS.time] = e.time; v[COLS.mood] = e.mood; v[COLS.text] = e.text; v[COLS.saved] = stamp;
+  return { values: v.map((x, k) => k === COLS.date ? dateCell(x) : ({ userEnteredValue:{ stringValue: String(x == null ? '' : x) } })) };
+}
+const EDQ_KEY = 'mimo_edq_v1'; let EDQ = [];
+async function addEntry(e){
+  const tp = isLinked() && navigator.onLine && !tokenOk() && gisReady() ? askToken(ME.email).catch(()=>null) : null;
+  if(ENTRIES.some(x => entryKey(x) === entryKey(e))) return;
+  ENTRIES.push(e); ENTRIES.sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  refreshAll(true); selectDay(e.date, true); await saveStoredEntries();
+  if(tp) await tp;
+  await syncPendingToSheet([e]);
+}
+async function updateEntry(old, neu){   // neu = null → borrar
+  const tp = isLinked() && navigator.onLine && !tokenOk() && gisReady() ? askToken(ME.email).catch(()=>null) : null;
+  const i = ENTRIES.indexOf(old); if(i < 0) return;
+  if(neu) ENTRIES[i] = neu; else ENTRIES.splice(i, 1);
+  const p = getPending(), pi = p.findIndex(x => entryKey(x) === entryKey(old));
+  if(pi >= 0){ const q = p.slice(); if(neu) q[pi] = neu; else q.splice(pi, 1); setPending(q); }
+  else { EDQ.push({ old: plainEntry(old), neu: neu && plainEntry(neu) }); encSet(EDQ_KEY, EDQ); }
+  ENTRIES.sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  refreshAll(true); if(neu) selectDay(neu.date, true); await saveStoredEntries();
+  setStatus(neu ? 'Pensamiento editado ✓' : 'Pensamiento borrado ✓', 'ok');
+  if(tp) await tp;
+  await flushEdits();
+}
+let edBusy = false;
+async function flushEdits(){
+  if(edBusy || !EDQ.length || !isLinked() || !navigator.onLine || !tokenOk()) return;
+  edBusy = true;
+  try{
+    const gid = ME.diarioGid != null ? ME.diarioGid : (await prepareSheet(ME.sheetId)).gid;
+    const r = await gfetch(SHEETS + ME.sheetId + '/values/' + rng('Diario!A1:Z'));
+    const rows = r.values || [], head = (rows[0] || []).map(h => String(h).trim().toLowerCase());
+    const ix = (n, d) => { const i = head.findIndex(h => h === n || h.startsWith(n + ' ')); return i < 0 ? d : i; };
+    COLS = { date: ix('fecha',0), dow: ix('día',1), time: ix('hora',2), mood: ix('ánimo',3), text: ix('texto',4), saved: ix('guardado',5) };
+    const keys = rows.map((row, i) => i ? entryKey({ date: normDate(row[COLS.date]), time: normTime(row[COLS.time]), mood: String(row[COLS.mood] || '').trim(), text: String(row[COLS.text] || '') }) : null);
+    const used = new Set(), reqs = [], dels = [], stamp = nowStamp();
+    for(const op of EDQ){
+      const i = keys.findIndex((k, j) => j > 0 && !used.has(j) && k === entryKey(op.old)); if(i < 0) continue; used.add(i);
+      if(op.neu) reqs.push({ updateCells:{ start:{ sheetId:gid, rowIndex:i, columnIndex:0 }, fields:'userEnteredValue,userEnteredFormat.numberFormat', rows:[rowCells(op.neu, stamp)] } });
+      else dels.push(i);
+    }
+    dels.sort((a,b)=> b - a).forEach(i => reqs.push({ deleteDimension:{ range:{ sheetId:gid, dimension:'ROWS', startIndex:i, endIndex:i + 1 } } }));
+    if(reqs.length) await gfetch(SHEETS + ME.sheetId + ':batchUpdate', { method:'POST', body:{ requests: reqs } });
+    EDQ = []; encSet(EDQ_KEY, EDQ);
+  }catch(err){ console.error(err); }
+  finally{ edBusy = false; }
+}
 let syncing = false;
 async function syncPendingToSheet(extra){
   if(extra) addPending(extra);
@@ -2443,6 +2551,7 @@ async function pullFromSheet(){
   if(!tokenOk()){ needAuth(true); return; }
   setStatus('Sincronizando con tu hoja…');
   try{
+    await flushEdits();
     const r = await gfetch(SHEETS + ME.sheetId + '/values/' + rng('Diario!A1:Z'));
     const rows = r.values || [];
     const head = (rows[0] || []).map(h => String(h).trim().toLowerCase());
@@ -2452,6 +2561,8 @@ async function pullFromSheet(){
       const date = normDate(row[COLS.date]);
       return { date, dow: row[COLS.dow] || (date ? csvDowFor(date) : ''), time: normTime(row[COLS.time]), mood: String(row[COLS.mood] || '').trim(), text: String(row[COLS.text] || '') };
     }).filter(e => e.date && e.text.trim());
+    const gone = new Set(EDQ.map(op => entryKey(op.old)));
+    for(let k = sheetEntries.length - 1; k >= 0; k--) if(gone.has(entryKey(sheetEntries[k]))) sheetEntries.splice(k, 1);
     const sheetKeys = new Set(sheetEntries.map(entryKey));
     const localKeys = new Set(ENTRIES.map(entryKey));
     let added = 0;
@@ -2843,7 +2954,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '18', APP_DATE = '24/11/2026 01:00';
+const APP_VERSION = '19', APP_DATE = '24/11/2026 02:00';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3263,13 +3374,14 @@ async function init(){
   ENTRIES = stored || [];
   pendingMem = (await encGet(PENDING_KEY)) || [];
   if(window.RG) await RG.load();
+  EDQ = (await encGet(EDQ_KEY)) || [];
   ENTRIES.sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
 
   buildIndices();
   latestDate = parseISO(MAX_DATE);
   calMonth = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
   selectedDate = MAX_DATE;
-  statsAnchor = new Date(latestDate);
+  statsAnchor = new Date();
 
   populateYearSelect();
   refreshHeader();
@@ -3297,9 +3409,10 @@ startLock();
 <script>
 /* =========================================================
    REGISTRO DE CONDUCTAS (resumen del día para la psicóloga)
-   Lee y escribe las pestañas Registro y Habilidades con el MISMO
-   formato que Code.gs, así la vista de la psicóloga no cambia.
-   Columna extra al final: AF "Ánimo del día" (Code.gs la ignora).
+   Lee y escribe Registro y Habilidades con el MISMO formato que
+   Code.gs (la vista de la psicóloga no cambia). AF = Ánimo del día;
+   desde AG, campos de Cuerpo agregados por Flor. Configuración
+   (campos de Cuerpo, teléfonos, plan de crisis) en _diario!B2.
    ========================================================= */
 window.RG = (()=>{
 const ESC=["No pensé en usarla","Pensé en usarla pero no lo quise","Pensé en hacerlo, no lo hice pero lo deseaba","Me esforcé pero no pude","Me esforcé, la usé pero no me ayudó","Me esforcé, la usé y me ayudó","No me esforcé, la usé, no funcionó","No me esforcé, la usé, funcionó"];
@@ -3343,24 +3456,37 @@ const KEYS=["fecha","notas","suicImp","suicAcc","inex","pas","act","hostImp","ho
 const HEADS=["Fecha","Lo que hice","Suicidio/CASIS · impulso","Suicidio/CASIS · acción","Pensamientos de inexistencia","Ideación pasiva","Ideación activa","Comport. hostil · impulso","Comport. hostil · acción","Sexo/hombres · impulso","Sexo/hombres · acción","Scrollear · impulso","Scrollear · tiempo (h:mm)","Tristeza","Vergüenza","Enojo","Miedo","Alegría","Otras emociones","Sueño (h)","Agua (L)","Fui al baño","Tomé sol","Hice ejercicio","Comí a horario","Medicación","Alcohol/sustancias","Contacto social","Menstruación","Impulso de dejar terapia","Actualizado","Ánimo del día"];
 const NUM=["suicImp","hostImp","sexImp","scrImp","trist","verg","enojo","miedo","alegria","terapia"];
 const YN=["suicAcc","inex","pas","act","hostAcc","sexAcc","bano","sol","ejer","comi","medic","alcohol","social","mens"];
+const BODY=[{k:"sueno",l:"😴 Horas de sueño",t:"num",st:.5,u:"h"},{k:"agua",l:"💧 Agua",t:"num",st:.25,u:"L"},{k:"bano",l:"Fui al baño",t:"yn",g:1},{k:"sol",l:"Tomé sol",t:"yn",g:1},{k:"ejer",l:"Hice ejercicio",t:"yn",g:1},{k:"comi",l:"Comí a horario",t:"yn",g:1},{k:"medic",l:"Tomé la medicación",t:"yn",g:1},{k:"alcohol",l:"Alcohol / sustancias",t:"yn"},{k:"social",l:"Contacto social",t:"yn",g:1},{k:"mens",l:"Menstruación",t:"yn"}];
+const LINEAS=[["Emergencias","911"],["Línea 135 (CABA y GBA)","135"],["Línea 135 desde todo el país","01152751135"],["Línea 135 (otra opción)","08003451435"],["Salud mental 24 h","08009990091"]];
+const INFO={
+ suic:"<p><b>Suicidio:</b> cualquier acto con la intención de terminar con tu vida.</p><p><b>CASIS</b> (Conducta Autolesiva Sin Intención Suicida): lastimarte a propósito <i>sin</i> querer morir.</p><p><b>Impulso:</b> cuántas ganas tuviste (0 nada, 5 muchísimas). <b>Acción:</b> si lo hiciste.</p>",
+ host:"Gritar, insultar, dar portazos, romper cosas o mandar mensajes agresivos.",
+ sexo:"Buscar sexo o encuentros con hombres de una forma que después te hace mal.",
+ scroll:"El tiempo lo ves en «Bienestar digital» o «Tiempo de uso» del celular."};
 const CARDS=[
- {id:"dia",tab:"Mi día",h:"Resumen del día",s:"Títulos cortos: qué hice, qué me detonó, temas para charlar en terapia."},
+ {id:"dia",tab:"Mi día",h:"Mi día",s:"Resumen en títulos cortos y tus pensamientos del día."},
  {id:"suic",tab:"Suicidio/CASIS",h:"Suicidio / CASIS",s:"Las ganas (impulso) y si lo hiciste (acción)."},
- {id:"pens",tab:"Pensamientos",h:"Pensamientos",s:"Esto es para tu psicóloga. No hay respuestas buenas o malas."},
+ {id:"pens",tab:"Pensamientos",h:"Pensamientos",s:"Para tu psicóloga. No hay respuestas buenas o malas."},
  {id:"host",tab:"Hostil",h:"Comportamiento hostil",s:"Impulso y acción."},
  {id:"sexo",tab:"Sexo",h:"Sexo / hombres",s:"Impulso y acción."},
  {id:"scroll",tab:"Scroll",h:"Scrollear",s:"Impulso y tiempo con el celular."},
- {id:"emo",tab:"Emociones",h:"¿Qué emociones sentí?",s:"La intensidad más alta del día. Tocá de nuevo el mismo círculo para bajarlo."},
+ {id:"emo",tab:"Emociones",h:"¿Qué emociones sentí?",s:"La intensidad más alta del día."},
  {id:"cuerpo",tab:"Cuerpo",h:"Cuidado del cuerpo",s:"Sueño, agua y hábitos del día."},
  {id:"hab",tab:"Habilidades",h:"Habilidades",s:"Tocá una habilidad para ver cómo se hace y cargarla."},
  {id:"fin",tab:"Listo",h:"Revisá y guardá",s:"Se guarda en tu hoja y tu psicóloga lo ve como siempre."}];
-let REG={}, PEND=[], d=null, day=null, ci=0, sk=null, skI=-1, tmr=null, loaded=false;
+let REG={}, PEND=[], CFG={body:{},extra:[],psi:"",emer:"",emerName:"Emergencias San Michel",plan:""}, cfgDirty=false;
+let d=null, day=null, ci=0, sk=null, skI=-1, tmr=null, bodyEdit=false, infoOpen=false;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const dt=v=>new Date(v+"T12:00:00");
 const fmt=v=>{const[y,m,x]=v.split("-");return `${x}/${m}/${y}`};
 const short=k=>DIAS[dt(k).getDay()].slice(0,3)+" "+fmt(k).slice(0,5);
-const blank=()=>({notas:"",suicImp:0,suicAcc:"NO",suicDet:"",inex:"",pas:"",act:"",hostImp:0,hostAcc:"NO",sexImp:0,sexAcc:"NO",scrImp:0,scrH:0,scrM:0,trist:0,verg:0,enojo:0,miedo:0,alegria:0,otras:[],sueno:"",agua:"",bano:"NO",sol:"NO",ejer:"NO",comi:"NO",medic:"NO",alcohol:"NO",social:"NO",mens:"NO",terapia:0,habs:[],animo:""});
+const colA1=i=>{let s="";i++;while(i){const r=(i-1)%26;s=String.fromCharCode(65+r)+s;i=Math.floor((i-1)/26)}return s};
+const ib=(sym,tip,attrs,cls)=>`<button type="button" class="ib ${cls||""}" title="${tip}" aria-label="${tip}" ${attrs}>${sym}</button>`;
+function fields(){const out=BODY.map(f=>Object.assign({},f,CFG.body[f.k]||{}));(CFG.extra||[]).forEach(x=>out.push(Object.assign({st:x.t==="num"?.5:0},x)));return out}
+const live=()=>fields().filter(f=>!f.del);
+const blank=()=>{const o={notas:"",suicImp:0,suicAcc:"NO",suicDet:"",inex:"",pas:"",act:"",hostImp:0,hostAcc:"NO",sexImp:0,sexAcc:"NO",scrImp:0,scrH:0,scrM:0,trist:0,verg:0,enojo:0,miedo:0,alegria:0,otras:[],terapia:0,habs:[],animo:""};
+ fields().forEach(f=>o[f.k]=f.t==="yn"&&!f.hid&&!f.del?"NO":"");return o};
 const ynv=v=>{v=String(v??"").trim();return v===""?"":(/^s/i.test(v)?"SÍ":"NO")};
 const serial=n=>new Date(Date.UTC(1899,11,30)+Math.round(n)*864e5).toISOString().slice(0,10);
 function isoOf(v){if(typeof v==="number")return serial(v);v=String(v||"").replace(/^'/,"").trim();let m;
@@ -3376,19 +3502,22 @@ function fromRow(r){const o=blank();KEYS.forEach((k,i)=>{let v=r[i];if(v==null)v
  if(YN.includes(k)){o[k]=ynv(v);return}
  if(NUM.includes(k)){o[k]=+numv(v)||0;return}
  if(k==="sueno"||k==="agua"){o[k]=numv(v);return}
- o[k]=String(v)});return o}
-function toRow(o,f){const t=new Date();return KEYS.map(k=>{
+ o[k]=String(v)});
+ (CFG.extra||[]).forEach(x=>{const v=r[x.col];o[x.k]=x.t==="yn"?ynv(v):numv(v)});return o}
+function toRow(o,f){const t=new Date(),row=KEYS.map(k=>{
  if(k==="fecha")return "'"+f;
  if(k==="upd")return pad2(t.getDate())+"/"+pad2(t.getMonth()+1)+"/"+t.getFullYear();
  if(k==="scrT")return "'"+(+o.scrH||0)+":"+pad2(+o.scrM||0);
  if(k==="otras")return (o.otras||[]).filter(x=>x.n).map(x=>x.n+" ("+x.v+")").join(", ");
  if(k==="suicAcc")return o.suicAcc==="SÍ"&&o.suicDet&&o.suicDet.trim()?"SÍ | "+o.suicDet.replace(/\s*\n\s*/g," ").trim():o.suicAcc;
- const v=o[k];return v==null?"":v})}
+ const v=o[k];return v==null?"":v});
+ (CFG.extra||[]).forEach(x=>{while(row.length<x.col)row.push("");row[x.col]=x.del||o[x.k]==null?"":o[x.k]});return row}
+const lastCol=()=>colA1(Math.max(31,...(CFG.extra||[]).map(x=>x.col)));
 
 /* --- guardar local (cifrado) y en la hoja --- */
 const KEY="mimo_reg_v1";
-async function load(){const v=await encGet(KEY).catch(()=>null);if(v){REG=v.REG||{};PEND=v.PEND||[]}loaded=true}
-function save(){encSet(KEY,{REG,PEND})}
+async function load(){const v=await encGet(KEY).catch(()=>null);if(v){REG=v.REG||{};PEND=v.PEND||[];if(v.CFG)CFG=Object.assign(CFG,v.CFG);cfgDirty=!!v.cfgDirty}}
+function save(){encSet(KEY,{REG,PEND,CFG,cfgDirty})}
 const ID=()=>ME.sheetId;
 async function tabs(){const m=await sheetMeta(ID()),g={};(m.sheets||[]).forEach(s=>g[s.properties.title]=s.properties.sheetId);return g}
 async function ensureTabs(){let g=await tabs();const req=[];
@@ -3398,24 +3527,29 @@ async function ensureTabs(){let g=await tabs();const req=[];
   await gfetch(SHEETS+ID()+"/values:batchUpdate",{method:"POST",body:{valueInputOption:"RAW",data:[{range:"Registro!A1:AF1",values:[HEADS]},{range:"Habilidades!A1:D1",values:[["Fecha","Habilidad","Puntaje (0-7)","Cómo la usé"]]}]}})}
  return g}
 async function pull(){if(!isLinked()||!tokenOk())return;
- try{const r=await gfetch(SHEETS+ID()+"/values:batchGet?valueRenderOption=UNFORMATTED_VALUE&ranges="+rng("Registro!A1:AF")+"&ranges="+rng("Habilidades!A1:D"));
-  const[a,b]=r.valueRanges||[],out={};
+ try{const r=await gfetch(SHEETS+ID()+"/values:batchGet?valueRenderOption=UNFORMATTED_VALUE&ranges="+rng("_diario!B2")+"&ranges="+rng("Registro!A1:"+colA1(60))+"&ranges="+rng("Habilidades!A1:D"));
+  const[c,a,b]=r.valueRanges||[];
+  if(!cfgDirty&&c&&c.values&&c.values[0]&&c.values[0][0]){try{CFG=Object.assign(CFG,JSON.parse(c.values[0][0]))}catch(_){}}
+  const out={};
   ((a&&a.values)||[]).slice(1).forEach(row=>{const o=fromRow(row);if(o.fecha)out[o.fecha]=o});
   ((b&&b.values)||[]).slice(1).forEach(x=>{const f=isoOf(x[0]);if(out[f]&&x[1])out[f].habs.push({h:String(x[1]),p:+x[2]||0,c:String(x[3]||"")})});
   PEND.forEach(f=>{if(REG[f])out[f]=REG[f]});REG=out;save();redraw();await flush();
  }catch(e){if(e.status!==400)console.error(e)}}
+async function pushCfg(){cfgDirty=true;save();if(!isLinked()||!navigator.onLine||!tokenOk())return;
+ try{await gfetch(SHEETS+ID()+"/values/"+rng("_diario!A2:B2")+"?valueInputOption=RAW",{method:"PUT",body:{values:[["Configuración de Mimo (no la borres)",JSON.stringify(CFG)]]}});cfgDirty=false;save()}catch(e){console.error(e)}}
 let flushing=false;
-async function flush(){if(flushing||!PEND.length||!isLinked()||!navigator.onLine||!tokenOk())return;flushing=true;
+async function flush(){if(cfgDirty)await pushCfg();
+ if(flushing||!PEND.length||!isLinked()||!navigator.onLine||!tokenOk())return;flushing=true;
  try{const g=await ensureTabs();
-  const h=await gfetch(SHEETS+ID()+"/values:batchGet?valueRenderOption=UNFORMATTED_VALUE&ranges="+rng("Registro!A:A")+"&ranges="+rng("Registro!AF1")+"&ranges="+rng("Habilidades!A:A"));
-  const[ra,hd,ha]=h.valueRanges,rcol=(ra.values||[]).map(x=>isoOf(x[0])),hcol=(ha.values||[]).map(x=>isoOf(x[0]));
-  const data=[],app=[],del=[],habs=[],todo=PEND.slice();
-  if(!(hd.values&&hd.values[0]&&hd.values[0][0]))data.push({range:"Registro!AF1",values:[[HEADS[31]]]});
+  const h=await gfetch(SHEETS+ID()+"/values:batchGet?valueRenderOption=UNFORMATTED_VALUE&ranges="+rng("Registro!A:A")+"&ranges="+rng("Habilidades!A:A"));
+  const[ra,ha]=h.valueRanges,rcol=(ra.values||[]).map(x=>isoOf(x[0])),hcol=(ha.values||[]).map(x=>isoOf(x[0]));
+  const data=[{range:"Registro!AF1",values:[[HEADS[31]]]}],app=[],del=[],habs=[],todo=PEND.slice(),L=lastCol();
+  (CFG.extra||[]).forEach(x=>data.push({range:"Registro!"+colA1(x.col)+"1",values:[[x.del?"":x.l]]}));
   todo.forEach(f=>{const o=REG[f];if(!o)return;const i=rcol.indexOf(f);
-   if(i>=1)data.push({range:`Registro!A${i+1}:AF${i+1}`,values:[toRow(o,f)]});else app.push(toRow(o,f));
+   if(i>=1)data.push({range:`Registro!A${i+1}:${L}${i+1}`,values:[toRow(o,f)]});else app.push(toRow(o,f));
    hcol.forEach((x,j)=>{if(j>=1&&x===f)del.push(j)});
    (o.habs||[]).forEach(x=>habs.push(["'"+f,x.h,x.p,x.c||""]))});
-  if(data.length)await gfetch(SHEETS+ID()+"/values:batchUpdate",{method:"POST",body:{valueInputOption:"USER_ENTERED",data}});
+  await gfetch(SHEETS+ID()+"/values:batchUpdate",{method:"POST",body:{valueInputOption:"USER_ENTERED",data}});
   if(app.length)await gfetch(SHEETS+ID()+"/values/"+rng("Registro!A1")+":append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",{method:"POST",body:{values:app}});
   if(del.length)await gfetch(SHEETS+ID()+":batchUpdate",{method:"POST",body:{requests:del.sort((a,b)=>b-a).map(j=>({deleteDimension:{range:{sheetId:g.Habilidades,dimension:"ROWS",startIndex:j,endIndex:j+1}}}))}});
   if(habs.length)await gfetch(SHEETS+ID()+"/values/"+rng("Habilidades!A1")+":append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",{method:"POST",body:{values:habs}});
@@ -3424,49 +3558,85 @@ async function flush(){if(flushing||!PEND.length||!isLinked()||!navigator.onLine
  finally{flushing=false}}
 function touch(){if(!day)return;d.fecha=day;REG[day]=JSON.parse(JSON.stringify(d));if(!PEND.includes(day))PEND.push(day);save();clearTimeout(tmr);tmr=setTimeout(flush,2500)}
 
-/* --- ánimo del día: el del registro o el promedio de los pensamientos --- */
 function dayMood(k){const es=byDate.get(k);if(es&&es.length)return SCORE_MOOD[Math.round(es.reduce((s,e)=>s+(MOOD_SCORE[e.mood]||3),0)/es.length)];return REG[k]&&REG[k].animo||""}
 
-/* --- fichas --- */
-function circ(k,label,v,attr){v=+v||0;return `<div class="q"><div class="ql">${label}<span class="val">${v} · ${WORDS[v]}</span></div><div class="ci">${[1,2,3,4,5].map(n=>`<button type="button" class="${n<=v?"on":""}" data-${attr}="${k}|${n}" aria-label="${label} ${n}">${n}</button>`).join("")}</div></div>`}
-function yn(k,label,help,good){const cN=good?"r":"g",cS=good?"g":"r";return `<div class="q"><div class="ql">${label}<span class="seg"><button type="button" class="${d[k]==="NO"?"on "+cN:""}" data-yn="${k}|NO">NO</button><button type="button" class="${d[k]==="SÍ"?"on "+cS:""}" data-yn="${k}|SÍ">SÍ</button></span></div>${help?`<div class="hint2">${help}</div>`:""}</div>`}
-function stepper(k,label,unit,st){return `<div class="q"><div class="ql">${label}<span class="step"><button type="button" data-st="${k}|-${st}" aria-label="Restar">−</button><input type="number" min="0" step="${st}" value="${d[k]}" data-num="${k}" aria-label="${label}"><button type="button" data-st="${k}|${st}" aria-label="Sumar">+</button></span></div><div class="hint2">${unit}</div></div>`}
+/* --- controles: siempre a la izquierda, lo que significa a la derecha --- */
+function circ(k,label,v,attr,extra){v=+v||0;return `<div class="q"><div class="ci">${[0,1,2,3,4,5].map(n=>`<button type="button" class="${n===0?(v===0?"z on":"z"):(n<=v?"on":"")}" data-${attr}="${k}|${n}" title="${n} · ${WORDS[n]}" aria-label="${label}: ${n}, ${WORDS[n]}">${n}</button>`).join("")}</div><div class="qt">${label} <small>(${v} · ${WORDS[v].toLowerCase()})</small>${extra||""}</div></div>`}
+function yn(k,label,help,good){const cN=good?"r":"g",cS=good?"g":"r";return `<div class="q"><span class="seg"><button type="button" class="${d[k]==="NO"?"on "+cN:""}" data-yn="${k}|NO">NO</button><button type="button" class="${d[k]==="SÍ"?"on "+cS:""}" data-yn="${k}|SÍ">SÍ</button></span><div class="qt">${label}${help?`<small class="hl">${help}</small>`:""}</div></div>`}
+function stepper(k,label,unit,st){return `<div class="q"><span class="step">${ib("−","Restar "+st,`data-st="${k}|-${st}"`)}<input type="number" min="0" step="${st}" value="${d[k]}" data-num="${k}" aria-label="${label}">${ib("+","Sumar "+st,`data-st="${k}|${st}"`)}</span><div class="qt">${label} <small>(${unit})</small></div></div>`}
 function moodRow(){return `<div class="rg-moods">${MOODS.slice().reverse().map(m=>`<button type="button" data-am="${m}" class="${d.animo===m?"on":""}" style="--c:${MOOD_HEX[m]}">${MOOD_LABEL[m]}</button>`).join("")}</div>`}
+const risk=()=>+d.suicImp>0||d.suicAcc==="SÍ"||d.inex==="SÍ"||d.pas==="SÍ"||d.act==="SÍ";
+function crisisRow(){if(!risk())return "";
+ return `<div class="crisis">${ib("📋 Plan de crisis","Abrir tu plan de crisis","data-cr=\"plan\"","wide")}${ib("📞 Mi psicóloga",CFG.psi?"Llamar a tu psicóloga ("+CFG.psi+")":"Cargar el teléfono de tu psicóloga","data-cr=\"psi\"","wide")}${ib("🚑 "+esc(CFG.emerName.replace(/^Emergencias\s*/i,"")||"Emergencias"),CFG.emer?"Llamar a "+esc(CFG.emerName)+" ("+CFG.emer+")":"Cargar el teléfono de "+esc(CFG.emerName),"data-cr=\"emer\"","wide")}${ib("☎️ Líneas gratis","Ver las líneas de ayuda gratuitas","data-cr=\"lineas\"","wide")}</div>`}
+function penList(){const ps=byDate.get(day)||[];
+ return `<div class="mod">Pensamientos del día</div>${ps.map((e,i)=>`<div class="pen"><i style="background:${MOOD_HEX[e.mood]}"></i><div class="pt"><b style="color:${MOOD_HEX[e.mood]}">${MOOD_LABEL[e.mood]}</b> · ${e.time}<p>${esc(e.text)}</p></div>${ib("✏️","Editar este pensamiento",`data-pe="${day}|${i}"`)}${ib("🗑️","Borrar este pensamiento",`data-pd="${day}|${i}"`)}</div>`).join("")||`<div class="hint2">Todavía no hay pensamientos este día.</div>`}${ib("＋ Agregar pensamiento","Escribir un pensamiento nuevo en este día",`data-pn="${day}"`,"wide add")}`}
+function bodyCard(){const fs=fields();
+ const head=`<div class="rg-tools">${ib(bodyEdit?"✓ Listo":"⚙️ Editar campos",bodyEdit?"Terminar de editar":"Ocultar, agregar, renombrar o borrar campos","data-be=\"1\"","wide")}</div>`;
+ if(bodyEdit)return head+fs.filter(f=>!f.del).map(f=>`<div class="q fe ${f.hid?"off":""}">${ib(f.hid?"🙈":"👁️",f.hid?"Volver a mostrar":"Ocultar (los datos quedan)",`data-bh="${f.k}"`)}${ib("✏️","Cambiar el nombre",`data-br="${f.k}"`)}${ib("🗑️","Borrar el campo",`data-bd="${f.k}"`)}<div class="qt">${esc(f.l)} <small>(${f.t==="yn"?"Sí/No":"número"})</small></div></div>`).join("")+ib("＋ Agregar campo","Sumar un campo nuevo","data-ba=\"1\"","wide add")+(fs.some(f=>f.del&&!f.x)?`<div class="hint2" style="margin-top:8px">Borrados: ${fs.filter(f=>f.del&&!f.x).map(f=>`<button type="button" class="lnk" data-bu="${f.k}" title="Volver a usar este campo">${esc(f.l)}</button>`).join(", ")}</div>`:"");
+ return head+live().filter(f=>!f.hid).map(f=>f.t==="num"?stepper(f.k,esc(f.l),f.u||"número",f.st||.5):yn(f.k,esc(f.l),"",f.g!==0&&(f.g||f.x))).join("")+circ("terapia","Impulso de dejar terapia",d.terapia,"c")}
 function body(c){switch(c.id){
- case"dia":{const ps=byDate.get(day)||[];return `<textarea id="rgNotas" placeholder="Trabajo · sol · terapia&#10;Me detonó: …&#10;Para charlar: …">${esc(d.notas)}</textarea>`+(ps.length?`<details class="rg-ref"><summary>Tus pensamientos de este día (${ps.length})</summary>${ps.map(e=>`<p><b style="color:${MOOD_HEX[e.mood]}">${MOOD_LABEL[e.mood]}</b> · ${e.time}<br>${esc(e.text)}</p>`).join("")}</details>`:"")}
- case"suic":return `<details class="info"><summary>¿Qué es esto?</summary><p><b>Suicidio:</b> cualquier acto con la intención de terminar con tu vida.</p><p><b>CASIS</b> (Conducta Autolesiva Sin Intención Suicida): lastimarte a propósito <i>sin</i> querer morir.</p><p><b>Impulso:</b> cuántas ganas tuviste (0 nada, 5 muchísimas). <b>Acción:</b> si lo hiciste.</p></details>${circ("suicImp","Impulso",d.suicImp,"c")}${yn("suicAcc","Acción")}${d.suicAcc==="SÍ"?`<div class="q"><div class="ql">¿Qué hiciste exactamente?</div><textarea id="rgDet" style="min-height:80px" placeholder="Contá qué pasó, con tus palabras">${esc(d.suicDet||"")}</textarea></div>`:""}${ALERT}`;
- case"pens":return `${yn("inex","Pensamientos de inexistencia","Ideas como «ojalá no existiera» o «quisiera desaparecer».")}${yn("pas","Ideación pasiva","Pensar en la muerte o en «estar mejor muerta», sin intención ni plan.")}${yn("act","Ideación activa","Pensar en quitarte la vida con algo de intención, o en cómo o cuándo hacerlo.")}${ALERT}`;
- case"host":return `<div class="info">Gritar, insultar, dar portazos, romper cosas o mandar mensajes agresivos.</div>${circ("hostImp","Impulso",d.hostImp,"c")}${yn("hostAcc","Acción")}`;
- case"sexo":return `<div class="info">Buscar sexo o encuentros con hombres de una forma que después te hace mal.</div>${circ("sexImp","Impulso",d.sexImp,"c")}${yn("sexAcc","Acción")}`;
- case"scroll":return `${circ("scrImp","Impulso",d.scrImp,"c")}<div class="q"><div class="ql">Tiempo scrolleando</div><div class="rg-row"><label>Horas<input type="number" min="0" max="24" value="${d.scrH}" data-num="scrH"></label><label>Minutos<input type="number" min="0" max="59" step="5" value="${d.scrM}" data-num="scrM"></label></div><div class="hint2">Lo ves en «Bienestar digital» o «Tiempo de uso».</div></div>`;
- case"emo":return EMOS.map(e=>circ(e[0],e[1]+" "+e[2],d[e[0]],"c")).join("")+d.otras.map((o,n)=>`<div class="q"><div class="ql"><input type="text" list="rgEmos" value="${esc(o.n)}" data-on="${n}" placeholder="Nombre de la emoción" style="flex:1"><button type="button" class="chip" data-del="${n}" aria-label="Quitar">✕</button></div><div class="ci">${[1,2,3,4,5].map(x=>`<button type="button" class="${x<=o.v?"on":""}" data-oc="${n}|${x}">${x}</button>`).join("")}</div></div>`).join("")+(d.otras.length<6?`<button type="button" class="chip" id="rgAddEmo" style="margin-top:10px">+ Otra emoción</button>`:"")+`<datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia"].map(x=>`<option value="${x}">`).join("")}</datalist>`;
- case"cuerpo":return stepper("sueno","😴 Horas de sueño","horas (podés poner 6.5)",0.5)+stepper("agua","💧 Agua","litros (de a 0,25)",0.25)+yn("bano","Fui al baño","",1)+yn("sol","Tomé sol","",1)+yn("ejer","Hice ejercicio","",1)+yn("comi","Comí a horario","",1)+yn("medic","Tomé la medicación","",1)+yn("alcohol","Alcohol / sustancias")+yn("social","Contacto social","Hablé o me vi con alguien.",1)+yn("mens","Menstruación")+circ("terapia","Impulso de dejar terapia",d.terapia,"c");
- case"hab":{const h=d.habs.length?`<div class="used-list">${d.habs.map((x,n)=>`<div class="u"><div><b>${esc(x.h)}</b> · ${x.p} – ${ESC[x.p]}${x.c?`<br><span class="hint2">${esc(x.c)}</span>`:""}</div><button type="button" class="chip" data-eh="${n}">Editar</button></div>`).join("")}</div>`:"";
+ case"dia":return `<div class="mod" style="margin-top:0">Resumen para tu psicóloga</div><textarea id="rgNotas" placeholder="Trabajo · sol · terapia&#10;Me detonó: …&#10;Para charlar: …">${esc(d.notas)}</textarea>${penList()}`;
+ case"suic":return `${circ("suicImp","Impulso",d.suicImp,"c")}${yn("suicAcc","Acción")}${d.suicAcc==="SÍ"?`<textarea id="rgDet" class="det" placeholder="¿Qué hiciste exactamente? Con tus palabras">${esc(d.suicDet||"")}</textarea>`:""}${crisisRow()}`;
+ case"pens":return `${yn("inex","Pensamientos de inexistencia","«Ojalá no existiera», «quisiera desaparecer».")}${yn("pas","Ideación pasiva","Pensar en la muerte, sin intención ni plan.")}${yn("act","Ideación activa","Con algo de intención, o pensar en cómo o cuándo.")}${crisisRow()}`;
+ case"host":return `${circ("hostImp","Impulso",d.hostImp,"c")}${yn("hostAcc","Acción")}`;
+ case"sexo":return `${circ("sexImp","Impulso",d.sexImp,"c")}${yn("sexAcc","Acción")}`;
+ case"scroll":return `${circ("scrImp","Impulso",d.scrImp,"c")}<div class="q"><span class="rg-row"><input type="number" min="0" max="24" value="${d.scrH}" data-num="scrH" aria-label="Horas"> h <input type="number" min="0" max="59" step="5" value="${d.scrM}" data-num="scrM" aria-label="Minutos"> min</span><div class="qt">Tiempo scrolleando</div></div>`;
+ case"emo":return EMOS.map(e=>circ(e[0],e[1]+" "+e[2],d[e[0]],"c")).join("")+d.otras.map((o,n)=>`<div class="q"><div class="ci">${[0,1,2,3,4,5].map(x=>`<button type="button" class="${x===0?(o.v===0?"z on":"z"):(x<=o.v?"on":"")}" data-oc="${n}|${x}" title="${x} · ${WORDS[x]}">${x}</button>`).join("")}</div><div class="qt"><input type="text" list="rgEmos" value="${esc(o.n)}" data-on="${n}" placeholder="Nombre de la emoción"> ${ib("🗑️","Quitar esta emoción",`data-del="${n}"`)}</div></div>`).join("")+(d.otras.length<6?ib("＋ Otra emoción","Sumar otra emoción","id=\"rgAddEmo\"","wide add"):"")+`<datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia"].map(x=>`<option value="${x}">`).join("")}</datalist>`;
+ case"cuerpo":return bodyCard();
+ case"hab":{const h=d.habs.length?`<div class="used-list">${d.habs.map((x,n)=>`<div class="u"><div><b>${esc(x.h)}</b> · ${x.p} – ${ESC[x.p]}${x.c?`<br><span class="hint2">${esc(x.c)}</span>`:""}</div>${ib("✏️","Editar",`data-eh="${n}"`)}</div>`).join("")}</div>`:"";
   return h+[...new Set(SK.map(s=>s[0]))].map(m=>`<div class="mod">${m}</div><div class="chips">${SK.map((s,n)=>s[0]===m?`<button type="button" class="chip ${d.habs.some(x=>x.h===s[1])?"used":""}" data-sk="${n}">${s[1]}</button>`:"").join("")}</div>`).join("")}
  case"fin":{const r=(a,b)=>`<div><span>${a}</span><b>${esc(b)}</b></div>`,emo=EMOS.map(e=>e[1]+" "+d[e[0]]).join("  ");
   return `<div class="mod" style="margin-top:0">Ánimo del día</div>${moodRow()}<div class="sum">${r("Emociones",emo)}${r("Suicidio/CASIS",d.suicImp+" · "+(d.suicAcc||"–"))}${r("Inexistencia / pasiva / activa",(d.inex||"–")+" / "+(d.pas||"–")+" / "+(d.act||"–"))}${r("Hostil · Sexo",d.hostImp+" · "+(d.hostAcc||"–")+"   "+d.sexImp+" · "+(d.sexAcc||"–"))}${r("Scroll",d.scrImp+" · "+(+d.scrH||0)+":"+pad2(+d.scrM||0)+" h")}${r("Sueño · Agua",(d.sueno===""?"–":d.sueno)+" h · "+(d.agua===""?"–":d.agua)+" L")}${r("Habilidades",d.habs.map(h=>h.h+" ("+h.p+")").join(", ")||"ninguna")}</div>`+((!d.inex||!d.pas||!d.act)?`<div class="warn">Te falta responder Pensamientos (inexistencia e ideación).</div>`:"")}
 }}
 function render(){const c=CARDS[ci];
- $("rgDate").textContent=DIAS[dt(day).getDay()]+" "+fmt(day);$("rgH").textContent=c.h;$("rgSub").textContent=c.s;
+ $("rgDate").textContent=DIAS[dt(day).getDay()]+" "+fmt(day);
+ $("rgH").innerHTML=esc(c.h)+(INFO[c.id]?ib("ⓘ","¿Qué es esto?","data-info=\"1\"","info"):"");
+ $("rgInfo").innerHTML=INFO[c.id]||"";$("rgInfo").hidden=!(INFO[c.id]&&infoOpen);
+ $("rgSub").textContent=c.s;
  $("rgDots").innerHTML=CARDS.map((x,n)=>`<button type="button" class="${n===ci?"on":""}" data-go="${n}">${x.tab}</button>`).join("");
  $("rgBody").innerHTML=body(c);$("rgPrev").style.visibility=ci?"visible":"hidden";$("rgNext").textContent=ci===CARDS.length-1?"Guardar":"Siguiente";
- const a=$("alerta");if(a)a.classList.toggle("show",d.suicAcc==="SÍ"||d.pas==="SÍ"||d.act==="SÍ"||d.inex==="SÍ"||d.suicImp>=4);
  const on=$("rgDots").querySelector(".on");if(on&&on.scrollIntoView)on.scrollIntoView({block:"nearest",inline:"center"})}
 function open(k,card,mood){day=k;d=REG[k]?JSON.parse(JSON.stringify(REG[k])):blank();d.habs=d.habs||[];d.otras=d.otras||[];
- if(mood){d.animo=mood;touch()}ci=Math.max(0,CARDS.findIndex(c=>c.id===card));$("rgSk").hidden=true;render();$("regBg").classList.add("open");$("rgCard").scrollTop=0}
+ if(mood){d.animo=mood;touch()}ci=Math.max(0,CARDS.findIndex(c=>c.id===card));bodyEdit=false;infoOpen=false;$("rgSk").hidden=true;render();$("regBg").classList.add("open");$("rgCard").scrollTop=0}
 function close(){$("regBg").classList.remove("open");flush();redraw()}
-function openSkill(n){const s=SK[n];skI=d.habs.findIndex(x=>x.h===s[1]);sk=skI<0?{h:s[1],p:null,c:""}:{...d.habs[skI]};
- $("rgSk").innerHTML=`<div class="rg-top"><div><div class="mod" style="margin:0">${s[0]}</div><h2>${s[1]}</h2></div><button type="button" class="rg-x" id="rgSkX" aria-label="Cerrar">✕</button></div><p>${s[2]}</p><b>Cómo hacerla</b><ol>${s[3].map(x=>`<li>${x}</li>`).join("")}</ol><b>¿Cómo te fue hoy?</b><div class="score">${ESC.map((x,k)=>`<button type="button" data-sc="${k}" class="${sk.p===k?"on":""}">${k} – ${x}</button>`).join("")}</div><div class="err2" id="rgScErr"></div><b>¿Cómo la usaste?</b><textarea id="rgComo" style="min-height:70px;margin-top:6px" placeholder="Situación y qué hiciste">${esc(sk.c)}</textarea><div class="actions">${skI>=0?'<button type="button" class="btn-g" id="rgSkRm">Quitar</button>':""}<button type="button" class="btn-p" id="rgSkOk">${skI>=0?"Guardar cambios":"La usé hoy"}</button></div>`;
- $("rgSk").hidden=false;$("rgSk").scrollTop=0}
 
-/* --- vista Semana (igual a la de la psicóloga) + pensamientos en los días sin registro --- */
+/* --- ventanita (habilidad, teléfonos, campos, pensamientos, confirmaciones) --- */
+function sheet(title,html,sub){$("rgSk").innerHTML=`<div class="rg-top"><div>${sub?`<div class="mod" style="margin:0">${sub}</div>`:""}<h2>${title}</h2></div>${ib("✕","Cerrar","data-skx=\"1\"","x")}</div>${html}`;$("rgSk").hidden=false;$("rgSk").scrollTop=0;
+ if(!$("regBg").classList.contains("open")){$("regBg").classList.add("open","solo")}}
+function closeSheet(){$("rgSk").hidden=true;const bg=$("regBg");if(bg.classList.contains("solo"))bg.classList.remove("open","solo")}
+function openSkill(n){const s=SK[n];skI=d.habs.findIndex(x=>x.h===s[1]);sk=skI<0?{h:s[1],p:null,c:""}:{...d.habs[skI]};
+ sheet(s[1],`<p>${s[2]}</p><b>Cómo hacerla</b><ol>${s[3].map(x=>`<li>${x}</li>`).join("")}</ol><b>¿Cómo te fue hoy?</b><div class="score">${ESC.map((x,k)=>`<button type="button" data-sc="${k}" class="${sk.p===k?"on":""}">${k} – ${x}</button>`).join("")}</div><div class="err2" id="rgScErr"></div><b>¿Cómo la usaste?</b><textarea id="rgComo" style="min-height:70px;margin-top:6px" placeholder="Situación y qué hiciste">${esc(sk.c)}</textarea><div class="actions">${skI>=0?ib("🗑️ Quitar","Quitar esta habilidad del día","id=\"rgSkRm\"","wide"):""}<button type="button" class="btn-p" id="rgSkOk">${skI>=0?"Guardar cambios":"La usé hoy"}</button></div>`,s[0])}
+function telSheet(which){const isP=which==="psi",v=isP?CFG.psi:CFG.emer;
+ sheet(isP?"Tu psicóloga":esc(CFG.emerName),`${v?`<a class="btn-p call" href="tel:${esc(v.replace(/[^\d+]/g,""))}">📞 Llamar a ${esc(v)}</a>`:""}${isP?"":`<label class="fl">Nombre<input type="text" id="rgEmName" value="${esc(CFG.emerName)}"></label>`}<label class="fl">Teléfono<input type="tel" id="rgTel" value="${esc(v)}" placeholder="Ej: 0351 4123456"></label><div class="actions"><button type="button" class="btn-p" data-tels="${which}">Guardar</button></div>`)}
+function planSheet(edit){const p=CFG.plan||"";
+ if(p&&!edit&&/^https?:\/\//i.test(p.trim())){window.open(p.trim(),"_blank");return}
+ if(p&&!edit){sheet("Mi plan de crisis",`<div class="plan">${esc(p)}</div><div class="actions">${ib("✏️ Editar","Editar tu plan de crisis","data-cr=\"planed\"","wide")}</div>`);return}
+ sheet("Mi plan de crisis",`<p class="hint2">Pegá el link de tu plan (Drive, Docs…) o escribilo acá.</p><textarea id="rgPlan" style="min-height:140px" placeholder="https://… o los pasos de tu plan">${esc(p)}</textarea><div class="actions"><button type="button" class="btn-p" data-plans="1">Guardar</button></div>`)}
+function linesSheet(){sheet("Líneas de ayuda gratuitas",LINEAS.map(([n,t])=>`<a class="line" href="tel:${t}">📞 <b>${n}</b><span>${t}</span></a>`).join(""))}
+/* pensamientos */
+let penOld=null,penMood=null;
+function penSheet(k,i){const e=i==null?null:(byDate.get(k)||[])[i];penOld=e;penMood=e?e.mood:null;
+ sheet(e?"Editar pensamiento":"Nuevo pensamiento",`<div class="rg-row2"><input type="date" id="pnDate" value="${e?e.date:k}"><input type="time" id="pnTime" value="${e?e.time:nowHHMM()}"></div><div class="rg-moods" id="pnMoods">${MOODS.slice().reverse().map(m=>`<button type="button" data-pm="${m}" class="${penMood===m?"on":""}" style="--c:${MOOD_HEX[m]}">${MOOD_LABEL[m]}</button>`).join("")}</div><textarea id="pnText" style="min-height:160px" placeholder="Qué pasó, qué sentiste y por qué…">${e?esc(e.text):""}</textarea><div class="err2" id="pnErr"></div><div class="actions">${e?ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide"):""}<button type="button" class="btn-p" id="pnOk">Guardar</button></div>`)}
+function penDel(k,i){const e=(byDate.get(k)||[])[i];if(!e)return;penOld=e;
+ sheet("¿Borrar este pensamiento?",`<div class="pen"><i style="background:${MOOD_HEX[e.mood]}"></i><div class="pt"><b style="color:${MOOD_HEX[e.mood]}">${MOOD_LABEL[e.mood]}</b> · ${fmt(e.date)} ${e.time}<p>${esc(e.text.slice(0,240))}${e.text.length>240?"…":""}</p></div></div><p class="hint2">Se borra de este dispositivo y de tu hoja. No se puede deshacer.</p><div class="actions"><button type="button" class="btn-g" data-skx="1">Cancelar</button><button type="button" class="btn-p danger" id="pnDelOk">🗑️ Borrar</button></div>`)}
+/* campos de Cuerpo */
+const used=k=>Object.keys(REG).filter(f=>{const v=REG[f][k];return v!==""&&v!=null});
+function setField(k,patch){const ex=(CFG.extra||[]).find(x=>x.k===k);if(ex)Object.assign(ex,patch);else CFG.body[k]=Object.assign(CFG.body[k]||{},patch);pushCfg()}
+function fieldDel(k){const f=fields().find(x=>x.k===k),n=used(k).length;
+ if(!n){setField(k,{del:1,hid:1});if(d)d[k]="";toast2("Listo: «"+f.l+"» se borró (no tenía datos).");render();return}
+ sheet("¿Borrar «"+esc(f.l)+"»?",`<p>Vas a borrar <b>${n} dato${n>1?"s":""}</b> (${n} día${n>1?"s":""} con este campo cargado). No se puede deshacer.</p><p class="hint2">Si preferís, ocultalo: deja de aparecer y los datos quedan guardados.</p><div class="actions">${ib("🙈 Solo ocultar","Ocultar sin borrar datos",`data-bho="${k}"`,"wide")}<button type="button" class="btn-p danger" data-bdo="${k}">🗑️ Borrar ${n} dato${n>1?"s":""}</button></div>`)}
+function toast2(t){setStatus(t,"ok")}
+
+/* --- vista Semana: últimos 8 días, igual a la de la psicóloga --- */
 function cycleDay(k){const ks=Object.keys(REG).filter(x=>REG[x].mens==="SÍ").sort();let s0=null;for(const s of ks){if(s>k)break;const p=dt(s);p.setDate(p.getDate()-1);const pk=toISO(p);if(!(REG[pk]&&REG[pk].mens==="SÍ"))s0=s}if(!s0)return"";const n=Math.round((dt(k)-dt(s0))/864e5)+1;return n>60?"":n}
-function week(ds){const reg=ds.filter(k=>REG[k]).map(k=>[k,REG[k]]),n=reg.length;
+function week(ds){const reg=ds.filter(k=>REG[k]).map(k=>[k,REG[k]]);
  const avg=f=>{const v=reg.map(([,x])=>f(x)).filter(v=>v!==""&&v!=null&&!isNaN(v));return v.length?Math.round(v.reduce((a,b)=>a+ +b,0)/v.length*10)/10:"–"};
  const scr=reg.reduce((a,[,x])=>a+(+x.scrH||0)*60+(+x.scrM||0),0);
  const SN=(x,f,good)=>!x||!x[f]?"–":`<b class="${(x[f]==="SÍ")===!!good?"no":"si"}">${x[f]}</b>`;
  const R=[],g=t=>R.push({g:t});
- R.push({cd:"dia",l:"Lo que hice",cls:"nt",c:(x,k)=>{if(x&&x.notas)return esc(x.notas);const ps=byDate.get(k)||[];return ps.length?`<div class="rg-pens">${ps.map(e=>`<p><i style="background:${MOOD_HEX[e.mood]}"></i>${esc(e.text.length>160?e.text.slice(0,160)+"…":e.text)}</p>`).join("")}<span>Sin resumen · tocá para cargarlo</span></div>`:"–"}});
+ R.push({cd:"dia",l:"Lo que hice",cls:"nt",c:(x,k)=>{const ps=byDate.get(k)||[];const pl=ps.length?`<div class="rg-pens">${ps.map((e,i)=>`<p><i style="background:${MOOD_HEX[e.mood]}"></i>${esc(e.text.length>140?e.text.slice(0,140)+"…":e.text)} ${ib("✏️","Editar este pensamiento",`data-pe="${k}|${i}"`,"mini")}${ib("🗑️","Borrar este pensamiento",`data-pd="${k}|${i}"`,"mini")}</p>`).join("")}</div>`:"";
+  if(x&&x.notas)return `<div class="nn">${esc(x.notas)}</div>`+(ps.length?`<details class="pd"><summary>${ps.length} pensamiento${ps.length>1?"s":""}</summary>${pl}</details>`:"");
+  return ps.length?pl+`<span class="hint3">Sin resumen · tocá para cargarlo</span>`:"–"}});
  g("Conductas · (impulso) acción");
  [["Suicidio/CASIS","suicImp","suicAcc","suic"],["Comport. hostil","hostImp","hostAcc","host"],["Sexo / hombres","sexImp","sexAcc","sexo"]].forEach(c=>R.push({cd:c[3],l:c[0],c:x=>x?`(${x[c[1]]}) ${SN(x,c[2])}`+(c[1]==="suicImp"&&x.suicAcc==="SÍ"&&x.suicDet?`<div class="det">${esc(x.suicDet)}</div>`:""):"–"}));
  R.push({cd:"scroll",l:"Scrollear",c:x=>x?`(${x.scrImp}) ${(+x.scrH||0)}:${pad2(+x.scrM||0)} h`:"–"});
@@ -3484,12 +3654,11 @@ function week(ds){const reg=ds.filter(k=>REG[k]).map(k=>[k,REG[k]]),n=reg.length
  const C=R.filter(r=>!r.g),groups=[];let cur=null;R.forEach(r=>{if(r.g){cur={t:r.g,n:0};groups.push(cur)}else{if(!cur){cur={t:"",n:0};groups.push(cur)}cur.n++}});
  const tod=toISO(new Date()),falta=ds.filter(k=>k<=tod&&!REG[k]).map(short),pocaAgua=reg.filter(([,x])=>x.agua!==""&&+x.agua<2).map(([k])=>short(k)),pocoSueno=reg.filter(([,x])=>x.sueno!==""&&+x.sueno<6).map(([k])=>short(k)),sinSol=reg.filter(([,x])=>x.sol==="NO").length;
  const alerts=[falta.length?`📅 Falta cargar: <b>${falta.join(", ")}</b>`:"",pocaAgua.length?`💧 Menos de 2 litros: <b>${pocaAgua.join(", ")}</b>`:"",pocoSueno.length?`😴 Menos de 6 h de sueño: <b>${pocoSueno.join(", ")}</b>`:""].filter(Boolean).map(x=>`<div class="warn">${x}</div>`).join("");
- const dot=k=>{const m=dayMood(k);return m?`<i class="md" style="background:${MOOD_HEX[m]}"></i>`:`<i class="md"></i>`};
- const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(r=>`<th class="${r.em?"em":""}" title="${r.t||r.l}">${r.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr><th>${dot(k)}${short(k)}</th>${C.map(r=>`<td class="${r.cls||""}" data-ed="${r.cd}|${k}" style="${r.st?r.st(REG[k]):""}">${r.c(REG[k],k)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+ const dot=k=>{const m=dayMood(k);return `<i class="md" style="${m?"background:"+MOOD_HEX[m]:""}"></i>`};
+ const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(r=>`<th class="${r.em?"em":""}" title="${r.t||r.l}">${r.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(r=>`<td class="${r.cls||""}" data-ed="${r.cd}|${k}" style="${r.st?r.st(REG[k]):""}">${r.c(REG[k],k)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
  return `${alerts}<div class="rg-met"><div><b>${avg(x=>x.sueno)}</b>😴 h sueño (prom.)</div><div><b>${avg(x=>x.agua)}</b>💧 litros (prom.)</div><div><b>${Math.floor(scr/60)}:${pad2(scr%60)}</b>📱 h de scroll</div><div><b>${sinSol}</b>☀️ días sin sol</div></div><div class="tw">${t}</div>`}
-function weekView(start){const ds=[...Array(7)].map((_,k)=>toISO(addDays(start,k)));$("weekView").innerHTML=week(ds)}
+function weekView(start,end){const ds=[];for(let x=new Date(start);x<=end;x=addDays(x,1))ds.push(toISO(x));$("weekView").innerHTML=week(ds)}
 
-/* --- estadística de emociones del registro en el período --- */
 function emoStats(s,e){const ks=Object.keys(REG).filter(k=>k>=s&&k<=e).sort();
  if(!ks.length)return `<div class="htitle">Emociones</div><div class="rg-empty">Sin registros en este período.</div>`;
  const rows=EMOS.map(x=>{const v=ks.map(k=>+REG[k][x[0]]||0),a=v.reduce((p,q)=>p+q,0)/v.length,n=v.filter(q=>q>0).length;
@@ -3498,28 +3667,30 @@ function emoStats(s,e){const ks=Object.keys(REG).filter(k=>k>=s&&k<=e).sort();
  const top=Object.entries(ot).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([n,c])=>`${esc(n)} ×${c}`).join(" · ");
  return `<div class="htitle">Emociones <small>(promedio 0-5)</small></div>${rows}${top?`<div class="rg-days" style="margin-top:6px">Otras: ${top}</div>`:""}`}
 
-/* --- tarjeta del día en el detalle --- */
 function dayCard(k){const x=REG[k];
- if(!x)return `<button type="button" class="rg-add" data-rgopen="${k}">📋 Cargar el resumen del día</button>`;
- return `<div class="rg-day"><div class="rg-dh"><b>📋 Resumen del día</b>${x.animo?`<span class="mood-pill" style="background:${MOOD_HEX[x.animo]}">${MOOD_LABEL[x.animo]}</span>`:""}<button type="button" class="chip" data-rgopen="${k}">Editar</button></div>${x.notas?`<div class="rg-notas">${esc(x.notas)}</div>`:""}<div class="rg-emo">${EMOS.map(e=>e[1]+" "+x[e[0]]).join("  ")}${(x.otras||[]).filter(o=>o.n).map(o=>` · ${esc(o.n)} (${o.v})`).join("")}</div></div>`}
+ if(!x)return `<button type="button" class="rg-add" data-rgopen="${k}" title="Cargar el registro de este día">📋 Cargar el resumen del día</button>`;
+ return `<div class="rg-day"><div class="rg-dh"><b>📋 Resumen del día</b>${x.animo?`<span class="mood-pill" style="background:${MOOD_HEX[x.animo]}">${MOOD_LABEL[x.animo]}</span>`:""}${ib("✏️","Editar el resumen del día",`data-rgopen="${k}"`)}</div>${x.notas?`<div class="rg-notas">${esc(x.notas)}</div>`:""}<div class="rg-emo">${EMOS.map(e=>e[1]+" "+x[e[0]]).join("  ")}${(x.otras||[]).filter(o=>o.n).map(o=>` · ${esc(o.n)} (${o.v})`).join("")}</div></div>`}
 
 function redraw(){if(typeof renderStats==="function"&&statsAnchor){renderStats();if(selectedDate)selectDay(selectedDate,false)}}
 
-/* --- armado del modal y eventos --- */
-document.body.insertAdjacentHTML("beforeend",`<div class="modal-bg" id="regBg"><div class="composer reg" id="rgCard" role="dialog" aria-labelledby="rgH"><div class="rg-top"><div><div class="rg-date" id="rgDate"></div><h2 id="rgH"></h2></div><button type="button" class="rg-x" id="rgClose" aria-label="Cerrar">✕</button></div><div class="rg-dots" id="rgDots"></div><p class="rg-sub" id="rgSub"></p><div id="rgBody"></div><div class="actions"><button type="button" class="btn-g" id="rgPrev">Anterior</button><button type="button" class="btn-p" id="rgNext">Siguiente</button></div><div class="rg-sk" id="rgSk" hidden></div></div></div>`);
+/* --- armado y eventos --- */
+document.body.insertAdjacentHTML("beforeend",`<div class="modal-bg" id="regBg"><div class="composer reg" id="rgCard" role="dialog" aria-labelledby="rgH"><div class="rg-top"><div><div class="rg-date" id="rgDate"></div><h2 id="rgH"></h2></div>${ib("✕","Cerrar","id=\"rgClose\"","x")}</div><div class="rg-info" id="rgInfo" hidden></div><div class="rg-dots" id="rgDots"></div><p class="rg-sub" id="rgSub"></p><div id="rgBody"></div><div class="actions"><button type="button" class="btn-g" id="rgPrev">Anterior</button><button type="button" class="btn-p" id="rgNext">Siguiente</button></div><div class="rg-sk" id="rgSk" hidden></div></div></div>`);
 const bg=$("regBg");
-bg.addEventListener("input",e=>{const t=e.target;if(!d)return;
- if(t.id==="rgNotas")d.notas=t.value;else if(t.id==="rgDet")d.suicDet=t.value;else if(t.id==="rgComo"&&sk){sk.c=t.value;return}
+bg.addEventListener("input",e=>{const t=e.target;
+ if(t.id==="rgComo"&&sk){sk.c=t.value;return}if(!d||$("rgSk").contains(t))return;
+ if(t.id==="rgNotas")d.notas=t.value;else if(t.id==="rgDet")d.suicDet=t.value;
  else if(t.dataset.num)d[t.dataset.num]=t.value===""?"":Math.max(0,+t.value);
  else if(t.dataset.on!==undefined)d.otras[+t.dataset.on].n=t.value;else return;touch()});
-bg.addEventListener("click",async e=>{if(e.target===bg){close();return}const b=e.target.closest("button");if(!b)return;const s=b.dataset;
+async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b){if(e.target===bg){if(!$("rgSk").hidden)closeSheet();else close()}return}const s=b.dataset;
  if(b.id==="rgClose")return close();
+ if(s.skx)return closeSheet();
+ if(s.info){infoOpen=!infoOpen;$("rgInfo").hidden=!infoOpen;return}
  if(b.id==="rgPrev"){if(ci>0){ci--;render();$("rgCard").scrollTop=0}return}
  if(b.id==="rgNext"){if(ci<CARDS.length-1){ci++;render();$("rgCard").scrollTop=0;return}
   const tp=isLinked()&&navigator.onLine&&!tokenOk()&&gisReady()?askToken(ME.email).catch(()=>null):null;touch();bg.classList.remove("open");redraw();if(tp)await tp;clearTimeout(tmr);await flush();return}
- if(s.go!=null){ci=+s.go;render();$("rgCard").scrollTop=0;return}
- if(s.c){const[k,n]=s.c.split("|");d[k]=+d[k]===+n?+n-1:+n;touch();render();return}
- if(s.oc){const[i,n]=s.oc.split("|");const o=d.otras[+i];o.v=o.v===+n?+n-1:+n;touch();render();return}
+ if(s.go!=null){ci=+s.go;bodyEdit=false;render();$("rgCard").scrollTop=0;return}
+ if(s.c){const[k,n]=s.c.split("|");d[k]=+n;touch();render();return}
+ if(s.oc){const[i,n]=s.oc.split("|");d.otras[+i].v=+n;touch();render();return}
  if(s.yn){const[k,v]=s.yn.split("|");d[k]=d[k]===v&&["inex","pas","act"].includes(k)?"":v;touch();render();return}
  if(s.st){const[k,v]=s.st.split("|");d[k]=Math.round(Math.max(0,(+d[k]||0)+(+v))*100)/100;touch();render();return}
  if(s.am){d.animo=d.animo===s.am?"":s.am;touch();render();return}
@@ -3528,15 +3699,45 @@ bg.addEventListener("click",async e=>{if(e.target===bg){close();return}const b=e
  if(s.sk!=null)return openSkill(+s.sk);
  if(s.eh!=null)return openSkill(SK.findIndex(x=>x[1]===d.habs[+s.eh].h));
  if(s.sc!=null){sk.p=+s.sc;$("rgSk").querySelectorAll("[data-sc]").forEach(x=>x.classList.toggle("on",+x.dataset.sc===sk.p));$("rgScErr").textContent="";return}
- if(b.id==="rgSkOk"){if(sk.p===null){$("rgScErr").textContent="Elegí un puntaje primero";return}if(skI<0)d.habs.push(sk);else d.habs[skI]=sk;touch();$("rgSk").hidden=true;render();return}
- if(b.id==="rgSkRm"){d.habs.splice(skI,1);touch();$("rgSk").hidden=true;render();return}
- if(b.id==="rgSkX"){$("rgSk").hidden=true;return}});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&bg.classList.contains("open")){if(!$("rgSk").hidden)$("rgSk").hidden=true;else close()}});
-document.addEventListener("click",e=>{const o=e.target.closest("[data-rgopen]");if(o){open(o.dataset.rgopen,"dia");return}
- const td=e.target.closest("#weekView td[data-ed]");if(td){const[c,k]=td.dataset.ed.split("|");open(k,c)}});
+ if(b.id==="rgSkOk"){if(sk.p===null){$("rgScErr").textContent="Elegí un puntaje primero";return}if(skI<0)d.habs.push(sk);else d.habs[skI]=sk;touch();closeSheet();render();return}
+ if(b.id==="rgSkRm"){d.habs.splice(skI,1);touch();closeSheet();render();return}
+ /* crisis */
+ if(s.cr==="plan")return planSheet();if(s.cr==="planed")return planSheet(true);if(s.cr==="lineas")return linesSheet();
+ if(s.cr==="psi"||s.cr==="emer")return telSheet(s.cr);
+ if(s.tels){const t=$("rgTel").value.trim();if(s.tels==="psi")CFG.psi=t;else{CFG.emer=t;CFG.emerName=($("rgEmName").value.trim()||"Emergencias")}pushCfg();closeSheet();render();return}
+ if(s.plans){CFG.plan=$("rgPlan").value.trim();pushCfg();closeSheet();return}
+ /* pensamientos */
+ if(s.pn!=null)return penSheet(s.pn,null);
+ if(s.pe){const[k,i]=s.pe.split("|");return penSheet(k,+i)}
+ if(s.pd){const[k,i]=s.pd.split("|");return penDel(k,+i)}
+ if(s.pm){penMood=s.pm;$("pnMoods").querySelectorAll("[data-pm]").forEach(x=>x.classList.toggle("on",x.dataset.pm===penMood));return}
+ if(b.id==="pnOk"){const date=$("pnDate").value,time=$("pnTime").value||nowHHMM(),text=$("pnText").value.trim();
+  if(!penMood||!text||!date){$("pnErr").textContent=!penMood?"Elegí cómo te sentías":"Escribí el pensamiento";return}
+  const ne={date,dow:csvDowFor(date),time,mood:penMood,text};closeSheet();
+  if(penOld)await updateEntry(penOld,ne);else await addEntry(ne);if(bg.classList.contains("open")&&d)render();return}
+ if(b.id==="pnDelOk"){closeSheet();await updateEntry(penOld,null);if(bg.classList.contains("open")&&d)render();return}
+ /* campos de Cuerpo */
+ if(s.be){bodyEdit=!bodyEdit;render();return}
+ if(s.bh){const f=fields().find(x=>x.k===s.bh);setField(s.bh,{hid:f.hid?0:1});render();return}
+ if(s.br){const f=fields().find(x=>x.k===s.br);sheet("Cambiar nombre",`<label class="fl">Nombre<input type="text" id="rgFName" value="${esc(f.l)}"></label><div class="actions"><button type="button" class="btn-p" data-brs="${s.br}">Guardar</button></div>`);return}
+ if(s.brs){const v=$("rgFName").value.trim();if(v)setField(s.brs,{l:v});closeSheet();render();return}
+ if(s.bd)return fieldDel(s.bd);
+ if(s.bho){setField(s.bho,{hid:1});closeSheet();render();return}
+ if(s.bdo){const k=s.bdo,n=used(k);n.forEach(f=>{REG[f][k]="";if(!PEND.includes(f))PEND.push(f)});if(d)d[k]="";setField(k,{del:1,hid:1});save();flush();closeSheet();render();toast2("Se borraron "+n.length+" datos.");return}
+ if(s.bu){setField(s.bu,{del:0,hid:0});render();return}
+ if(s.ba){sheet("Nuevo campo",`<label class="fl">Nombre<input type="text" id="rgFName" placeholder="Ej: Meditación"></label><div class="rg-moods" id="rgFType"><button type="button" class="on" data-ft="yn" style="--c:var(--accent)">Sí / No</button><button type="button" data-ft="num" style="--c:var(--accent)">Número</button></div><div class="actions"><button type="button" class="btn-p" id="rgFAdd">Agregar</button></div>`);return}
+ if(s.ft){$("rgFType").querySelectorAll("[data-ft]").forEach(x=>x.classList.toggle("on",x===b));return}
+ if(b.id==="rgFAdd"){const l=$("rgFName").value.trim();if(!l)return;const t=$("rgFType").querySelector(".on").dataset.ft;
+  CFG.extra=CFG.extra||[];const col=Math.max(31,...CFG.extra.map(x=>x.col))+1;CFG.extra.push({k:"x"+col,l,t,col,x:1,g:1});if(d)d["x"+col]=t==="yn"?"NO":"";pushCfg();closeSheet();render();return}}
+bg.addEventListener("click",onClick);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&bg.classList.contains("open")){if(!$("rgSk").hidden)closeSheet();else close()}});
+document.addEventListener("click",e=>{if(bg.contains(e.target))return;
+ const pb=e.target.closest("[data-pe],[data-pd],[data-pn]");if(pb){e.stopPropagation();onClick(e);return}
+ const o=e.target.closest("[data-rgopen]");if(o){open(o.dataset.rgopen,"dia");return}
+ const td=e.target.closest("#weekView td[data-ed]");if(td&&!e.target.closest("details")){const[c,k]=td.dataset.ed.split("|");open(k,c)}},true);
 window.addEventListener("online",()=>flush());
 
-return {load,pull,flush,open,weekView,emoStats,dayCard,dayMood,get REG(){return REG},_seed:o=>{REG=o}};
+return {load,pull,flush,open,weekView,emoStats,dayCard,dayMood,penSheet,get REG(){return REG},_seed:o=>{REG=o}};
 })();
 
 </script>
