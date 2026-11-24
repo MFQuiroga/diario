@@ -937,7 +937,13 @@ footer.credit{
 .tt thead tr.gr td{ background:var(--bg-deep); }
 .tw{ overflow:visible; }
 .grid.v-week .week-view{ margin-left:-6px; margin-right:-6px; }
-@media (max-width:900px){ .tw{ overflow:auto; max-height:78vh; } .tt{ --hdrH:0px; } }
+@media (max-width:900px){ .tw{ overflow-x:auto; overflow-y:hidden; max-height:none; } .tt{ --hdrH:0px; } }
+/* celu/tablet: encabezado de la tabla flotante debajo de la barra fija, se va cuando termina la tabla */
+.tw-hd{ position:sticky; z-index:6; overflow-x:auto; scrollbar-width:none; border:1px solid var(--line); border-bottom:0; border-radius:12px 12px 0 0; background:var(--bg-panel); }
+.tw-hd::-webkit-scrollbar{ display:none; }
+.tw-hd .tt{ table-layout:fixed; }
+.tw-hd .tt thead{ position:static; }
+.tt .rg-pens p.flash{ border-radius:6px; }
 @media (max-width:420px){ .mood-dots{ gap:4px; } .mood-dots button{ width:calc(20% - 4px); } .mood-dots button span{ width:30px; height:30px; font-size:18px; } }
 .emo-stats{ border-top:0; padding-top:4px; margin-top:6px; }
 /* tabla de la semana: celdas chicas en una sola línea, más lugar para "Lo que hice" */
@@ -1625,6 +1631,19 @@ function renderSearchResults(query){
 }
 
 function goToSearchResult(result){
+  if(statsPeriodType === 'week' && window.RG){
+    const k = result.entry.date, idx = (byDate.get(k) || []).indexOf(result.entry);
+    searchResultsEl.classList.remove('open'); searchInput.blur();
+    RG.openPd(k); selectedDate = k; statsAnchor = parseISO(k);
+    renderStats(); syncCalFromStats();
+    requestAnimationFrame(()=>{
+      const p = document.querySelector(`#weekView .tw [data-pv="${k}|${idx}"]`);
+      if(!p) return;
+      p.scrollIntoView({behavior:'smooth', block:'center'});
+      p.classList.add('flash'); setTimeout(()=>p.classList.remove('flash'), 1700);
+    });
+    return;
+  }
   const map = new Map();
   const entries = byDate.get(result.entry.date) || [];
   for(const en of entries) map.set(en, en===result.entry ? result.spans : []);
@@ -3960,7 +3979,21 @@ function shareUrl(){const s=CFG.share||{},u=s.url||"";return u&&s.t?u+"?t="+s.t:
 async function cfgNow(){if(!isLinked()||!navigator.onLine)return false;if(!tokenOk()){try{await askToken(ME.email)}catch(_){return false}needAuth(false)}await pushCfg();return !cfgDirty}
 function shareSheet(){CFG.share=CFG.share||{};const s=CFG.share;if(!s.t){s.t=tok();s.days=s.days||8;pushCfg()}const u=shareUrl(),d=s.days||8,from=fmt(toISO(addDays(new Date(),-(d-1))));
  sheet("👩‍⚕️ Link para tu terapeuta",u?`<p class="hint2">Es siempre el mismo: mandáselo una sola vez. Ve solo el resumen semanal (sin tus pensamientos) y no puede cambiar nada.</p><div class="mod">¿Cuántos días puede ver?</div><div class="rg-moods">${[8,15,22,29].map((n,i)=>`<button type="button" data-shd="${n}" class="${d===n?"on":""}" style="--c:var(--accent)" title="${i+1} semana${i?"s":""} más hoy (${n} días)">${i+1} sem. + hoy</button>`).join("")}</div><p class="hint2">Ve desde el <b>${from}</b> hasta hoy (${d} días). Cada día se corre solo.</p><div class="sh-c"><button type="button" class="btn-p" data-shc="1">📋 Copiar link</button></div><p class="hint2" style="margin-top:16px;text-align:center">Si el link le llega a otra persona, cortalo: el actual deja de andar y se crea uno nuevo para mandarle a tu terapeuta.</p><div class="sh-c">${ib("✂️ Cortar acceso y crear link nuevo","El link actual deja de funcionar","data-shn=\"1\"","wide")}</div>`:`<p class="hint2">Falta la dirección de tu página de Apps Script (termina en /exec).</p><label class="fl">Dirección<input type="url" id="rgShUrl" placeholder="https://script.google.com/macros/s/…/exec"></label><div class="actions"><button type="button" class="btn-p" data-shu="1">Guardar</button></div>`)}
-function weekView(start,end){const hd=document.querySelector('header.top');document.documentElement.style.setProperty('--hdrH',(hd&&getComputedStyle(hd).position==='sticky'?hd.offsetHeight:0)+'px');const ds=[];for(let x=new Date(start);x<=end;x=addDays(x,1))ds.push(toISO(x));$("weekView").innerHTML=week(ds);const gr=$("weekView").querySelector("tr.gr");if(gr)$("weekView").style.setProperty("--grH",gr.offsetHeight+"px")}
+function weekView(start,end){const hd=document.querySelector('header.top');document.documentElement.style.setProperty('--hdrH',(hd&&getComputedStyle(hd).position==='sticky'?hd.offsetHeight:0)+'px');const ds=[];for(let x=new Date(start);x<=end;x=addDays(x,1))ds.push(toISO(x));$("weekView").innerHTML=week(ds);const gr=$("weekView").querySelector("tr.gr");if(gr)$("weekView").style.setProperty("--grH",gr.offsetHeight+"px");wkHead()}
+/* celu: la tabla baja con la página; el encabezado es una copia fija que se mueve de costado junto con la tabla */
+let wkRO=null;
+function wkHead(){const wv=$("weekView"),tw=wv.querySelector(".tw"),tb=tw&&tw.querySelector("table.tt");if(wkRO){wkRO.disconnect();wkRO=null}
+ if(!tb||!matchMedia("(max-width:900px)").matches)return;
+ const box=document.createElement("div");tw.before(box);const hd=document.createElement("div");hd.className="tw-hd";hd.setAttribute("aria-hidden","true");box.append(hd,tw);
+ const t2=document.createElement("table");t2.className="tt";const cg=document.createElement("colgroup");t2.append(cg,tb.tHead.cloneNode(true));hd.append(t2);
+ const stick=()=>{const el=[document.querySelector("header.top"),document.querySelector(".import-shell")].find(x=>x&&getComputedStyle(x).position==="sticky"&&x.offsetHeight);return el?el.offsetHeight:0};
+ const size=()=>{const ths=tb.tHead.rows[tb.tHead.rows.length-1].cells;cg.innerHTML=[...ths].map(c=>`<col style="width:${c.getBoundingClientRect().width}px">`).join("");t2.style.width=tb.getBoundingClientRect().width+"px";
+  hd.style.top=stick()+"px";hd.style.marginBottom=-tb.tHead.getBoundingClientRect().height+"px";hd.scrollLeft=tw.scrollLeft};
+ size();let lock=0;
+ tw.addEventListener("scroll",()=>{if(lock)return;lock=1;hd.scrollLeft=tw.scrollLeft;requestAnimationFrame(()=>lock=0)},{passive:true});
+ hd.addEventListener("scroll",()=>{if(lock)return;lock=1;tw.scrollLeft=hd.scrollLeft;requestAnimationFrame(()=>lock=0)},{passive:true});
+ if(window.ResizeObserver){wkRO=new ResizeObserver(()=>requestAnimationFrame(size));wkRO.observe(tb)}}
+let wkRz,wkW=innerWidth;addEventListener("resize",()=>{if(innerWidth===wkW)return;wkW=innerWidth;clearTimeout(wkRz);wkRz=setTimeout(()=>{if(document.querySelector(".grid.v-week")&&typeof statsPeriodType!=="undefined")renderStats()},200)});
 
 function emoStats(s,e){const ks=[...new Set([...Object.keys(REG),...allDates.filter(k=>(byDate.get(k)||[]).some(x=>emosOf(x).length))])].filter(k=>k>=s&&k<=e).sort();
  const val=(k,x)=>REG[k]?+REG[k][x]||0:(pensMax(k)[x]||0);
@@ -4073,7 +4106,7 @@ const EYE_K="mimo_eyes_v1";let EYES=(()=>{try{return JSON.parse(localStorage.get
 function emoVal(k,e){if(REG[k])return +REG[k][e]||0;const m=pensMax(k);return (byDate.get(k)||[]).length?(m[e]||0):null}
 function emoMonth(ym,e){const v=[...new Set([...Object.keys(REG),...allDates])].filter(k=>k.startsWith(ym)).map(k=>emoVal(k,e)).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-eye]");if(!b)return;EYES[b.dataset.eye]=EYES[b.dataset.eye]?0:1;try{localStorage.setItem(EYE_K,JSON.stringify(EYES))}catch(_){}renderStats()});
-return {shareSheet,colSheet,load,pull,flush,open,pensMax,weekView,emoStats,dayCard,dayMood,dayNum,dayColor,penSheet,passSheet,emoVal,emoMonth,eyesOn:()=>EMOS.filter(x=>EYES[x[0]]).map(x=>[x[0],EC[x[0]],x[2]]),pendN:()=>PEND.length+DELQ.length+(cfgDirty?1:0),get REG(){return REG},_seed:o=>{REG=o}};
+return {openPd:k=>openPd.add(k),shareSheet,colSheet,load,pull,flush,open,pensMax,weekView,emoStats,dayCard,dayMood,dayNum,dayColor,penSheet,passSheet,emoVal,emoMonth,eyesOn:()=>EMOS.filter(x=>EYES[x[0]]).map(x=>[x[0],EC[x[0]],x[2]]),pendN:()=>PEND.length+DELQ.length+(cfgDirty?1:0),get REG(){return REG},_seed:o=>{REG=o}};
 })();
 
 </script>
