@@ -767,6 +767,7 @@ footer.credit{
 .rg-x{ background:var(--bg-panel-2); border:1px solid var(--line); color:var(--text-light); width:32px; height:32px; border-radius:50%; cursor:pointer; flex:none; }
 .rg-dots{ display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:6px; scrollbar-width:none; }
 .rg-dots button{ flex:none; padding:5px 10px; border-radius:99px; border:1px solid var(--line); background:none; color:var(--text-muted); font:500 12px 'Inter',sans-serif; cursor:pointer; }
+.rg-dots button.dd{ border-color:rgba(224,82,79,.45); }
 .rg-dots button.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
 .rg-sub{ margin:0 0 10px; font-size:13px; color:var(--text-muted); }
 .reg .q{ padding:12px 0; border-top:1px solid var(--line); }
@@ -3146,7 +3147,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '26', APP_DATE = '24/11/2026 02:35';
+const APP_VERSION = '27', APP_DATE = '24/11/2026 02:50';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3666,7 +3667,7 @@ const CARDS=[
  {id:"cuerpo",tab:"Cuerpo",h:"Cuidado del cuerpo",s:"Sueño, agua y hábitos del día."},
  {id:"hab",tab:"Habilidades",h:"Habilidades",s:"Tocá una habilidad para ver cómo se hace y cargarla."},
  {id:"fin",tab:"Listo",h:"Revisá y guardá",s:"Se guarda en tu hoja y tu psicóloga lo ve como siempre."}];
-let REG={}, PEND=[], CFG={body:{},extra:[],psi:"",emer:"",emerName:"Emergencias San Michel",plan:""}, cfgDirty=false;
+let DELQ=[], REG={}, PEND=[], CFG={body:{},extra:[],psi:"",emer:"",emerName:"Emergencias San Michel",plan:""}, cfgDirty=false;
 let d=null, day=null, ci=0, sk=null, skI=-1, tmr=null, bodyEdit=false, infoOpen=false;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -3709,8 +3710,8 @@ const lastCol=()=>colA1(Math.max(31,...(CFG.extra||[]).map(x=>x.col)));
 
 /* --- guardar local (cifrado) y en la hoja --- */
 const KEY="mimo_reg_v1";
-async function load(){const v=await encGet(KEY).catch(()=>null);if(v){REG=v.REG||{};PEND=v.PEND||[];if(v.CFG)CFG=Object.assign(CFG,v.CFG);cfgDirty=!!v.cfgDirty}}
-function save(){encSet(KEY,{REG,PEND,CFG,cfgDirty})}
+async function load(){const v=await encGet(KEY).catch(()=>null);if(v){REG=v.REG||{};PEND=v.PEND||[];DELQ=v.DELQ||[];if(v.CFG)CFG=Object.assign(CFG,v.CFG);cfgDirty=!!v.cfgDirty}}
+function save(){encSet(KEY,{REG,PEND,DELQ,CFG,cfgDirty})}
 const ID=()=>ME.sheetId;
 async function tabs(){const m=await sheetMeta(ID()),g={};(m.sheets||[]).forEach(s=>g[s.properties.title]=s.properties.sheetId);return g}
 async function ensureCols(){const m=await gfetch(SHEETS+ID()+"?fields=sheets.properties(sheetId,title,gridProperties.columnCount)");
@@ -3729,17 +3730,18 @@ async function pull(){if(!isLinked()||!tokenOk())return;
   const out={};
   ((a&&a.values)||[]).slice(1).forEach(row=>{const o=fromRow(row);if(o.fecha)out[o.fecha]=o});
   ((b&&b.values)||[]).slice(1).forEach(x=>{const f=isoOf(x[0]);if(out[f]&&x[1])out[f].habs.push({h:String(x[1]),p:+x[2]||0,c:String(x[3]||"")})});
-  PEND.forEach(f=>{if(REG[f])out[f]=REG[f]});REG=out;recentAuto();save();redraw();await flush();
+  PEND.forEach(f=>{if(REG[f])out[f]=REG[f]});DELQ.forEach(f=>delete out[f]);REG=out;recentAuto();save();redraw();await flush();
  }catch(e){if(e.status!==400)console.error(e)}}
 async function pushCfg(){cfgDirty=true;save();if(isLinked()&&navigator.onLine&&!tokenOk())needAuth(true);if(!isLinked()||!navigator.onLine||!tokenOk())return;
  try{await gfetch(SHEETS+ID()+"/values/"+rng("_diario!A2:B2")+"?valueInputOption=RAW",{method:"PUT",body:{values:[["Configuración de Mimo (no la borres)",JSON.stringify(CFG)]]}});cfgDirty=false;save()}catch(e){console.error(e)}}
 let flushing=false;
 async function flush(){if(cfgDirty)await pushCfg();
- if(flushing||!PEND.length||!isLinked()||!navigator.onLine||!tokenOk())return;flushing=true;
+ if(flushing||!(PEND.length||DELQ.length)||!isLinked()||!navigator.onLine||!tokenOk())return;flushing=true;
  try{const g=await ensureTabs();
   const h=await gfetch(SHEETS+ID()+"/values:batchGet?valueRenderOption=UNFORMATTED_VALUE&ranges="+rng("Registro!A:A")+"&ranges="+rng("Habilidades!A:A"));
   const[ra,ha]=h.valueRanges,rcol=(ra.values||[]).map(x=>isoOf(x[0])),hcol=(ha.values||[]).map(x=>isoOf(x[0]));
-  const data=[{range:"Registro!AF1",values:[[HEADS[31]]]}],app=[],del=[],habs=[],todo=PEND.slice(),L=lastCol();
+  const data=[{range:"Registro!AF1",values:[[HEADS[31]]]}],app=[],del=[],habs=[],todo=PEND.slice(),L=lastCol(),dq=DELQ.slice(),rdel=[];
+  dq.forEach(f=>{rcol.forEach((x,j)=>{if(j>=1&&x===f)rdel.push(j)});hcol.forEach((x,j)=>{if(j>=1&&x===f)del.push(j)})});
   (CFG.extra||[]).forEach(x=>data.push({range:"Registro!"+colA1(x.col)+"1",values:[[x.del?"":x.l]]}));
   todo.forEach(f=>{const o=REG[f];if(!o)return;const i=rcol.indexOf(f);
    if(i>=1)data.push({range:`Registro!A${i+1}:${L}${i+1}`,values:[toRow(o,f)]});else app.push(toRow(o,f));
@@ -3749,6 +3751,8 @@ async function flush(){if(cfgDirty)await pushCfg();
   if(app.length)await gfetch(SHEETS+ID()+"/values/"+rng("Registro!A1")+":append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",{method:"POST",body:{values:app}});
   if(del.length)await gfetch(SHEETS+ID()+":batchUpdate",{method:"POST",body:{requests:del.sort((a,b)=>b-a).map(j=>({deleteDimension:{range:{sheetId:g.Habilidades,dimension:"ROWS",startIndex:j,endIndex:j+1}}}))}});
   if(habs.length)await gfetch(SHEETS+ID()+"/values/"+rng("Habilidades!A1")+":append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",{method:"POST",body:{values:habs}});
+  if(rdel.length)await gfetch(SHEETS+ID()+":batchUpdate",{method:"POST",body:{requests:rdel.sort((a,b)=>b-a).map(j=>({deleteDimension:{range:{sheetId:g.Registro,dimension:"ROWS",startIndex:j,endIndex:j+1}}}))}});
+  DELQ=DELQ.filter(f=>!dq.includes(f));
   PEND=PEND.filter(f=>!todo.includes(f));save();setStatus("Registro guardado en tu hoja ✓","ok");
  }catch(e){console.error(e);if(!(e instanceof NeedAuth))setStatus("No se pudo subir el registro ("+String(e.message||e).slice(0,70)+"). Quedó en este dispositivo y se reintenta.","err")}
  finally{flushing=false}}
@@ -3773,7 +3777,7 @@ const fv=(x,f)=>f==="otras"?otrStr(x.otras):f==="animo"?String(MN(x.animo)??""):
 let updA=null;
 const autoBlank=()=>{const o=blank();YN.forEach(f=>o[f]="");return o};
 function autoDay(k,ask){const a=autoOf(k);if(!a)return;const x=REG[k]?JSON.parse(JSON.stringify(REG[k])):autoBlank();x.habs=x.habs||[];x.otras=x.otras||[];
- const m=manOf(k),diff=[];let ch=!REG[k];
+ const m=manOf(k),diff=[];delete m.off;let ch=!REG[k];
  /* emociones: se suman, nunca se pisa ni se baja lo que ya estaba */
  const gone=m.gone||{},ok=(g,v)=>!(g in gone)||v>gone[g];
  EMOS.forEach(([e])=>{if((+a[e]||0)>(+x[e]||0)&&ok(e,+a[e])){x[e]=a[e];ch=true}});
@@ -3785,7 +3789,7 @@ function autoDay(k,ask){const a=autoOf(k);if(!a)return;const x=REG[k]?JSON.parse
  if(ch||rec){save();clearTimeout(tmr);tmr=setTimeout(flush,1500)}
  if(d&&day===k&&ch)d=JSON.parse(JSON.stringify(REG[k]));
  if(diff.length&&ask){updA={k,a,diff};askUpd()}}
-function recentAuto(){const lim=toISO(addDays(new Date(),-35));allDates.filter(k=>k>=lim&&(byDate.get(k)||[]).some(e=>emosOf(e).length)).forEach(k=>autoDay(k,false))}
+function recentAuto(){const lim=toISO(addDays(new Date(),-35));allDates.filter(k=>k>=lim&&!(CFG.man&&CFG.man[k]&&CFG.man[k].off)&&(byDate.get(k)||[]).some(e=>emosOf(e).length)).forEach(k=>autoDay(k,false))}
 function markMan(f){if(!day)return;const m=manOf(day);m[f]=1;CFG.man[day]=m;cfgDirty=true}
 /* borrar a mano una emoción: no vuelve sola, salvo que un pensamiento traiga una intensidad mayor */
 function thMax(g){let v=0;(byDate.get(day)||[]).forEach(e=>emosOf(e).forEach(o=>{const q=emoKey(o.n)||"o:"+o.n.toLowerCase();if(q===g)v=Math.max(v,+o.v||0)}));return v}
@@ -3834,7 +3838,7 @@ function render(){const c=CARDS[ci];
  $("rgH").innerHTML=esc(c.h)+(INFO[c.id]?ib("ⓘ","¿Qué es esto?","data-info=\"1\"","info"):"");
  $("rgInfo").innerHTML=INFO[c.id]||"";$("rgInfo").hidden=!(INFO[c.id]&&infoOpen);
  $("rgSub").textContent=c.s;
- $("rgDots").innerHTML=CARDS.map((x,n)=>`<button type="button" class="${n===ci?"on":""}" data-go="${n}">${x.tab}</button>`).join("");
+ $("rgDots").innerHTML=CARDS.map((x,n)=>`<button type="button" class="${n===ci?"on":""}" data-go="${n}">${x.tab}</button>`).join("")+`<button type="button" class="dd" data-dd="1" title="Borrar todo lo de este día" aria-label="Borrar todo lo de este día">🗑️</button>`;
  $("rgBody").innerHTML=body(c);$("rgTool").innerHTML=c.id==="cuerpo"?ib(bodyEdit?"✓ Listo":"⚙️ Editar campos",bodyEdit?"Terminar de editar":"Ocultar, agregar, renombrar o borrar campos","data-be=\"1\"","wide"):"";$("rgPrev").style.visibility=ci?"visible":"hidden";$("rgNext").textContent=ci===CARDS.length-1?"Guardar":"Siguiente";
  const on=$("rgDots").querySelector(".on");if(on&&on.scrollIntoView)on.scrollIntoView({block:"nearest",inline:"center"})}
 function pensMax(k){const m={};(byDate.get(k)||[]).forEach(e=>emosOf(e).forEach(o=>{const q=emoKey(o.n)||"o:"+o.n;m[q]=Math.max(m[q]||0,+o.v||0)}));return m}
@@ -3861,6 +3865,23 @@ function pnEmo(){return `<div class="mod" style="margin-top:4px">¿Qué emocione
 function penSheet(k,i){const e=i==null?null:(byDate.get(k)||[])[i];penOld=e;PN={mood:e&&e.mood||"",std:{},otr:[]};
  if(e)emosOf(e).forEach(o=>{const q=emoKey(o.n);if(q)PN.std[q]=+o.v;else PN.otr.push({n:o.n,v:+o.v})});
  sheet(e?"Editar pensamiento":"Nuevo pensamiento",`<div class="rg-row2"><input type="date" id="pnDate" value="${e?e.date:k}"><input type="time" id="pnTime" value="${e?e.time:nowHHMM()}"></div><textarea id="pnText" style="min-height:140px" placeholder="Qué pasó, qué sentiste y por qué…">${e?esc(e.text):""}</textarea><div id="pnEmo">${pnEmo()}</div><datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia","Calma","Frustración","Rechazada"].map(x=>`<option value="${x}">`).join("")}</datalist><div class="err2" id="pnErr"></div><div class="actions">${e?ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide"):""}<button type="button" class="btn-p" id="pnOk">Guardar</button></div>`)}
+/* borrar todo lo de un día */
+function dayParts(k){const x=REG[k],out=[];if(x){if(String(x.notas||"").trim())out.push("Lo que hice");
+ if(["suicImp","hostImp","sexImp","scrImp"].some(f=>+x[f]>0)||["suicAcc","hostAcc","sexAcc"].some(f=>x[f]==="SÍ")||+x.scrH||+x.scrM)out.push("Conductas");
+ if(["inex","pas","act"].some(f=>x[f]))out.push("Pensamientos de inexistencia e ideación");
+ if(EMOS.some(([e])=>+x[e]>0)||(x.otras||[]).some(o=>o.n))out.push("Emociones");
+ if(MN(x.animo)!=null)out.push("Ánimo del día");
+ if(live().some(f=>f.k!=="terapia"&&x[f.k]!==""&&x[f.k]!=null&&(f.t==="num"||x[f.k]==="SÍ")))out.push("Cuerpo");
+ if((x.habs||[]).length)out.push((x.habs.length)+" habilidad"+(x.habs.length>1?"es":""))}return out}
+function delDaySheet(){const k=day,parts=dayParts(k),ps=(byDate.get(k)||[]).length;
+ if(!REG[k]&&!ps){sheet("Borrar este día",`<p>Este día no tiene nada cargado.</p><div class="actions"><button type="button" class="btn-g" data-skx="1">Cerrar</button></div>`,DIAS[dt(k).getDay()]+" "+fmt(k));return}
+ sheet("¿Borrar todo lo de este día?",`<p>Se borra de este dispositivo y de tu hoja. <b>No se puede deshacer.</b></p>${REG[k]?`<p><b>Resumen del día</b>: ${parts.length?esc(parts.join(", ")):"sin datos cargados"}.</p>`:""}${ps?`<label class="pw-row"><input type="checkbox" id="ddPens" checked><span>Borrar también ${ps===1?"el pensamiento":"los "+ps+" pensamientos"} de este día</span></label>`:""}<div class="actions"><button type="button" class="btn-g" data-skx="1">Cancelar</button><button type="button" class="btn-p danger" data-ddok="1">🗑️ Sí, borrar todo</button></div>`,DIAS[dt(k).getDay()]+" "+fmt(k))}
+async function delDay(k,pens){const ps=pens?(byDate.get(k)||[]).slice():[];
+ if(REG[k]){delete REG[k];PEND=PEND.filter(f=>f!==k);if(!DELQ.includes(k))DELQ.push(k)}
+ CFG.man=CFG.man||{};if(ps.length||!(byDate.get(k)||[]).length)delete CFG.man[k];else CFG.man[k]={off:1};cfgDirty=true;save();   /* si dejaste los pensamientos, el resumen no se vuelve a armar solo */
+ closeSheet();bg.classList.remove("open");d=null;redraw();toast2("Listo: se borró todo lo del "+fmt(k)+".");
+ for(const e of ps)await updateEntry(e,null);
+ flush()}
 function penView(k,i){const e=(byDate.get(k)||[])[i];if(!e)return;const p=penPill(e);
  sheet(`${MOOD_EMO[e.mood]||""} ${MOOD_LABEL[e.mood]||""}`,`${p?`<div class="hint2">${esc(p)}</div>`:""}<div class="pv-text">${esc(e.text)}</div><div class="actions">${ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide")}<button type="button" class="btn-p" data-pe="${k}|${i}">✏️ Editar</button></div>`,DIAS[dt(e.date).getDay()]+" "+fmt(e.date)+" · "+e.time)}
 function penDel(k,i){const e=(byDate.get(k)||[])[i];if(!e)return;penOld=e;
@@ -3934,6 +3955,8 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(b.id==="rgPrev"){if(ci>0){ci--;render();$("rgCard").scrollTop=0}return}
  if(b.id==="rgNext"){if(ci<CARDS.length-1){ci++;render();$("rgCard").scrollTop=0;return}
   const tp=isLinked()&&navigator.onLine&&!tokenOk()&&gisReady()?askToken(ME.email).catch(()=>null):null;touch();bg.classList.remove("open");redraw();if(tp)await tp;clearTimeout(tmr);await flush();return}
+ if(s.dd)return delDaySheet();
+ if(s.ddok){const c=$("ddPens");return delDay(day,c?c.checked:false)}
  if(s.go!=null){ci=+s.go;bodyEdit=false;render();$("rgCard").scrollTop=0;return}
  if(s.c){const[k,n]=s.c.split("|");d[k]=+n;if(EMOS.some(x=>x[0]===k))markGone(k,!+n);if(ACC[k]&&!+n)d[ACC[k]]="NO";if(AUTOK.includes(k))markMan(k);touch();render();return}
  if(s.oc){const[i,n]=s.oc.split("|");d.otras[+i].v=+n;markMan("otras");touch();render();return}
@@ -4013,7 +4036,7 @@ const EYE_K="mimo_eyes_v1";let EYES=(()=>{try{return JSON.parse(localStorage.get
 function emoVal(k,e){if(REG[k])return +REG[k][e]||0;const m=pensMax(k);return (byDate.get(k)||[]).length?(m[e]||0):null}
 function emoMonth(ym,e){const v=[...new Set([...Object.keys(REG),...allDates])].filter(k=>k.startsWith(ym)).map(k=>emoVal(k,e)).filter(x=>x!=null);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-eye]");if(!b)return;EYES[b.dataset.eye]=EYES[b.dataset.eye]?0:1;try{localStorage.setItem(EYE_K,JSON.stringify(EYES))}catch(_){}renderStats()});
-return {shareSheet,colSheet,load,pull,flush,open,pensMax,weekView,emoStats,dayCard,dayMood,dayNum,dayColor,penSheet,passSheet,emoVal,emoMonth,eyesOn:()=>EMOS.filter(x=>EYES[x[0]]).map(x=>[x[0],EC[x[0]],x[2]]),pendN:()=>PEND.length+(cfgDirty?1:0),get REG(){return REG},_seed:o=>{REG=o}};
+return {shareSheet,colSheet,load,pull,flush,open,pensMax,weekView,emoStats,dayCard,dayMood,dayNum,dayColor,penSheet,passSheet,emoVal,emoMonth,eyesOn:()=>EMOS.filter(x=>EYES[x[0]]).map(x=>[x[0],EC[x[0]],x[2]]),pendN:()=>PEND.length+DELQ.length+(cfgDirty?1:0),get REG(){return REG},_seed:o=>{REG=o}};
 })();
 
 </script>
