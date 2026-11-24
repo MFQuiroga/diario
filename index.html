@@ -681,6 +681,18 @@ footer.credit{
 .lock-card p:empty{ display:none; }
 .lock-link{ background:none; border:0; color:var(--accent); font:500 13px 'Inter',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
 /* ===== v10: Google y hoja propia ===== */
+.pw-wrap{ position:relative; display:flex; }
+.pw-wrap:has(input[hidden]){ display:none; }
+.pw-wrap input{ flex:1; min-width:0; padding-left:44px !important; padding-right:44px !important; }
+.pw-wrap .eye{ position:absolute; right:6px; top:50%; transform:translateY(-50%); width:34px; height:34px; border:0; border-radius:9px; cursor:pointer;
+  background:center/20px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a9a3c4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E"); }
+.pw-wrap .eye.on{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a9a3c4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l18 18'/%3E%3Cpath d='M10.6 6.1A10.6 10.6 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3.2 3.9M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6'/%3E%3Cpath d='M9.9 9.9a3 3 0 0 0 4.2 4.2'/%3E%3C/svg%3E"); }
+.pw-wrap .eye:hover{ background-color:var(--bg-panel-3); }
+.sheet-found{ display:flex; flex-direction:column; gap:6px; }
+.sheet-found:empty{ display:none; }
+.sheet-found p{ margin:0; font-size:13px; color:var(--text-mute,#a9a3c4); }
+.sheet-found button{ text-align:left; padding:10px 12px; border-radius:11px; background:var(--bg-panel-2); border:1px solid var(--accent); color:var(--text-light); cursor:pointer; font:500 13.5px 'Inter',sans-serif; }
+.sheet-found small{ display:block; font-weight:400; font-size:12px; color:var(--text-mute,#a9a3c4); }
 .lock-pic{ width:84px; height:84px; border-radius:50%; margin:0 auto 4px; object-fit:cover; }
 .lock-links{ display:flex; flex-wrap:wrap; justify-content:center; gap:2px 12px; }
 .lock-links:empty{ display:none; }
@@ -715,12 +727,11 @@ footer.credit{
     <p id="lockMsg">Cargando…</p>
     <input type="text" name="username" id="lockUser" value="" autocomplete="username" hidden>
     <div class="lock-pick" id="lockPick" hidden></div>
-    <input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden>
-    <input type="password" id="lockPw2" placeholder="Repetila" autocomplete="new-password" hidden>
+    <div class="pw-wrap"><input type="password" id="lockPw" placeholder="Contraseña" autocomplete="current-password" hidden><button type="button" class="eye" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button></div>
+    <div class="pw-wrap"><input type="password" id="lockPw2" placeholder="Repetila" autocomplete="new-password" hidden><button type="button" class="eye" tabindex="-1" aria-label="Mostrar contraseña" title="Mostrar contraseña"></button></div>
     <ul class="pw-rules" id="pwRules" hidden>
       <li data-r="len">6 o más caracteres</li><li data-r="up">Una mayúscula</li><li data-r="lo">Una minúscula</li><li data-r="ns">Un número o símbolo</li>
     </ul>
-    <button type="button" class="lock-link" id="lockShow" hidden>Mostrar contraseña</button>
     <button type="submit" class="btn-p" id="lockGo" hidden>Entrar</button>
     <button type="button" class="btn-g" id="lockBio" hidden>Entrar con huella</button>
     <div class="lock-links" id="lockLinks"></div>
@@ -749,6 +760,7 @@ footer.credit{
   <div class="composer sheet-card" role="dialog" aria-labelledby="sheetTitle">
     <h2 id="sheetTitle">Enlazá tu hoja de cálculo</h2>
     <p class="sheet-help">Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado.</p>
+    <div class="sheet-found" id="sheetFound"></div>
     <input id="sheetUrl" type="text" placeholder="Pegá el link de tu hoja de cálculo" autocomplete="off" spellcheck="false">
     <button class="btn-p" id="sheetLink">Enlazar</button>
     <button class="btn-g" id="sheetNew">No tengo hoja de cálculo: crear una nueva y enlazar</button>
@@ -784,15 +796,15 @@ footer.credit{
       <div class="cfg-menu" id="cfgMenu" role="menu">
         <div class="cfg-state" id="cfgState"></div>
         <button class="cfg-item" id="cfgLinkSheet" title="Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado."><span class="ic">📗</span><span>Enlazar a hoja de cálculo<small>Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado.</small></span></button>
-        <button class="cfg-item" id="cfgOpenSheet" data-linked><span class="ic">📗</span><span>Abrir en Google Sheets</span></button>
-        <button class="cfg-item" id="cfgChangeSheet" data-linked><span class="ic">🔁</span><span>Cambiar hoja</span></button>
         <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Activar huella</span></button>
         <button class="cfg-item" id="cfgLockNow" data-linked><span class="ic">🔒</span><span>Bloquear</span></button>
         <button class="cfg-item" id="cfgInstall" hidden><span class="ic">📲</span><span>Instalar app</span></button>
         <div class="cfg-sep" data-linked></div>
+        <button class="cfg-item" id="cfgOpenSheet" data-linked><span class="ic">📗</span><span>Abrir en Google Sheets</span></button>
         <button class="cfg-item" id="cfgImport" data-linked><span class="ic">⬆️</span><span>Importar respaldo<small>PDF o CSV de MindDiary</small></span></button>
         <button class="cfg-item" id="cfgCsv" data-linked><span class="ic">⬇️</span><span>Descargar copia (CSV)</span></button>
         <div class="cfg-sep" data-linked></div>
+        <button class="cfg-item" id="cfgChangeSheet" data-linked><span class="ic">🔁</span><span>Cambiar hoja<small>La hoja que dejás no se borra: queda en tu Google Drive.</small></span></button>
         <button class="cfg-item" id="cfgLogout" data-linked><span class="ic">🚪</span><span>Cerrar sesión<small>Borra lo guardado en este dispositivo. Tu hoja no se toca.</small></span></button>
         <div class="cfg-ver" id="cfgVer"></div>
       </div>
@@ -2287,7 +2299,8 @@ const PROFILES_KEY = 'mimo_profiles_v1';
 const CLIENT_ID = '113344335854-jafcp3jjej55ard6r762bq0viuj7j5ln.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyAILH651QId6ekVBWRDTpOkdDi296yl-r4', APP_ID = '113344335854';
 const SCOPES = 'openid email profile https://www.googleapis.com/auth/drive.file';
-const HEADERS = ['Fecha','Día','Hora','Ánimo','Texto','Guardado'];
+const HEADERS = ['Fecha (año-mes-día)','Día','Hora','Ánimo','Texto','Guardado'];
+const DRIVE = 'https://www.googleapis.com/drive/v3/files';
 const SHEETS = 'https://sheets.googleapis.com/v4/spreadsheets/';
 const L = id => document.getElementById(id);
 
@@ -2320,7 +2333,7 @@ function askToken(hint, prompt){
     tokCb = r => {
       if(r.error){ ko(new Error(r.error_description || r.error)); return; }
       if(!google.accounts.oauth2.hasGrantedAllScopes(r, 'https://www.googleapis.com/auth/drive.file')){
-        ko(new Error('Google no le dio permiso a Mimo para usar tu hoja. Probá de nuevo y dejá marcado ese permiso.')); return;
+        ko(new Error('Falta un permiso. Tocá de nuevo y, en la ventana de Google, tildá la casilla «Ver, editar, crear y borrar solo los archivos de Google Drive que uses con esta app».')); return;
       }
       TOKEN = { access_token: r.access_token, exp: Date.now() + (Number(r.expires_in) || 3600) * 1000 };
       needAuth(false); ok(TOKEN);
@@ -2345,6 +2358,20 @@ const userInfo = () => gfetch('https://www.googleapis.com/oauth2/v3/userinfo');
 
 /* --- la hoja --- */
 const rng = a1 => encodeURIComponent(a1);
+/* Drive marca cuál es "la" hoja del diario de esta cuenta; con drive.file solo vemos las hojas que Mimo creó o que elegiste */
+async function taggedSheet(){
+  const q = encodeURIComponent("appProperties has { key='mimo' and value='diario' } and trashed=false");
+  const r = await gfetch(DRIVE + '?q=' + q + '&fields=files(id,name)&orderBy=modifiedTime desc');
+  return (r.files || [])[0] || null;
+}
+async function knownSheets(){
+  const q = encodeURIComponent("mimeType='application/vnd.google-apps.spreadsheet' and trashed=false");
+  const r = await gfetch(DRIVE + '?q=' + q + '&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc&pageSize=20');
+  return r.files || [];
+}
+async function tagSheet(id, on){
+  await gfetch(DRIVE + '/' + id + '?fields=id', { method:'PATCH', body:{ appProperties:{ mimo: on ? 'diario' : null } } });
+}
 async function sheetMeta(id){ return gfetch(SHEETS + id + '?fields=spreadsheetId,spreadsheetUrl,properties.title,sheets.properties(sheetId,title)'); }
 async function prepareSheet(id){
   let m = await sheetMeta(id);
@@ -2355,6 +2382,15 @@ async function prepareSheet(id){
   if(reqs.length){ await gfetch(SHEETS + id + ':batchUpdate', { method:'POST', body:{ requests: reqs } }); m = await sheetMeta(id); }
   if(needDiario) await gfetch(SHEETS + id + '/values/' + rng('Diario!A1:F1') + '?valueInputOption=RAW', { method:'PUT', body:{ values:[HEADERS] } });
   const d = m.sheets.find(s => s.properties.title === 'Diario');
+  const h = await gfetch(SHEETS + id + '/values/' + rng('Diario!A1:Z1'));
+  const col = ((h.values && h.values[0]) || []).findIndex(x => /^fecha/i.test(String(x).trim()));
+  if(col >= 0){
+    const reqs2 = [{ repeatCell:{ range:{ sheetId:d.properties.sheetId, startRowIndex:1, startColumnIndex:col, endColumnIndex:col+1 },
+      cell:{ userEnteredFormat:{ numberFormat:{ type:'DATE', pattern:'yyyy-mm-dd' } } }, fields:'userEnteredFormat.numberFormat' } }];
+    if(String(h.values[0][col]).trim() === 'Fecha') reqs2.push({ updateCells:{ start:{ sheetId:d.properties.sheetId, rowIndex:0, columnIndex:col }, fields:'userEnteredValue',
+      rows:[{ values:[{ userEnteredValue:{ stringValue: HEADERS[0] } }] }] } });
+    await gfetch(SHEETS + id + ':batchUpdate', { method:'POST', body:{ requests: reqs2 } });
+  }
   return { url: m.spreadsheetUrl, title: m.properties.title, gid: d.properties.sheetId };
 }
 async function createSheet(){
@@ -2401,17 +2437,22 @@ function addPending(list){
 let COLS = { date:0, dow:1, time:2, mood:3, text:4, saved:5 };
 const pad2 = n => String(n).padStart(2,'0');
 function nowStamp(){ const d = new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+/* la fecha va como fecha de verdad, que se ve año-mes-día */
+function dateCell(iso){
+  const [y, m, d] = iso.split('-').map(Number);
+  return { userEnteredValue:{ numberValue: Math.round((Date.UTC(y, m-1, d) - Date.UTC(1899, 11, 30)) / 864e5) }, userEnteredFormat:{ numberFormat:{ type:'DATE', pattern:'yyyy-mm-dd' } } };
+}
 async function appendRows(list){
   const gid = ME.diarioGid != null ? ME.diarioGid : (await prepareSheet(ME.sheetId)).gid;
   const width = Math.max(...Object.values(COLS)) + 1, stamp = nowStamp();
   const rows = list.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.time.localeCompare(a.time)).map(e=>{
     const v = new Array(width).fill('');
     v[COLS.date] = e.date; v[COLS.dow] = e.dow || csvDowFor(e.date); v[COLS.time] = e.time; v[COLS.mood] = e.mood; v[COLS.text] = e.text; v[COLS.saved] = stamp;
-    return { values: v.map(s => ({ userEnteredValue:{ stringValue: String(s == null ? '' : s) } })) };
+    return { values: v.map((s, k) => k === COLS.date ? dateCell(s) : ({ userEnteredValue:{ stringValue: String(s == null ? '' : s) } })) };
   });
   await gfetch(SHEETS + ME.sheetId + ':batchUpdate', { method:'POST', body:{ requests:[   // lo nuevo va arriba, debajo de los títulos
     { insertDimension:{ range:{ sheetId:gid, dimension:'ROWS', startIndex:1, endIndex:1 + rows.length }, inheritFromBefore:false } },
-    { updateCells:{ start:{ sheetId:gid, rowIndex:1, columnIndex:0 }, fields:'userEnteredValue', rows } }
+    { updateCells:{ start:{ sheetId:gid, rowIndex:1, columnIndex:0 }, fields:'userEnteredValue,userEnteredFormat.numberFormat', rows } }
   ] } });
 }
 let syncing = false;
@@ -2450,7 +2491,7 @@ async function pullFromSheet(){
     const r = await gfetch(SHEETS + ME.sheetId + '/values/' + rng('Diario!A1:Z'));
     const rows = r.values || [];
     const head = (rows[0] || []).map(h => String(h).trim().toLowerCase());
-    const ix = (n, d) => { const i = head.indexOf(n); return i < 0 ? d : i; };
+    const ix = (n, d) => { const i = head.findIndex(h => h === n || h.startsWith(n + ' ')); return i < 0 ? d : i; };
     COLS = { date: ix('fecha',0), dow: ix('día',1), time: ix('hora',2), mood: ix('ánimo',3), text: ix('texto',4), saved: ix('guardado',5) };
     const sheetEntries = rows.slice(1).map(row => {
       const date = normDate(row[COLS.date]);
@@ -2477,7 +2518,18 @@ async function pullFromSheet(){
 }
 /* si se venció el permiso de Google, un botón para renovarlo (necesita un toque) */
 function needAuth(on){ const b = L('authPill'); if(b) b.hidden = !(on && unlocked && isLinked()); updateGearDot(); }
-async function afterToken(){ if(!pulledOnce) await pullFromSheet(); else await syncPendingToSheet(); await reconcilePw(); }
+async function afterToken(){ if(!pulledOnce) await pullFromSheet(); else await syncPendingToSheet(); await reconcilePw(); await checkTag(); }
+let tagChecked = false;
+async function checkTag(){
+  if(tagChecked || !isLinked() || !tokenOk()) return;
+  tagChecked = true;
+  try{
+    const t = await taggedSheet();
+    if(!t){ await tagSheet(ME.sheetId, true); return; }
+    if(t.id === ME.sheetId) return;
+    if(confirm(`Tu cuenta usa la hoja «${t.name}» en otro dispositivo, y acá estás usando «${ME.sheetTitle || 'otra'}».\n\n¿Usar «${t.name}» también acá? (La de acá no se borra: queda en tu Google Drive.)`)) await linkSheet(t.id);
+  }catch(e){ console.warn('marca de Drive', e); }
+}
 L('authPill').addEventListener('click', async ()=>{
   try{ await askToken(ME.email); await afterToken(); }
   catch(err){ setStatus(err.message, 'err'); }
@@ -2515,10 +2567,25 @@ function openSheetCard(changing){
   L('sheetTitle').textContent = changing ? 'Cambiar de hoja' : 'Enlazá tu hoja de cálculo';
   L('sheetClose').hidden = !changing; L('sheetOther').hidden = !!changing;
   L('sheetErr').textContent = ''; L('sheetUrl').value = '';
-  sheetBg.classList.add('open');
+  sheetBg.classList.add('open'); renderFound();
   setTimeout(()=> L('sheetUrl').focus(), 50);
 }
 function closeSheetCard(){ sheetBg.classList.remove('open'); }
+async function renderFound(){
+  const box = L('sheetFound'); box.innerHTML = '';
+  if(!tokenOk()) return;
+  let list = [];
+  try{ list = (await knownSheets()).filter(f => !ME || f.id !== ME.sheetId); }catch(_){ return; }
+  if(!list.length) return;
+  box.innerHTML = '<p>Hojas que ya usaste con Mimo:</p>' + list.map(f => `<button type="button" data-id="${escH(f.id)}">📗 ${escH(f.name)}<small>Modificada el ${new Date(f.modifiedTime).toLocaleDateString('es-AR')}</small></button>`).join('') + '<p>…o pegá el link de otra:</p>';
+}
+L('sheetFound').addEventListener('click', async ev=>{
+  const b = ev.target.closest('button[data-id]'); if(!b) return;
+  L('sheetErr').textContent = ''; sheetBusy(true); b.disabled = true;
+  try{ await linkSheet(b.dataset.id); }
+  catch(err){ console.error(err); L('sheetErr').textContent = 'No se pudo: ' + err.message; }
+  finally{ sheetBusy(false); b.disabled = false; }
+});
 function showNoSheet(msg){
   lockEl.classList.add('off');
   document.body.classList.add('nosheet');
@@ -2532,7 +2599,16 @@ async function linkSheet(id){
     await syncPendingToSheet();
     if(getPending().length) throw new Error('Primero tiene que subirse lo pendiente a tu hoja actual. Probá con internet.');
   }
-  const info = await prepareSheet(id);
+  let info;
+  for(let k = 0; ; k++){
+    try{ info = await prepareSheet(id); break; }
+    catch(e){ if(k >= 4 || !(e.status === 403 || e.status === 404)) throw e; await new Promise(r => setTimeout(r, 1500)); }
+  }
+  try{
+    const old = await taggedSheet();
+    if(old && old.id !== id) await tagSheet(old.id, false);
+    await tagSheet(id, true);
+  }catch(e){ console.warn('marca de Drive', e); }
   Object.assign(ME, { sheetId:id, sheetUrl:info.url, sheetTitle:info.title, diarioGid:info.gid });
   if(changing){ delete ME.lock; }
   putProfile(ME);
@@ -2679,7 +2755,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '10', APP_DATE = '23/11/2026 20:24';
+const APP_VERSION = '11', APP_DATE = '23/11/2026 21:16';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -2739,9 +2815,10 @@ function setMode(mode, msg){
   L('lockIcon').hidden = !pic.hidden;
   const pwMode = mode === 'create' || mode === 'enter' || mode === 'reset';
   lockPw.hidden = !pwMode;
-  lockPw2.hidden = L('pwRules').hidden = L('lockShow').hidden = !(mode === 'create' || mode === 'reset');
+  lockPw2.hidden = L('pwRules').hidden = !(mode === 'create' || mode === 'reset');
+  document.querySelectorAll('.pw-wrap .eye').forEach(b => b.hidden = !(mode === 'create' || mode === 'reset'));   // al entrar no se muestra: protege lo que autocompleta el navegador
   if(!L('pwRules').hidden) renderPwRules();
-  lockPw.type = lockPw2.type = 'password'; L('lockShow').textContent = 'Mostrar contraseña';
+  [lockPw, lockPw2].forEach(i => { i.type = 'password'; i.nextElementSibling.classList.remove('on'); });
   lockPw.placeholder = mode === 'reset' ? 'Contraseña nueva' : 'Contraseña';
   lockPw.autocomplete = mode === 'enter' ? 'current-password' : 'new-password';
   L('lockUser').value = ME ? ME.email : '';
@@ -2768,11 +2845,11 @@ const PW_RULES = { len: s => s.length >= 6, up: s => /\p{Lu}/u.test(s), lo: s =>
 function pwRulesOk(s){ return Object.values(PW_RULES).every(f => f(s)); }
 function renderPwRules(){ L('pwRules').querySelectorAll('li').forEach(li => li.classList.toggle('ok', PW_RULES[li.dataset.r](lockPw.value))); }
 lockPw.addEventListener('input', ()=>{ if(!L('pwRules').hidden) renderPwRules(); });
-L('lockShow').addEventListener('click', ()=>{
-  const show = lockPw.type === 'password';
-  lockPw.type = lockPw2.type = show ? 'text' : 'password';
-  L('lockShow').textContent = show ? 'Ocultar contraseña' : 'Mostrar contraseña';
-});
+document.querySelectorAll('.pw-wrap .eye').forEach(b => b.addEventListener('click', ()=>{
+  const inp = b.previousElementSibling, show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password'; b.classList.toggle('on', show);
+  b.title = b.ariaLabel = show ? 'Ocultar contraseña' : 'Mostrar contraseña';
+}));
 function busy(on, txt){ L('lockGo').disabled = on; if(txt) L('lockGo').textContent = txt; }
 function sessGet(){ try{ return JSON.parse(sessionStorage.getItem(SESS_KEY) || 'null'); }catch(_){ return null; } }
 
@@ -2787,11 +2864,19 @@ async function finishUnlock(){
   if(!started){ started = true; await init(); await saveStoredEntries(); setPending(pendingMem.slice()); }
   needAuth(!tokenOk());
   await reconcilePw();
+  await checkTag();
 }
 
 /* después de entrar con Google: ¿tiene hoja? ¿ya hay contraseña en la hoja? */
 async function afterGoogle(){
-  if(!ME.sheetId){ showNoSheet(); return; }
+  if(!ME.sheetId){
+    let t = null; try{ t = await taggedSheet(); }catch(_){}
+    if(t){
+      try{ const info = await prepareSheet(t.id); Object.assign(ME, { sheetId:t.id, sheetUrl:info.url, sheetTitle:info.title, diarioGid:info.gid }); putProfile(ME); }
+      catch(_){ t = null; }
+    }
+    if(!t){ showNoSheet(); return; }
+  }
   let sp;
   try{ sp = await readPw(); }
   catch(err){
