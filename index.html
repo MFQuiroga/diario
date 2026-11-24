@@ -3146,7 +3146,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '25', APP_DATE = '24/11/2026 02:45';
+const APP_VERSION = '26', APP_DATE = '24/11/2026 02:35';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3729,7 +3729,7 @@ async function pull(){if(!isLinked()||!tokenOk())return;
   const out={};
   ((a&&a.values)||[]).slice(1).forEach(row=>{const o=fromRow(row);if(o.fecha)out[o.fecha]=o});
   ((b&&b.values)||[]).slice(1).forEach(x=>{const f=isoOf(x[0]);if(out[f]&&x[1])out[f].habs.push({h:String(x[1]),p:+x[2]||0,c:String(x[3]||"")})});
-  PEND.forEach(f=>{if(REG[f])out[f]=REG[f]});REG=out;save();redraw();await flush();
+  PEND.forEach(f=>{if(REG[f])out[f]=REG[f]});REG=out;recentAuto();save();redraw();await flush();
  }catch(e){if(e.status!==400)console.error(e)}}
 async function pushCfg(){cfgDirty=true;save();if(isLinked()&&navigator.onLine&&!tokenOk())needAuth(true);if(!isLinked()||!navigator.onLine||!tokenOk())return;
  try{await gfetch(SHEETS+ID()+"/values/"+rng("_diario!A2:B2")+"?valueInputOption=RAW",{method:"PUT",body:{values:[["Configuración de Mimo (no la borres)",JSON.stringify(CFG)]]}});cfgDirty=false;save()}catch(e){console.error(e)}}
@@ -3771,11 +3771,13 @@ function manOf(k){CFG.man=CFG.man||{};if(CFG.man[k])return Object.assign({},CFG.
  if(x){if(MN(x.animo)!=null)m.animo=1;EMOS.forEach(([e])=>{if(+x[e])m[e]=1});if((x.otras||[]).some(o=>o.n))m.otras=1}return m}
 const fv=(x,f)=>f==="otras"?otrStr(x.otras):f==="animo"?String(MN(x.animo)??""):String(+x[f]||0);
 let updA=null;
-function autoDay(k,ask){const a=autoOf(k);if(!a)return;const x=REG[k]?JSON.parse(JSON.stringify(REG[k])):blank();x.habs=x.habs||[];x.otras=x.otras||[];
+const autoBlank=()=>{const o=blank();YN.forEach(f=>o[f]="");return o};
+function autoDay(k,ask){const a=autoOf(k);if(!a)return;const x=REG[k]?JSON.parse(JSON.stringify(REG[k])):autoBlank();x.habs=x.habs||[];x.otras=x.otras||[];
  const m=manOf(k),diff=[];let ch=!REG[k];
  /* emociones: se suman, nunca se pisa ni se baja lo que ya estaba */
- EMOS.forEach(([e])=>{if((+a[e]||0)>(+x[e]||0)){x[e]=a[e];ch=true}});
- a.otras.forEach(o=>{const y=x.otras.find(z=>z.n&&z.n.toLowerCase()===o.n.toLowerCase());if(!y){x.otras.push({n:o.n,v:o.v});ch=true}else if(o.v>y.v){y.v=o.v;ch=true}});
+ const gone=m.gone||{},ok=(g,v)=>!(g in gone)||v>gone[g];
+ EMOS.forEach(([e])=>{if((+a[e]||0)>(+x[e]||0)&&ok(e,+a[e])){x[e]=a[e];ch=true}});
+ a.otras.forEach(o=>{const y=x.otras.find(z=>z.n&&z.n.toLowerCase()===o.n.toLowerCase());if(!ok("o:"+o.n.toLowerCase(),o.v))return;if(!y){x.otras.push({n:o.n,v:o.v});ch=true}else if(o.v>y.v){y.v=o.v;ch=true}});
  /* ánimo del día: se recalcula siempre, salvo que lo hayas cambiado a mano (ahí pregunta) */
  if(fv(x,"animo")===fv(a,"animo"))delete m.animo;else if(m.animo)diff.push("animo");else{x.animo=a.animo;ch=true}
  const rec=!(CFG.man&&CFG.man[k]);CFG.man[k]=m;if(rec){cfgDirty=true}
@@ -3783,7 +3785,11 @@ function autoDay(k,ask){const a=autoOf(k);if(!a)return;const x=REG[k]?JSON.parse
  if(ch||rec){save();clearTimeout(tmr);tmr=setTimeout(flush,1500)}
  if(d&&day===k&&ch)d=JSON.parse(JSON.stringify(REG[k]));
  if(diff.length&&ask){updA={k,a,diff};askUpd()}}
+function recentAuto(){const lim=toISO(addDays(new Date(),-35));allDates.filter(k=>k>=lim&&(byDate.get(k)||[]).some(e=>emosOf(e).length)).forEach(k=>autoDay(k,false))}
 function markMan(f){if(!day)return;const m=manOf(day);m[f]=1;CFG.man[day]=m;cfgDirty=true}
+/* borrar a mano una emoción: no vuelve sola, salvo que un pensamiento traiga una intensidad mayor */
+function thMax(g){let v=0;(byDate.get(day)||[]).forEach(e=>emosOf(e).forEach(o=>{const q=emoKey(o.n)||"o:"+o.n.toLowerCase();if(q===g)v=Math.max(v,+o.v||0)}));return v}
+function markGone(g,on){if(!day)return;const m=manOf(day);m.gone=Object.assign({},m.gone);if(on)m.gone[g]=thMax(g);else delete m.gone[g];CFG.man[day]=m;cfgDirty=true}
 const showF=(x,f)=>f==="animo"?(mText(x.animo)||"–"):f==="otras"?(otrStr(x.otras)||"–"):String(+x[f]||0);
 const FN={animo:"Ánimo del día",otras:"Otras emociones"};EMOS.forEach(e=>FN[e[0]]=e[1]+" "+e[2]);
 function askUpd(){const{k,a,diff}=updA,x=REG[k];
@@ -3920,7 +3926,7 @@ bg.addEventListener("input",e=>{const t=e.target;
  if(t.dataset.pon!=null&&PN){PN.otr[+t.dataset.pon].n=t.value;return}if(!d||$("rgSk").contains(t))return;
  if(t.id==="rgNotas")d.notas=t.value;else if(t.id==="rgDet")d.suicDet=t.value;
  else if(t.dataset.num)d[t.dataset.num]=t.value===""?"":Math.max(0,+t.value);
- else if(t.dataset.on!==undefined){d.otras[+t.dataset.on].n=t.value;markMan("otras")}else return;touch()});
+ else if(t.dataset.on!==undefined){d.otras[+t.dataset.on].n=t.value;markMan("otras");markGone("o:"+t.value.trim().toLowerCase(),0)}else return;touch()});
 async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b){const pv=e.target.closest("[data-pv]");if(pv){const[k,i]=pv.dataset.pv.split("|");return penView(k,+i)}if(e.target===bg){if(!$("rgSk").hidden)closeSheet();else close()}return}const s=b.dataset;
  if(b.id==="rgClose")return close();
  if(s.skx)return closeSheet();
@@ -3929,13 +3935,13 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(b.id==="rgNext"){if(ci<CARDS.length-1){ci++;render();$("rgCard").scrollTop=0;return}
   const tp=isLinked()&&navigator.onLine&&!tokenOk()&&gisReady()?askToken(ME.email).catch(()=>null):null;touch();bg.classList.remove("open");redraw();if(tp)await tp;clearTimeout(tmr);await flush();return}
  if(s.go!=null){ci=+s.go;bodyEdit=false;render();$("rgCard").scrollTop=0;return}
- if(s.c){const[k,n]=s.c.split("|");d[k]=+n;if(ACC[k]&&!+n)d[ACC[k]]="NO";if(AUTOK.includes(k))markMan(k);touch();render();return}
+ if(s.c){const[k,n]=s.c.split("|");d[k]=+n;if(EMOS.some(x=>x[0]===k))markGone(k,!+n);if(ACC[k]&&!+n)d[ACC[k]]="NO";if(AUTOK.includes(k))markMan(k);touch();render();return}
  if(s.oc){const[i,n]=s.oc.split("|");d.otras[+i].v=+n;markMan("otras");touch();render();return}
  if(s.yn){const[k,v]=s.yn.split("|");d[k]=d[k]===v&&["inex","pas","act"].includes(k)?"":v;touch();render();return}
  if(s.st){const[k,v]=s.st.split("|");d[k]=Math.round(Math.max(0,(+d[k]||0)+(+v))*100)/100;touch();render();return}
  if(s.am){const n=+s.am;d.animo=MN(d.animo)===n?"":n;markMan("animo");touch();render();return}
  if(b.id==="rgAddEmo"){d.otras.push({n:"",v:0});touch();render();return}
- if(s.del!=null){d.otras.splice(+s.del,1);markMan("otras");touch();render();return}
+ if(s.del!=null){const gn=(d.otras[+s.del]||{}).n;if(gn)markGone("o:"+gn.toLowerCase(),1);d.otras.splice(+s.del,1);markMan("otras");touch();render();return}
  if(b.id==="updOk"&&updA){const{k,a,diff}=updA,x=REG[k],m=manOf(k);diff.forEach(f=>{x[f]=f==="otras"?a.otras:a[f];delete m[f]});CFG.man[k]=m;cfgDirty=true;if(!PEND.includes(k))PEND.push(k);save();updA=null;closeSheet();if(d&&day===k){d=JSON.parse(JSON.stringify(x));render()}redraw();flush();return}
  if(s.pwa){closeSheet();document.getElementById(s.pwa).click();return}
  if(s.wh){const W=W_();W.hid[s.wh]=W.hid[s.wh]?0:1;return colDone()}
