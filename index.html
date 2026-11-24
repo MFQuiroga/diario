@@ -676,6 +676,9 @@ footer.credit{
 .dev-qr-app{ display:flex; gap:14px; align-items:center; margin:0 0 14px; }
 .dev-qr-app img,.dev-qr-app canvas{ background:#fff; padding:8px; border-radius:10px; width:120px !important; height:120px !important; }
 .dev-qr-app:empty{ display:none; }
+.dev-ok{ padding:8px 12px; margin:0 0 8px; border-radius:10px; background:rgba(120,200,140,.22); font-weight:600; }
+.dev-row.new{ animation:devNew 2.4s ease; }
+@keyframes devNew{ 0%,40%{ background:rgba(120,200,140,.28); } 100%{ background:transparent; } }
 [hidden]{ display:none !important; }
 .lock-ver{ margin-top:18px !important; font-size:11.5px !important; opacity:.6; }
 .cfg-ver{ padding:6px 10px 4px; font-size:11.5px; color:var(--text-mute,#a9a3c4); opacity:.75; }
@@ -2584,16 +2587,32 @@ async function wipeRevoked(){
   location.reload();
   await new Promise(()=>{});
 }
-async function renderDevices(){
+let devSig = null, devTimer = null;
+function devHtml(list){
+  return list.map(d => `<div class="dev-row${d.off ? ' off' : ''}${d.isNew ? ' new' : ''}"><span class="nm">${escH(d.name)}<small>${d.off ? 'Desconectado' : 'Conectado el ' + escH(d.added) + ' · último uso ' + escH(d.seen)}</small></span>${d.id === ME.devId ? '<span class="me">este</span>' : ''}${d.off ? '' : `<button data-id="${escH(d.id)}" data-row="${d.row}">Desconectar</button>`}</div>`).join('') || 'Todavía no hay dispositivos.';
+}
+async function renderDevices(silent){
   const box = L('devList');
-  if(!navigator.onLine){ box.textContent = 'Necesitás internet para ver tus dispositivos.'; return; }
-  if(!tokenOk()){ box.innerHTML = '<button class="btn-g" id="devAuth">Conectar con Google para ver la lista</button>'; return; }
-  box.textContent = 'Cargando…';
+  if(!navigator.onLine){ if(!silent) box.textContent = 'Necesitás internet para ver tus dispositivos.'; return; }
+  if(!tokenOk()){ if(!silent) box.innerHTML = '<button class="btn-g" id="devAuth">Conectar con Google para ver la lista</button>'; return; }
+  if(!silent) box.textContent = 'Cargando…';
   try{
     const list = (await readDevices()).sort((a, b) => (a.off - b.off) || b.seen.localeCompare(a.seen));
-    box.innerHTML = list.map(d => `<div class="dev-row${d.off ? ' off' : ''}"><span class="nm">${escH(d.name)}<small>${d.off ? 'Desconectado' : 'Conectado el ' + escH(d.added) + ' · último uso ' + escH(d.seen)}</small></span>${d.id === ME.devId ? '<span class="me">este</span>' : ''}${d.off ? '' : `<button data-id="${escH(d.id)}" data-row="${d.row}">Desconectar</button>`}</div>`).join('') || 'Todavía no hay dispositivos.';
-  }catch(err){ box.textContent = 'No se pudo cargar la lista: ' + err.message; }
+    const sig = JSON.stringify(list.map(d => [d.id, d.off]));
+    if(silent && sig === devSig) return;
+    if(silent && box.querySelector('button[disabled]')) return;
+    const before = devSig ? JSON.parse(devSig).map(x => x[0]) : null;
+    const nuevos = before ? list.filter(d => !d.off && !before.includes(d.id)) : [];
+    nuevos.forEach(d => d.isNew = true);
+    devSig = sig;
+    box.innerHTML = (nuevos.length ? '<div class="dev-ok">✓ Se conectó ' + escH(nuevos.map(d => d.name).join(', ')) + '</div>' : '') + devHtml(list);
+  }catch(err){ if(!silent) box.textContent = 'No se pudo cargar la lista: ' + err.message; }
 }
+function devWatch(on){
+  clearInterval(devTimer); devTimer = null;
+  if(on) devTimer = setInterval(()=>{ if(!document.hidden && L('devBg').classList.contains('open')) renderDevices(true); }, 4000);
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && devTimer) renderDevices(true); });
 L('devList').addEventListener('click', async ev=>{
   if(ev.target.id === 'devAuth'){ try{ await askToken(ME.email); await afterToken(); }catch(err){ setStatus(err.message, 'err'); } renderDevices(); return; }
   const b = ev.target.closest('button[data-id]'); if(!b) return;
@@ -2612,7 +2631,7 @@ L('devList').addEventListener('click', async ev=>{
 let qrLib = null;
 function loadQr(){ return window.QRCode ? Promise.resolve() : (qrLib || (qrLib = loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'))); }
 L('cfgDevices').addEventListener('click', async ()=>{
-  closeCfg(); L('devBg').classList.add('open'); renderDevices();
+  closeCfg(); L('devBg').classList.add('open'); devSig = null; renderDevices(); devWatch(true);
   const q = L('devQr'); q.innerHTML = '';
   try{ await loadQr(); new QRCode(q, { text: APP_URL, width:420, height:420, correctLevel: QRCode.CorrectLevel.L }); }catch(_){ q.innerHTML = ''; }
 });
@@ -2621,8 +2640,9 @@ L('devCopy').addEventListener('click', async ()=>{
   catch(_){ prompt('Copiá este link:', APP_URL); }
   setTimeout(()=> L('devCopy').textContent = 'Copiar link', 2000);
 });
-L('devClose').addEventListener('click', ()=> L('devBg').classList.remove('open'));
-L('devBg').addEventListener('click', ev=>{ if(ev.target === L('devBg')) L('devBg').classList.remove('open'); });
+function closeDev(){ L('devBg').classList.remove('open'); devWatch(false); }
+L('devClose').addEventListener('click', closeDev);
+L('devBg').addEventListener('click', ev=>{ if(ev.target === L('devBg')) closeDev(); });
 let tagChecked = false;
 async function checkTag(){
   if(tagChecked || !isLinked() || !tokenOk()) return;
@@ -2860,7 +2880,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '12', APP_DATE = '23/11/2026 21:34';
+const APP_VERSION = '13', APP_DATE = '23/11/2026 21:50';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
