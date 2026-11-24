@@ -709,9 +709,12 @@ footer.credit{
 .emo-stats{ margin:14px 0 6px; padding-top:16px; border-top:1px solid var(--line); }
 .emo-stats .htitle small{ font-weight:400; color:var(--text-faint); }
 .emo-stats .mood-bar-row{ margin-top:6px; }
-.grid.v-week .stats-panel{ display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:0 28px; align-content:start; }
-.grid.v-week .stats-panel > *{ grid-column:1/-1; }
-.grid.v-week .stats-panel > [data-sec=emo], .grid.v-week .stats-panel > [data-sec=tend]{ grid-column:auto; }
+/* Cómo estuve: en la compu, Ánimo · Tendencia · Emociones en una fila (si entra) */
+.stats-panel{ container-type:inline-size; }
+@container (min-width:860px){ .stat-cols{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:0 28px; align-items:start; }
+  .stat-cols .emo-stats{ margin-top:0; padding-top:0; border-top:0; } .stat-cols .horizon-wrap{ margin-top:0; padding-top:0; border-top:0; } }
+/* semana: sin el detalle del día debajo (los pensamientos se ven en la tabla) */
+.grid.v-week #dayDetail{ display:none; }
 .rg-days{ font-size:11px; color:var(--text-faint); margin:2px 0 0; }
 .rg-empty{ font-size:12px; color:var(--text-faint); font-style:italic; margin-top:6px; }
 /* celu: navegador de fechas en 2 filas */
@@ -1174,8 +1177,8 @@ footer.credit{
 
       <div class="stat-tg" id="statTg" role="group" aria-label="Qué mostrar">
         <button type="button" data-t="animo" title="Mostrar u ocultar el ánimo"><i></i>Ánimo</button>
-        <button type="button" data-t="emo" title="Mostrar u ocultar las emociones"><i></i>Emociones</button>
         <button type="button" data-t="tend" title="Mostrar u ocultar la tendencia"><i></i>Tendencia</button>
+        <button type="button" data-t="emo" title="Mostrar u ocultar las emociones"><i></i>Emociones</button>
       </div>
       <div class="period-nav" id="periodNav">
         <button id="periodPrev">
@@ -1187,16 +1190,17 @@ footer.credit{
         </button>
       </div>
 
-      <div class="stat-big" data-sec="animo">
+      <div class="stat-cols">
+      <div class="sec-a" data-sec="animo">
+      <div class="stat-big">
         <div class="num" id="statCount">0</div>
         <div class="lbl">registros anímicos<br>en el período</div>
       </div>
-      <div class="coverage" id="statCoverage" data-sec="animo"></div>
+      <div class="coverage" id="statCoverage"></div>
 
-      <div class="mood-bars" id="moodBars" data-sec="animo"></div>
-      <div class="insight-line" id="insightLine" data-sec="animo"></div>
-      <div class="emo-stats" id="emoStats" data-sec="emo"></div>
-
+      <div class="mood-bars" id="moodBars"></div>
+      <div class="insight-line" id="insightLine"></div>
+      </div>
       <div class="horizon-wrap" data-sec="tend">
         <div class="htitle-row">
           <div class="htitle">Tendencia</div>
@@ -1209,6 +1213,8 @@ footer.credit{
         </div>
         <div id="horizonChart"></div>
         <div class="horizon-legend" id="horizonLegend"></div>
+      </div>
+      <div class="emo-stats" id="emoStats" data-sec="emo"></div>
       </div>
 
 
@@ -2615,9 +2621,13 @@ async function appendRows(list){
   const rows = list.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.time.localeCompare(a.time)).map(e => rowCells(e, stamp));
   await gfetch(SHEETS + ME.sheetId + ':batchUpdate', { method:'POST', body:{ requests:[   // lo nuevo va arriba, debajo de los títulos
     { insertDimension:{ range:{ sheetId:gid, dimension:'ROWS', startIndex:1, endIndex:1 + rows.length }, inheritFromBefore:false } },
-    { updateCells:{ start:{ sheetId:gid, rowIndex:1, columnIndex:0 }, fields:'userEnteredValue,userEnteredFormat.numberFormat', rows } }
+    { updateCells:{ start:{ sheetId:gid, rowIndex:1, columnIndex:0 }, fields:'userEnteredValue,userEnteredFormat.numberFormat', rows } },
+    sortDiario(gid)
   ] } });
 }
+/* la pestaña Diario siempre de más nuevo a más viejo (fecha y hora) */
+function sortDiario(gid){ return { sortRange:{ range:{ sheetId:gid, startRowIndex:1, startColumnIndex:0, endColumnIndex: Math.max(...Object.values(COLS)) + 1 },
+  sortSpecs:[ { dimensionIndex: COLS.date, sortOrder:'DESCENDING' }, { dimensionIndex: COLS.time, sortOrder:'DESCENDING' } ] } }; }
 function rowCells(e, stamp){
   const width = Math.max(...Object.values(COLS)) + 1, v = new Array(width).fill('');
   v[COLS.date] = e.date; v[COLS.dow] = e.dow || csvDowFor(e.date); v[COLS.time] = e.time; v[COLS.mood] = e.mood; v[COLS.text] = e.text; v[COLS.saved] = stamp;
@@ -2664,7 +2674,7 @@ async function flushEdits(){
       else dels.push(i);
     }
     dels.sort((a,b)=> b - a).forEach(i => reqs.push({ deleteDimension:{ range:{ sheetId:gid, dimension:'ROWS', startIndex:i, endIndex:i + 1 } } }));
-    if(reqs.length) await gfetch(SHEETS + ME.sheetId + ':batchUpdate', { method:'POST', body:{ requests: reqs } });
+    if(reqs.length){ reqs.push(sortDiario(gid)); await gfetch(SHEETS + ME.sheetId + ':batchUpdate', { method:'POST', body:{ requests: reqs } }); }
     EDQ = []; encSet(EDQ_KEY, EDQ);
   }catch(err){ console.error(err); }
   finally{ edBusy = false; }
@@ -3136,7 +3146,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '24', APP_DATE = '24/11/2026 02:20';
+const APP_VERSION = '25', APP_DATE = '24/11/2026 02:45';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3763,7 +3773,11 @@ const fv=(x,f)=>f==="otras"?otrStr(x.otras):f==="animo"?String(MN(x.animo)??""):
 let updA=null;
 function autoDay(k,ask){const a=autoOf(k);if(!a)return;const x=REG[k]?JSON.parse(JSON.stringify(REG[k])):blank();x.habs=x.habs||[];x.otras=x.otras||[];
  const m=manOf(k),diff=[];let ch=!REG[k];
- AUTOK.forEach(f=>{if(fv(x,f)===fv(a,f)){delete m[f];return}if(m[f])diff.push(f);else{x[f]=f==="otras"?a.otras:a[f];ch=true}});
+ /* emociones: se suman, nunca se pisa ni se baja lo que ya estaba */
+ EMOS.forEach(([e])=>{if((+a[e]||0)>(+x[e]||0)){x[e]=a[e];ch=true}});
+ a.otras.forEach(o=>{const y=x.otras.find(z=>z.n&&z.n.toLowerCase()===o.n.toLowerCase());if(!y){x.otras.push({n:o.n,v:o.v});ch=true}else if(o.v>y.v){y.v=o.v;ch=true}});
+ /* ánimo del día: se recalcula siempre, salvo que lo hayas cambiado a mano (ahí pregunta) */
+ if(fv(x,"animo")===fv(a,"animo"))delete m.animo;else if(m.animo)diff.push("animo");else{x.animo=a.animo;ch=true}
  const rec=!(CFG.man&&CFG.man[k]);CFG.man[k]=m;if(rec){cfgDirty=true}
  if(ch){x.fecha=k;REG[k]=x;if(!PEND.includes(k))PEND.push(k)}
  if(ch||rec){save();clearTimeout(tmr);tmr=setTimeout(flush,1500)}

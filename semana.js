@@ -12,6 +12,7 @@ const dt=v=>new Date(v+"T12:00:00");
 const iso=d=>d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
 const fmt=v=>{const[y,m,x]=v.split("-");return `${x}/${m}/${y}`};
 const short=k=>DIAS[dt(k).getDay()].slice(0,3)+" "+fmt(k).slice(0,5);
+const ESC=["No pensé en usarla","Pensé en usarla pero no lo quise","Pensé en hacerlo, no lo hice pero lo deseaba","Me esforcé pero no pude","Me esforcé, la usé pero no me ayudó","Me esforcé, la usé y me ayudó","No me esforcé, la usé, no funcionó","No me esforcé, la usé, funcionó"];
 const GROUPS={dia:"",cond:"Conductas · (impulso) acción",psi:"Para mi psicóloga",emo:"Emociones (0-5)",hab:"Habilidades",cuerpo:"Cuerpo"};
 const GORDER=["dia","cond","psi","emo","hab","cuerpo"];
 const SN=(x,f,good)=>!x||!x[f]?"–":`<b class="${(x[f]==="SÍ")===!!good?"no":"si"}">${x[f]}</b>`;
@@ -60,7 +61,17 @@ function render(o){const R=o.REG||{},ds=o.days,reg=ds.filter(k=>R[k]).map(k=>[k,
  const groups=[];C.forEach(c=>{const t=GROUPS[c.g];if(groups.length&&groups[groups.length-1].g===c.g)groups[groups.length-1].n++;else groups.push({g:c.g,t,n:1})});
  const tod=o.today||iso(new Date());
  const dot=k=>{const c=o.dayColor?o.dayColor(k):"";return `<i class="md" style="${c?"background:"+c:""}" title="${esc(o.dayTitle?o.dayTitle(k):"")}"></i>`};
- const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(c=>`<th class="${c.em?"em":""} ${c.cls==="c4"?"c4":""}" title="${esc(c.name)}">${c.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(c=>`<td class="${c.cls||""}" ${o.who==="me"?`data-ed="${c.cd}|${k}"`:""} style="${c.st?c.st(R[k]):""}">${c.c(R[k],k,R,o)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+ const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(c=>`<th class="${c.em?"em":""} ${c.cls==="c4"?"c4":""}" title="${esc(c.name)}">${c.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(c=>`<td class="${c.cls||""}" ${o.who==="me"?`data-ed="${c.cd}|${k}"`:`data-cell="${c.k}|${k}"`} style="${c.st?c.st(R[k]):""}">${c.c(R[k],k,R,o)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
  return `<div class="rg-met"><div><b>${avg(x=>x.sueno)}</b>😴 h sueño (prom.)</div><div><b>${avg(x=>x.agua)}</b>💧 litros (prom.)</div><div><b>${Math.floor(scr/60)}:${pad2(scr%60)}</b>📱 h de scroll</div><div><b>${sinSol}</b>☀️ días sin sol</div>${o.tools?`<div class="mt">${o.tools}</div>`:""}</div><div class="tw">${t}</div>`}
-window.Semana={render,all,GROUPS,GORDER,VERSION:1};
+/* detalle en grande de una celda (lo usa la página de la terapeuta) */
+function detail(o,ck,k){const R=o.REG||{},x=R[k],c=all(o.cfg).find(y=>y.k===ck);if(!c)return null;
+ const title=(c.g==="cuerpo"&&c.em?c.l+" ":"")+esc(c.name),when=DIAS[dt(k).getDay()]+" "+fmt(k);let body;
+ if(!x)body="Sin registro este día.";
+ else if(ck==="habs")body=(x.habs||[]).length?x.habs.map(h=>`<div class="hd"><b>${esc(h.h)}</b> · ${h.p} – ${ESC[h.p]||""}${h.c?`<p>${esc(h.c)}</p>`:""}</div>`).join(""):"No usó habilidades este día.";
+ else if(ck==="dia")body=x.notas?`<p style="white-space:pre-wrap">${esc(x.notas)}</p>`:"Sin resumen este día.";
+ else if(ck==="otras")body=(x.otras||[]).filter(y=>y.n).map(y=>`${esc(y.n)}: <b>${y.v}</b> de 5`).join("<br>")||"Ninguna.";
+ else if(c.g==="emo")body=`<b style="font-size:22px">${+x[ck]||0}</b> de 5`;
+ else body=`<div class="big">${c.c(x,k,R,o)}</div>`;
+ return {title,when,body}}
+window.Semana={render,all,detail,ESC,GROUPS,GORDER,VERSION:2};
 })();
