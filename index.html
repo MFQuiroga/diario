@@ -438,95 +438,10 @@ header.top .titles p .n{ color:var(--accent-2); font-weight:600; }
 .insight-line .mood-tag{ font-weight:700; }
 
 /* ---------- Period summary / triggers ---------- */
-.period-summary{
-  margin-top:18px; padding-top:18px; border-top:1px solid var(--line);
-}
-.ps-title{
-  font-size:12px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.5px;
-  margin-bottom:14px;
-}
-.ps-block{ margin-bottom:16px; }
-.ps-block:last-child{ margin-bottom:0; }
-.ps-block-label{
-  font-size:11px; color:var(--text-faint); margin-bottom:8px; display:flex; align-items:center; gap:6px;
-}
-.ps-chip-row{ display:flex; flex-wrap:wrap; gap:7px; }
-.ps-chip{
-  display:inline-flex; align-items:center; gap:6px;
-  background:var(--bg-panel-2); border:1px solid var(--line);
-  border-radius:99px; padding:5px 11px 5px 9px; font-size:12px; color:var(--text-light);
-}
-.ps-chip .bar{ width:3px; align-self:stretch; border-radius:2px; flex:none; min-height:14px; }
-.ps-chip .n{
-  font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--text-faint);
-  background:var(--bg-panel-3); border-radius:6px; padding:1px 5px;
-}
-.ps-chip.distress .bar{ background:var(--accent-2); }
-.ps-chip.positive .bar{ background:var(--mood-bien); }
-.ps-chip.trigger .bar{ background:var(--mood-masomenos); }
-.ps-empty{ font-size:12px; color:var(--text-faint); font-style:italic; }
 
-.ps-note{
-  font-size:10.5px; color:var(--text-faint); line-height:1.6; margin-top:12px; font-style:italic;
-  font-family:'Fraunces',serif;
-}
 
-.ps-ai-btn{
-  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
-  background:linear-gradient(135deg, var(--accent), #7a6fd9);
-  color:#fff; border:none; border-radius:12px; padding:11px; font-size:13px; font-weight:700;
-  cursor:pointer; margin-top:16px;
-}
-.ps-ai-btn:hover{ filter:brightness(1.08); }
-.ps-ai-btn:disabled{ opacity:.65; cursor:default; }
-.ps-ai-btn .spinner{
-  width:14px; height:14px; border-radius:50%;
-  border:2px solid rgba(255,255,255,.35); border-top-color:#fff;
-  animation:spin .7s linear infinite; display:none;
-}
-.ps-ai-btn.loading .spinner{ display:inline-block; }
 @keyframes spin{ to{ transform:rotate(360deg); } }
 
-.ps-ai-output{
-  background:var(--bg-panel-2); border:1px solid var(--line); border-radius:14px;
-  padding:16px 18px; margin-top:14px;
-}
-.ps-ai-output .label{
-  font-size:10.5px; color:var(--accent-2); text-transform:uppercase; letter-spacing:.5px;
-  font-weight:700; margin-bottom:10px;
-}
-.ps-ai-output p{
-  font-family:'Fraunces',serif; font-size:14px; line-height:1.65; margin:0 0 10px; color:var(--text-light);
-}
-.ps-ai-output p:last-child{ margin-bottom:0; }
-.ps-ai-output .ai-tags{ display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
-.ps-ai-output .ai-tag{
-  font-size:10.5px; padding:4px 10px; border-radius:99px;
-  background:var(--bg-panel-3); color:var(--text-muted); border:1px solid var(--line);
-}
-.ps-ai-error{
-  background:rgba(224,82,79,.1); border:1px solid rgba(224,82,79,.35);
-  border-radius:12px; padding:12px 14px; margin-top:14px; font-size:12.5px; color:var(--mood-mal);
-  line-height:1.5;
-}
-.ps-ai-error button{
-  margin-top:8px; background:none; border:1px solid var(--mood-mal); color:var(--mood-mal);
-  border-radius:8px; padding:5px 12px; font-size:12px; cursor:pointer; font-weight:600;
-}
-.ps-key-setup{
-  background:var(--bg-panel-2); border:1px solid var(--line); border-radius:12px;
-  padding:12px 14px; margin-top:14px; font-size:12px; color:var(--text-muted); line-height:1.6;
-}
-.ps-key-setup input{
-  width:100%; margin-top:8px; background:var(--bg-panel-3); border:1px solid var(--line);
-  color:var(--text-light); border-radius:8px; padding:8px 10px; font-size:12.5px; font-family:'JetBrains Mono',monospace;
-}
-.ps-key-setup .row{ display:flex; gap:8px; margin-top:8px; }
-.ps-key-setup button{
-  background:var(--accent); color:#fff; border:none; border-radius:8px; padding:7px 14px;
-  font-size:12px; font-weight:600; cursor:pointer;
-}
-.ps-key-setup .ghost{ background:none; border:1px solid var(--line); color:var(--text-muted); }
 
 footer.credit{
   text-align:center; color:var(--text-faint); font-size:11.5px; margin-top:36px; letter-spacing:.2px;
@@ -980,7 +895,6 @@ footer.credit{
 
       <div class="insight-line" id="insightLine"></div>
 
-      <div class="period-summary" id="periodSummary"></div>
 
       <div class="ypx-wrap">
         <div class="htitle">Mi año en cuadraditos · <span id="ypxYear"></span></div>
@@ -1674,102 +1588,6 @@ function renderInsight(entries, counts, type){
   el.innerHTML = `Predominó <b class="mood-tag" style="color:${MOOD_COLOR[domMood]}">${MOOD_LABEL[domMood]}</b> (${pct}% de los registros).`;
 }
 
-/* =========================================================
-   PERIOD SUMMARY — DBT-informed keyword lexicon (no AI, runs
-   entirely client-side). Categories were chosen to mirror what
-   a DBT clinician typically wants named at intake/session:
-   emotion dysregulation markers, protective/positive states,
-   and trigger domains (kept generic — no specific partner names,
-   since who's "the partner" changes but the pattern doesn't).
-   ========================================================= */
-function normalizeFullText(s){
-  return (s||'').toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-}
-
-const SYMPTOM_LEXICON_DISTRESS = {
-  'Ansiedad': ['ansiedad','ansios'],
-  'Activación / hiperactivación corporal': ['activacion','activada','hiperactivada','hiper mega ultra'],
-  'Llanto': ['llore','llorando','llorar','llanto'],
-  'Pánico': ['panico'],
-  'Insomnio / no dormir': ['no dormi','insomnio','no descanso','no puedo dormir'],
-  'Nudo en el estómago / malestar físico': ['nudo en la panza','nudo en el estomago','estomago','nauseas'],
-  'Dolor de cabeza': ['dolor de cabeza','me duele la cabeza'],
-  'Desmayo / mareo': ['desmay','mareo'],
-  'Pensamientos que no paran (rumiación)': ['no puedo dejar de pensar','mi mente no para','obsesion','obsesiv'],
-};
-const SYMPTOM_LEXICON_POSITIVE = {
-  'Calma / alivio': ['calma','tranquil','alivio','en paz'],
-  'Energía / motivación': ['con ganas','motivada','energia','entusiasm'],
-  'Sensación de acompañamiento / apoyo': ['acompañada','me sostuvo','apoyo incondicional','me sostiene'],
-};
-
-const TRIGGER_LEXICON = {
-  'Miedo al abandono / conflicto de pareja': ['abandono','me deje','me dejes','me dejo','chongos','vinculo','relacion de pareja','me eligio','me elija'],
-  'Conflicto o tensión familiar': [' tio ','tios',' tia ','familia'],
-  'Duelo / pérdida': ['duelo',' extraño','perdida de'],
-  'Salud propia o de un ser querido': ['cancer','quimio','hospital','medico','enferma','salud'],
-  'Estrés económico / laboral': ['numeros','clientes','plata','negocio','trabajo'],
-  'Alteración del sueño': ['dormir','desperte','insomnio'],
-  'Comparación social / redes': ['instagram','redes'],
-  'Soledad / aislamiento': [' sola ','soledad'],
-  'Sensación de invalidación': ['no me cree','no es justo','no me escucha','no me entiende','no me creyo'],
-};
-
-function scanLexicon(entries, lexicon){
-  const results = {};
-  for(const [label, kws] of Object.entries(lexicon)){
-    let count = 0;
-    for(const e of entries){
-      const norm = normalizeFullText(e.text);
-      if(kws.some(kw => norm.includes(kw))) count++;
-    }
-    if(count>0) results[label] = count;
-  }
-  return Object.entries(results).sort((a,b)=>b[1]-a[1]);
-}
-
-function renderChipRow(items, cls){
-  if(!items.length) return `<div class="ps-empty">No aparecen menciones claras en este período.</div>`;
-  return `<div class="ps-chip-row">${items.map(([label,count])=>`
-    <span class="ps-chip ${cls}"><span class="bar"></span>${escapeHtml(label)}<span class="n">${count}</span></span>
-  `).join('')}</div>`;
-}
-
-let lastPeriodEntries = [];
-
-function renderPeriodSummary(entries){
-  lastPeriodEntries = entries;
-  const wrap = document.getElementById('periodSummary');
-  if(!entries.length){
-    wrap.innerHTML = '';
-    return;
-  }
-  const distress = scanLexicon(entries, SYMPTOM_LEXICON_DISTRESS).slice(0,4);
-  const positive = scanLexicon(entries, SYMPTOM_LEXICON_POSITIVE);
-  const triggers = scanLexicon(entries, TRIGGER_LEXICON).slice(0,7);
-
-  wrap.innerHTML = `
-    <div class="ps-title">Resumen del período</div>
-    <div class="ps-block">
-      <div class="ps-block-label">Síntomas predominantes</div>
-      ${renderChipRow(distress, 'distress')}
-    </div>
-    ${positive.length ? `
-    <div class="ps-block">
-      <div class="ps-block-label">También aparece</div>
-      ${renderChipRow(positive, 'positive')}
-    </div>` : ''}
-    <div class="ps-block">
-      <div class="ps-block-label">Detonantes probables</div>
-      ${renderChipRow(triggers, 'trigger')}
-    </div>
-    <div class="ps-note">Basado en palabras clave de tus propios registros — cuenta menciones, no es un análisis clínico ni prueba causalidad.</div>
-    <button class="ps-ai-btn" id="psAiBtn"><span class="spinner"></span><span class="btntxt">Interpretar detonantes con más detalle</span></button>
-    <div id="psAiArea"></div>
-  `;
-  document.getElementById('psAiBtn').addEventListener('click', onInterpretClick);
-}
 
 function renderStats(){
   document.querySelectorAll('#periodTabs button').forEach(b=>{
@@ -1794,7 +1612,6 @@ function renderStats(){
   const points = buildHorizonSeries(statsPeriodType, start, end, entries);
   renderHorizon(points);
   renderInsight(entries, counts, statsPeriodType);
-  renderPeriodSummary(entries);
   renderYearPixels();
 }
 const SCORE_MOOD = { 5:'Increible', 4:'Bien', 3:'Mas o Menos', 2:'Mal', 1:'Horrible' };
@@ -1822,172 +1639,6 @@ document.getElementById('ypx').addEventListener('click', ev=>{
   selectDay(b.dataset.d, true); syncStatsFromCal();
   const dd = document.getElementById('dayDetail'); if(dd && dd.scrollIntoView) dd.scrollIntoView({ behavior:'smooth', block:'start' });
 });
-
-/* =========================================================
-   AI INTERPRETATION ("Interpretar detonantes con más detalle")
-   Uses YOUR OWN Anthropic API key, entered once and saved only
-   in this browser's localStorage. See chat explanation for why
-   (this file runs standalone, outside claude.ai's artifact
-   sandbox, so the automatic key-injection isn't available here).
-   ========================================================= */
-const ANTHROPIC_KEY_STORAGE = 'diario_anthropic_api_key_v1';
-
-function getStoredApiKey(){
-  try { return localStorage.getItem(ANTHROPIC_KEY_STORAGE) || ''; } catch(e){ return ''; }
-}
-function setStoredApiKey(k){
-  try { localStorage.setItem(ANTHROPIC_KEY_STORAGE, k); } catch(e){}
-}
-function clearStoredApiKey(){
-  try { localStorage.removeItem(ANTHROPIC_KEY_STORAGE); } catch(e){}
-}
-
-function renderKeySetup(){
-  const area = document.getElementById('psAiArea');
-  area.innerHTML = `
-    <div class="ps-key-setup">
-      Para esta función necesitás tu propia clave de API de Anthropic (se guarda solo en este navegador — nunca se envía a otro lado más que directo a Anthropic). La conseguís en <b>console.anthropic.com</b> → API Keys.
-      <input type="password" id="psApiKeyInput" placeholder="sk-ant-..." autocomplete="off">
-      <div class="row">
-        <button id="psApiKeySave">Guardar y continuar</button>
-        <button class="ghost" id="psApiKeyCancel">Cancelar</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('psApiKeySave').addEventListener('click', ()=>{
-    const val = document.getElementById('psApiKeyInput').value.trim();
-    if(!val.startsWith('sk-ant')){
-      alert('Esa no parece una clave válida de Anthropic (debería empezar con sk-ant-).');
-      return;
-    }
-    setStoredApiKey(val);
-    area.innerHTML = '';
-    runAiInterpretation();
-  });
-  document.getElementById('psApiKeyCancel').addEventListener('click', ()=>{
-    area.innerHTML = '';
-  });
-}
-
-function buildPeriodTextForPrompt(entries){
-  const MAX_CHARS = 12000;
-  const out = [];
-  let total = 0;
-  const sorted = entries.slice().sort((a,b)=> a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
-  for(const e of sorted){
-    const line = `[${e.date} ${e.time} - ${MOOD_LABEL[e.mood]}] ${e.text}`;
-    if(total + line.length > MAX_CHARS) break;
-    out.push(line);
-    total += line.length;
-  }
-  return out.join('\n\n');
-}
-
-async function runAiInterpretation(){
-  const key = getStoredApiKey();
-  const area = document.getElementById('psAiArea');
-  if(!key){
-    renderKeySetup();
-    return;
-  }
-  if(!lastPeriodEntries.length){
-    area.innerHTML = `<div class="ps-ai-error">No hay registros en este período para interpretar.</div>`;
-    return;
-  }
-
-  const btn = document.getElementById('psAiBtn');
-  btn.classList.add('loading');
-  btn.disabled = true;
-  area.innerHTML = '';
-
-  const periodText = buildPeriodTextForPrompt(lastPeriodEntries);
-  const periodLabel = periodLabelText(statsPeriodType, statsAnchor);
-
-  const systemPrompt = `Sos un profesional especializado en DBT (Terapia Dialéctico Conductual) analizando los registros del diario emocional de tu paciente para el período "${periodLabel}". Identificá qué detonantes actuaron, cómo, y si el período fue en general favorable o desfavorable para su regulación emocional. Basate únicamente en lo que los registros muestran, sin inventar información ni diagnosticar. No uses el nombre de una pareja específica como categoría fija — hablá de patrones (miedo al abandono, conflicto vincular, etc), ya que las personas en su vida cambian con el tiempo. Respondé en español rioplatense, con calidez profesional. Respondé ÚNICAMENTE con un objeto JSON válido, sin texto antes ni después, con este formato exacto:
-{"valoracion": "favorable" | "mixto" | "desfavorable", "resumen": ["parrafo 1", "parrafo 2", "parrafo 3 opcional"], "etiquetas": ["etiqueta corta 1", "etiqueta corta 2", "etiqueta corta 3"]}`;
-
-  const userPrompt = `Registros del período (fecha, hora, estado de ánimo, texto):\n\n${periodText}`;
-
-  try{
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }]
-      })
-    });
-
-    if(!response.ok){
-      const errBody = await response.text().catch(()=> '');
-      if(response.status === 401){
-        clearStoredApiKey();
-        throw new Error('Tu clave de API no es válida o expiró. Al reintentar te va a pedir una nueva.');
-      }
-      throw new Error(`Error de la API (${response.status}). ${errBody.slice(0,200)}`);
-    }
-
-    const data = await response.json();
-    const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
-    const text = textBlocks.join('\n');
-
-    const m = text.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error("No se encontró JSON en la respuesta.");
-    let parsed;
-    try { parsed = JSON.parse(m[0]); }
-    catch {
-      let raw = m[0];
-      const oB=(raw.match(/\{/g)||[]).length, cB=(raw.match(/\}/g)||[]).length;
-      const oK=(raw.match(/\[/g)||[]).length, cK=(raw.match(/\]/g)||[]).length;
-      const last = Math.max(raw.lastIndexOf('",'), raw.lastIndexOf('},'), raw.lastIndexOf('],'));
-      if (last > 0) {
-        raw = raw.slice(0, last + 1);
-        raw += "]".repeat(Math.max(0,oK-cK)) + "}".repeat(Math.max(0,oB-cB));
-      }
-      parsed = JSON.parse(raw);
-    }
-
-    renderAiResult(parsed);
-  } catch(err){
-    console.error(err);
-    area.innerHTML = `
-      <div class="ps-ai-error">
-        No se pudo generar la interpretación. ${escapeHtml(err.message || 'Error desconocido.')}
-        <br><button id="psAiRetry">Reintentar</button>
-      </div>
-    `;
-    document.getElementById('psAiRetry').addEventListener('click', runAiInterpretation);
-  } finally {
-    btn.classList.remove('loading');
-    btn.disabled = false;
-  }
-}
-
-function renderAiResult(parsed){
-  const area = document.getElementById('psAiArea');
-  const valColor = parsed.valoracion === 'favorable' ? 'var(--mood-bien)' : parsed.valoracion === 'desfavorable' ? 'var(--mood-mal)' : 'var(--mood-masomenos)';
-  const valLabel = parsed.valoracion === 'favorable' ? 'Favorable' : parsed.valoracion === 'desfavorable' ? 'Desfavorable' : 'Mixto';
-  const paras = (parsed.resumen||[]).map(p=>`<p>${escapeHtml(p)}</p>`).join('');
-  const tags = (parsed.etiquetas||[]).map(t=>`<span class="ai-tag">${escapeHtml(t)}</span>`).join('');
-  area.innerHTML = `
-    <div class="ps-ai-output">
-      <div class="label" style="color:${valColor}">✨ Interpretación · ${valLabel}</div>
-      ${paras}
-      ${tags ? `<div class="ai-tags">${tags}</div>` : ''}
-    </div>
-  `;
-}
-
-function onInterpretClick(){
-  runAiInterpretation();
-}
 
 /* un solo navegador: mueve calendario y estadísticas juntos */
 function syncCalFromStats(){
@@ -3024,7 +2675,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '16', APP_DATE = '23/11/2026 22:30';
+const APP_VERSION = '17', APP_DATE = '23/11/2026 22:45';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
