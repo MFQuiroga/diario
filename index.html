@@ -2800,7 +2800,7 @@ async function registerDevice(){
 async function wipeRevoked(){
   await wipeLocalData();
   try{ indexedDB.deleteDatabase(DB_NAME); }catch(_){}
-  dropProfile(ME.email);
+  dropProfile(ME.email); keepClear();
   try{ sessionStorage.removeItem(SESS_KEY); }catch(_){}
   alert('Este dispositivo fue desconectado de tu diario. Se borró lo que estaba guardado acá. Lo que está en tu hoja no se perdió.');
   location.reload();
@@ -3056,7 +3056,7 @@ L('cfgLogout').addEventListener('click', async ()=>{
   TOKEN = null;
   await wipeLocalData();
   try{ indexedDB.deleteDatabase(DB_NAME); }catch(_){}
-  dropProfile(ME.email);
+  dropProfile(ME.email); keepClear();
   try{ sessionStorage.removeItem(SESS_KEY); }catch(_){}
   location.reload();
 });
@@ -3147,7 +3147,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '28', APP_DATE = '24/11/2026 03:00';
+const APP_VERSION = '29', APP_DATE = '24/11/2026 02:45';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3173,7 +3173,12 @@ async function bioAvailable(){
   try{ return !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); }catch(_){ return false; }
 }
 function idleTooLong(){ if(ME && ME.keep) return false; return Date.now() - Number(localStorage.getItem(LAST_KEY) || 0) > IDLE_MS; }
-function relock(){ try{ sessionStorage.removeItem(SESS_KEY); localStorage.setItem(LAST_KEY, '0'); }catch(_){} location.reload(); }
+/* «no pedir contraseña en este dispositivo»: la llave queda guardada acá aunque se cierre la app */
+const KEEP_KEY = 'mimo_keep_v1';
+function keepSave(){ try{ if(!ME) return; const v = KEY_RAW ? { email: ME.email, k: b64(KEY_RAW) } : (DATA_KEY ? { email: ME.email, bio: 1 } : null); if(v) localStorage.setItem(KEEP_KEY, JSON.stringify(v)); }catch(_){} }
+function keepClear(){ try{ localStorage.removeItem(KEEP_KEY); }catch(_){} }
+function keepGet(){ try{ return JSON.parse(localStorage.getItem(KEEP_KEY) || 'null'); }catch(_){ return null; } }
+function relock(){ keepClear(); try{ sessionStorage.removeItem(SESS_KEY); localStorage.setItem(LAST_KEY, '0'); }catch(_){} location.reload(); }
 function markActive(force){
   if(!unlocked) return;
   if(idleTooLong()){ relock(); return; }
@@ -3253,6 +3258,7 @@ async function finishUnlock(){
   lastWrite = Date.now();
   if(KEY_RAW){ try{ sessionStorage.setItem(SESS_KEY, JSON.stringify({ email: ME.email, k: b64(KEY_RAW) })); }catch(_){} }
   if(!L('keepWrap').hidden) ME.keep = L('keepOn').checked;
+  if(ME.keep) keepSave(); else keepClear();
   L('keepWrap').hidden = true;
   ME.last = Date.now(); putProfile(ME);
   lockEl.classList.add('off'); document.body.classList.remove('nosheet'); closeSheetCard();
@@ -3477,6 +3483,7 @@ L('pwForm').addEventListener('submit', async ev=>{
     await saveStoredEntries(); setPending([]);
     if(draft) await encSet(DRAFT_KEY, draft);
     try{ sessionStorage.setItem(SESS_KEY, JSON.stringify({ email: ME.email, k: b64(KEY_RAW) })); }catch(_){}
+    if(ME.keep) keepSave();
     closePw(); renderBioItem();
     alert('✓ Contraseña cambiada.' + (hadBio ? '\n\nVolvé a activar la huella en ⚙️.' : ''));
   }catch(e){ err.textContent = 'No se pudo: ' + e.message; }
@@ -3549,6 +3556,14 @@ async function startLock(){
     if(p.lock && sk && sk.email === p.email && !idleTooLong()){
       try{ await useKeyRaw(unb64(sk.k)); await encGet(STORAGE_KEY); await finishUnlock(); return; }
       catch(_){ try{ sessionStorage.removeItem(SESS_KEY); }catch(__){} }
+    }
+    const kp = keepGet();
+    if(p.lock && p.keep && kp && kp.email === p.email){
+      try{
+        if(kp.k) await useKeyRaw(unb64(kp.k));
+        else { DATA_KEY = await idbGet('bio_key'); KEY_RAW = null; if(!DATA_KEY) throw new Error('sin llave'); }
+        await encGet(STORAGE_KEY); await finishUnlock(); return;
+      }catch(_){ keepClear(); }
     }
   }
   await detectInstalled();
@@ -3961,7 +3976,7 @@ function redraw(){if(typeof renderStats==="function"&&statsAnchor){renderStats()
 document.body.insertAdjacentHTML("beforeend",`<div class="modal-bg" id="regBg"><div class="composer reg" id="rgCard" role="dialog" aria-labelledby="rgH"><div class="rg-dtop"><div class="rg-dots" id="rgDots"></div>${ib("✕","Cerrar","id=\"rgClose\"","x")}</div><div class="rg-date" id="rgDate"></div><h2 id="rgH"></h2><div class="rg-info" id="rgInfo" hidden></div><p class="rg-sub" id="rgSub"></p><div id="rgBody"></div><div class="actions"><button type="button" class="btn-g" id="rgPrev">Anterior</button><span id="rgTool"></span><button type="button" class="btn-p" id="rgNext">Siguiente</button></div><div class="rg-sk" id="rgSk" hidden></div></div></div>`);
 const bg=$("regBg");
 bg.addEventListener("input",e=>{const t=e.target;
- if(t.id==="rgComo"&&sk){sk.c=t.value;return}if(t.id==="pwKeep"){ME.keep=!t.checked;putProfile(ME);setStatus(t.checked?"Te va a pedir la contraseña al abrir ✓":"En este dispositivo no te pide la contraseña hasta que toques Bloquear","ok");return}
+ if(t.id==="rgComo"&&sk){sk.c=t.value;return}if(t.id==="pwKeep"){ME.keep=!t.checked;putProfile(ME);if(ME.keep)keepSave();else keepClear();setStatus(t.checked?"Te va a pedir la contraseña al abrir ✓":"En este dispositivo no te pide la contraseña hasta que toques Bloquear","ok");return}
  if((t.dataset.pon!=null||t.dataset.on!=null)&&/[,()]/.test(t.value)){const c=t.selectionStart;t.value=cleanEmo(t.value);try{t.setSelectionRange(c-1,c-1)}catch(_){}}
  if(t.dataset.pon!=null&&PN){PN.otr[+t.dataset.pon].n=t.value;pdSave();return}
  if(t.id==="pnText"||t.id==="pnDate"||t.id==="pnTime"){pdSave();return}if(!d||$("rgSk").contains(t))return;
