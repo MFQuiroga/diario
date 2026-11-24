@@ -3166,7 +3166,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '30', APP_DATE = '24/11/2026 02:50';
+const APP_VERSION = '31', APP_DATE = '24/11/2026 16:50';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3962,7 +3962,7 @@ function toast2(t){setStatus(t,"ok")}
 function cycleDay(k){const ks=Object.keys(REG).filter(x=>REG[x].mens==="SÍ").sort();let s0=null;for(const s of ks){if(s>k)break;const p=dt(s);p.setDate(p.getDate()-1);const pk=toISO(p);if(!(REG[pk]&&REG[pk].mens==="SÍ"))s0=s}if(!s0)return"";const n=Math.round((dt(k)-dt(s0))/864e5)+1;return n>60?"":n}
 function wkThoughts(k){const ps=byDate.get(k)||[];if(!ps.length)return "";return `<details class="pd" data-pdk="${k}" ${openPd.has(k)?"open":""}><summary>${ps.length} pensamiento${ps.length>1?"s":""}</summary><div class="rg-pens">${ps.map((e,i)=>`<p data-pv="${k}|${i}" title="Tocá para verlo completo"><i style="background:${MOOD_HEX[e.mood]}"></i>${esc(e.text.length>140?e.text.slice(0,140)+"…":e.text)}</p>`).join("")}</div></details>`}
 const openPd=new Set();
-function week(ds){return Semana.render({days:ds,REG,cfg:CFG,who:"me",thoughts:wkThoughts,tools:ib("⚙️","Editar columnas: ver, renombrar, ordenar, sacar o agregar y elegir cuáles ve tu terapeuta","data-wcol=\"1\"","gear"),dayColor,dayTitle:k=>mText(dayNum(k))||MOOD_LABEL[dayMood(k)]||"",today:toISO(new Date())})}
+function week(ds){return Semana.render({days:ds,REG,cfg:CFG,who:"me",thoughts:wkThoughts,pens:k=>byDate.get(k)||[],tools:ib("⚙️","Editar columnas: ver, renombrar, ordenar, sacar o agregar y elegir cuáles ve tu terapeuta","data-wcol=\"1\"","gear"),dayColor,dayTitle:k=>mText(dayNum(k))||MOOD_LABEL[dayMood(k)]||"",today:toISO(new Date())})}
 /* --- columnas del resumen semanal (CFG.week) --- */
 function W_(){CFG.week=CFG.week||{};["del","hid","np","l"].forEach(x=>CFG.week[x]=CFG.week[x]||{});return CFG.week}
 function colDone(){pushCfg();colSheet();redraw()}

@@ -19,7 +19,7 @@ const SN=(x,f,good)=>!x||!x[f]?"–":`<b class="${(x[f]==="SÍ")===!!good?"no":"
 const IMP=v=>+v>0?`<b class="si">(${+v})</b>`:`(${+v||0})`;
 function cond(imp,acc,card,label,det){return {k:card,g:"cond",l:label,cls:"c4",cd:card,c:x=>x?`${IMP(x[imp])} ${SN(x,acc)}`+(det&&x[acc]==="SÍ"&&x.suicDet?`<div class="det">${esc(x.suicDet)}</div>`:""):"–"}}
 function base(){return [
- {k:"dia",g:"dia",l:"Lo que hice",cls:"nt",cd:"dia",c:(x,k,R,o)=>{const th=o&&o.thoughts?o.thoughts(k):"";return (x&&x.notas?`<div class="nn">${esc(x.notas)}</div>`:(th?"":"–"))+th}},
+ {k:"dia",g:"dia",l:"Lo que hice",cls:"nt",cd:"dia",c:(x,k,R,o)=>{if(x&&x.notas)return `<div class="nn">${esc(x.notas)}</div>`+(o&&o.thoughts?o.thoughts(k):"");const ps=o&&o.pens?o.pens(k)||[]:[];return ps.length?pens(ps,o.who==="me"?k:""):"–"}},
  cond("suicImp","suicAcc","suic","Suicidio/CASIS",1),
  cond("hostImp","hostAcc","host","Comport. hostil"),
  cond("sexImp","sexAcc","sexo","Sexo / hombres"),
@@ -43,6 +43,16 @@ function base(){return [
  {k:"social",g:"cuerpo",l:"👥",em:1,t:"Contacto social",off:1,cd:"cuerpo",c:x=>SN(x,"social",1)}]}
 function emo1(t){const m=String(t||"").trim().match(/^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u);return m?m[1]:""}
 function cycleDay(R,k){const ks=Object.keys(R).filter(x=>R[x]&&R[x].mens==="SÍ").sort();let s0=null;for(const s of ks){if(s>k)break;const p=dt(s);p.setDate(p.getDate()-1);const pk=iso(p);if(!(R[pk]&&R[pk].mens==="SÍ"))s0=s}if(!s0)return "";const n=Math.round((dt(k)-dt(s0))/864e5)+1;return n>60?"":n}
+/* pensamientos desglosados: se muestran cuando el día no tiene resumen («Lo que hice») */
+const MH={increible:"#1e8449",bien:"#9ccc65","mas o menos":"#dfb43a",mal:"#e0524f",horrible:"#7a4fc9"};
+const ML={increible:"Increíble",bien:"Bien","mas o menos":"Más o menos",mal:"Mal",horrible:"Horrible"};
+const mk=m=>String(m||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+function css(){if(typeof document==="undefined"||document.getElementById("sem-pens"))return;const st=document.createElement("style");st.id="sem-pens";
+ st.textContent=".wp{display:flex;flex-direction:column;gap:6px;text-align:left}.wp .wpn{border-left:3px solid var(--c,#999);padding:2px 0 2px 7px}.wp .wph{font-size:11px;font-weight:600;opacity:.8}.wp .wpe{font-size:10.5px;opacity:.75}.wp .wpn p{margin:2px 0 0;white-space:pre-wrap;font-style:normal;line-height:1.35}.wp [data-pv]{cursor:pointer}";
+ document.head.appendChild(st)}
+function emoTxt(e){return (e.emos||[]).filter(y=>y&&y.n&&+y.v).map(y=>`${esc(y.n)} ${+y.v}`).join(" · ")}
+function pens(ps,pv){css();return `<div class="rg-pens wp">${ps.map((e,i)=>{const m=mk(e.mood),et=emoTxt(e);
+ return `<div class="wpn" style="--c:${MH[m]||"#999"}" ${pv?`data-pv="${pv}|${i}" title="Tocá para verlo completo"`:""}><div class="wph">${esc(e.time||"")}${ML[m]?(e.time?" · ":"")+ML[m]:""}</div>${et?`<div class="wpe">${et}</div>`:""}<p>${esc(e.text||"")}</p></div>`}).join("")}</div>`}
 /* todas las columnas posibles con su estado según la configuración */
 function all(cfg){cfg=cfg||{};const W=cfg.week||{},B=cfg.body||{};
  const L=base().concat((cfg.extra||[]).filter(x=>!x.del).map(x=>({k:x.k,g:"cuerpo",l:emo1(x.l)||"📌",t:x.l,em:1,off:1,cd:"cuerpo",c:y=>x.t==="yn"?SN(y,x.k,x.g!==0):(y&&y[x.k]!==""&&y[x.k]!=null?esc(y[x.k]):"–")})));
@@ -52,7 +62,7 @@ function all(cfg){cfg=cfg||{};const W=cfg.week||{},B=cfg.body||{};
   if(c.k==="suic"&&!(W.l&&W.l.suic))c.l="Suicidio/<wbr>CASIS"});
  const ord=W.order||[],pos=c=>{const j=ord.indexOf(c.k);return j<0?1000+c.i:j};
  return L.sort((a,b)=>GORDER.indexOf(a.g)-GORDER.indexOf(b.g)||pos(a)-pos(b))}
-/* opts: {days, REG, cfg, who:'me'|'psi', dayColor(k), dayTitle(k), today} */
+/* opts: {days, REG, cfg, who:'me'|'psi', dayColor(k), dayTitle(k), today, pens(k)→[{time,mood,text,emos:[{n,v}]}], thoughts(k)} */
 function render(o){const R=o.REG||{},ds=o.days,reg=ds.filter(k=>R[k]).map(k=>[k,R[k]]);
  const avg=f=>{const v=reg.map(([,x])=>f(x)).filter(v=>v!==""&&v!=null&&!isNaN(v));return v.length?Math.round(v.reduce((a,b)=>a+ +b,0)/v.length*10)/10:"–"};
  const scr=reg.reduce((a,[,x])=>a+(+x.scrH||0)*60+(+x.scrM||0),0),sinSol=reg.filter(([,x])=>x.sol==="NO").length;
@@ -66,12 +76,14 @@ function render(o){const R=o.REG||{},ds=o.days,reg=ds.filter(k=>R[k]).map(k=>[k,
 /* detalle en grande de una celda (lo usa la página de la terapeuta) */
 function detail(o,ck,k){const R=o.REG||{},x=R[k],c=all(o.cfg).find(y=>y.k===ck);if(!c)return null;
  const title=(c.g==="cuerpo"&&c.em?c.l+" ":"")+esc(c.name),when=DIAS[dt(k).getDay()]+" "+fmt(k);let body;
- if(!x)body="Sin registro este día.";
+ const ps=o.pens?o.pens(k)||[]:[];
+ if(ck==="dia"&&!(x&&x.notas)&&ps.length)body=pens(ps,"");
+ else if(!x)body="Sin registro este día.";
  else if(ck==="habs")body=(x.habs||[]).length?x.habs.map(h=>`<div class="hd"><b>${esc(h.h)}</b> · ${h.p} – ${ESC[h.p]||""}${h.c?`<p>${esc(h.c)}</p>`:""}</div>`).join(""):"No usó habilidades este día.";
  else if(ck==="dia")body=x.notas?`<p style="white-space:pre-wrap">${esc(x.notas)}</p>`:"Sin resumen este día.";
  else if(ck==="otras")body=(x.otras||[]).filter(y=>y.n).map(y=>`${esc(y.n)}: <b>${y.v}</b> de 5`).join("<br>")||"Ninguna.";
  else if(c.g==="emo")body=`<b style="font-size:22px">${+x[ck]||0}</b> de 5`;
  else body=`<div class="big">${c.c(x,k,R,o)}</div>`;
  return {title,when,body}}
-window.Semana={render,all,detail,ESC,GROUPS,GORDER,VERSION:2};
+window.Semana={render,all,detail,ESC,GROUPS,GORDER,pens,VERSION:3};
 })();
