@@ -18,12 +18,12 @@ const SN=(x,f,good)=>!x||!x[f]?"–":`<b class="${(x[f]==="SÍ")===!!good?"no":"
 const IMP=v=>+v>0?`<b class="si">(${+v})</b>`:`(${+v||0})`;
 function cond(imp,acc,card,label,det){return {k:card,g:"cond",l:label,cls:"c4",cd:card,c:x=>x?`${IMP(x[imp])} ${SN(x,acc)}`+(det&&x[acc]==="SÍ"&&x.suicDet?`<div class="det">${esc(x.suicDet)}</div>`:""):"–"}}
 function base(){return [
- {k:"dia",g:"dia",l:"Lo que hice",cls:"nt",cd:"dia",c:x=>x&&x.notas?`<div class="nn">${esc(x.notas)}</div>`:"–"},
+ {k:"dia",g:"dia",l:"Lo que hice",cls:"nt",cd:"dia",c:(x,k,R,o)=>{const th=o&&o.thoughts?o.thoughts(k):"";return (x&&x.notas?`<div class="nn">${esc(x.notas)}</div>`:(th?"":"–"))+th}},
  cond("suicImp","suicAcc","suic","Suicidio/CASIS",1),
  cond("hostImp","hostAcc","host","Comport. hostil"),
  cond("sexImp","sexAcc","sexo","Sexo / hombres"),
  {k:"scroll",g:"cond",l:"Scrollear",cls:"c4",cd:"scroll",c:x=>x?`<span class="sc2">${IMP(x.scrImp)}</span><span class="sc2">${(+x.scrH||0)}:${pad2(+x.scrM||0)} h</span>`:"–"},
- {k:"terapia",g:"cond",l:"Dejar terapia",cls:"c4",cd:"cuerpo",off:1,c:x=>x?IMP(x.terapia):"–"},
+ {k:"terapia",g:"cond",l:"Dejar terapia",t:"Impulso de dejar terapia",cls:"c4",cd:"cuerpo",off:1,c:x=>x?IMP(x.terapia):"–"},
  {k:"inex",g:"psi",l:"Inexistencia",cd:"pens",c:x=>SN(x,"inex")},
  {k:"pas",g:"psi",l:"Ideación pasiva",cd:"pens",c:x=>SN(x,"pas")},
  {k:"act",g:"psi",l:"Ideación activa",cd:"pens",c:x=>SN(x,"act")},
@@ -35,18 +35,19 @@ function base(){return [
  {k:"ejer",g:"cuerpo",l:"🏃‍♀️",t:"Ejercicio",em:1,cd:"cuerpo",c:x=>SN(x,"ejer",1)},
  {k:"sol",g:"cuerpo",l:"☀️",t:"Sol",em:1,cd:"cuerpo",c:x=>SN(x,"sol",1)},
  {k:"ciclo",g:"cuerpo",l:"🩸",t:"Día del ciclo",em:1,cd:"cuerpo",c:(x,k,R)=>{const c=cycleDay(R,k);return c===""?"–":c},st:x=>x&&x.mens==="SÍ"?"background:rgba(226,75,74,.28);color:var(--mood-mal);font-weight:700":""},
- {k:"bano",g:"cuerpo",l:"Baño",t:"Fui al baño",off:1,cd:"cuerpo",c:x=>SN(x,"bano",1)},
- {k:"comi",g:"cuerpo",l:"Comí",t:"Comí a horario",off:1,cd:"cuerpo",c:x=>SN(x,"comi",1)},
- {k:"medic",g:"cuerpo",l:"Medicación",t:"Tomé la medicación",off:1,cd:"cuerpo",c:x=>SN(x,"medic",1)},
- {k:"alcohol",g:"cuerpo",l:"Alcohol",t:"Alcohol / sustancias",off:1,cd:"cuerpo",c:x=>SN(x,"alcohol")},
- {k:"social",g:"cuerpo",l:"Social",t:"Contacto social",off:1,cd:"cuerpo",c:x=>SN(x,"social",1)}]}
+ {k:"bano",g:"cuerpo",l:"🚽",em:1,t:"Fui al baño",off:1,cd:"cuerpo",c:x=>SN(x,"bano",1)},
+ {k:"comi",g:"cuerpo",l:"🍽️",em:1,t:"Comí a horario",off:1,cd:"cuerpo",c:x=>SN(x,"comi",1)},
+ {k:"medic",g:"cuerpo",l:"💊",em:1,t:"Tomé la medicación",off:1,cd:"cuerpo",c:x=>SN(x,"medic",1)},
+ {k:"alcohol",g:"cuerpo",l:"🍷",em:1,t:"Alcohol / sustancias",off:1,cd:"cuerpo",c:x=>SN(x,"alcohol")},
+ {k:"social",g:"cuerpo",l:"👥",em:1,t:"Contacto social",off:1,cd:"cuerpo",c:x=>SN(x,"social",1)}]}
+function emo1(t){const m=String(t||"").trim().match(/^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u);return m?m[1]:""}
 function cycleDay(R,k){const ks=Object.keys(R).filter(x=>R[x]&&R[x].mens==="SÍ").sort();let s0=null;for(const s of ks){if(s>k)break;const p=dt(s);p.setDate(p.getDate()-1);const pk=iso(p);if(!(R[pk]&&R[pk].mens==="SÍ"))s0=s}if(!s0)return "";const n=Math.round((dt(k)-dt(s0))/864e5)+1;return n>60?"":n}
 /* todas las columnas posibles con su estado según la configuración */
 function all(cfg){cfg=cfg||{};const W=cfg.week||{},B=cfg.body||{};
- const L=base().concat((cfg.extra||[]).filter(x=>!x.del).map(x=>({k:x.k,g:"cuerpo",l:x.l,off:1,cd:"cuerpo",c:y=>x.t==="yn"?SN(y,x.k,x.g!==0):(y&&y[x.k]!==""&&y[x.k]!=null?esc(y[x.k]):"–")})));
+ const L=base().concat((cfg.extra||[]).filter(x=>!x.del).map(x=>({k:x.k,g:"cuerpo",l:emo1(x.l)||"📌",t:x.l,em:1,off:1,cd:"cuerpo",c:y=>x.t==="yn"?SN(y,x.k,x.g!==0):(y&&y[x.k]!==""&&y[x.k]!=null?esc(y[x.k]):"–")})));
  L.forEach((c,i)=>{c.i=i;if(B[c.k]&&B[c.k].l&&!c.em&&c.g==="cuerpo")c.t=B[c.k].l;
   c.del=W.del&&c.k in W.del?!!W.del[c.k]:!!c.off;c.hid=!!(W.hid&&W.hid[c.k]);c.np=!!(W.np&&W.np[c.k]);
-  if(W.l&&W.l[c.k]){c.name=W.l[c.k];c.l=esc(W.l[c.k]);c.em=0}else c.name=c.t||c.l;
+  if(W.l&&W.l[c.k]){c.name=W.l[c.k];if(c.g==="cuerpo")c.l=emo1(W.l[c.k])||c.l;else{c.l=esc(W.l[c.k]);c.em=0}}else c.name=c.t||c.l;
   if(c.k==="suic"&&!(W.l&&W.l.suic))c.l="Suicidio/<wbr>CASIS"});
  const ord=W.order||[],pos=c=>{const j=ord.indexOf(c.k);return j<0?1000+c.i:j};
  return L.sort((a,b)=>GORDER.indexOf(a.g)-GORDER.indexOf(b.g)||pos(a)-pos(b))}
@@ -59,7 +60,7 @@ function render(o){const R=o.REG||{},ds=o.days,reg=ds.filter(k=>R[k]).map(k=>[k,
  const groups=[];C.forEach(c=>{const t=GROUPS[c.g];if(groups.length&&groups[groups.length-1].g===c.g)groups[groups.length-1].n++;else groups.push({g:c.g,t,n:1})});
  const tod=o.today||iso(new Date());
  const dot=k=>{const c=o.dayColor?o.dayColor(k):"";return `<i class="md" style="${c?"background:"+c:""}" title="${esc(o.dayTitle?o.dayTitle(k):"")}"></i>`};
- const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(c=>`<th class="${c.em?"em":""} ${c.cls==="c4"?"c4":""}" title="${esc(c.name)}">${c.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(c=>`<td class="${c.cls||""}" ${o.who==="me"?`data-ed="${c.cd}|${k}"`:""} style="${c.st?c.st(R[k]):""}">${c.c(R[k],k,R)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
- return `<div class="rg-met"><div><b>${avg(x=>x.sueno)}</b>😴 h sueño (prom.)</div><div><b>${avg(x=>x.agua)}</b>💧 litros (prom.)</div><div><b>${Math.floor(scr/60)}:${pad2(scr%60)}</b>📱 h de scroll</div><div><b>${sinSol}</b>☀️ días sin sol</div></div><div class="tw">${t}</div>`}
+ const t=`<table class="tt"><thead><tr class="gr"><td></td>${groups.map(x=>`<td colspan="${x.n}">${x.t}</td>`).join("")}</tr><tr><th></th>${C.map(c=>`<th class="${c.em?"em":""} ${c.cls==="c4"?"c4":""}" title="${esc(c.name)}">${c.l}</th>`).join("")}</tr></thead><tbody>${ds.map(k=>`<tr class="${k===tod?"hoy":""}"><th>${dot(k)}${short(k)}</th>${C.map(c=>`<td class="${c.cls||""}" ${o.who==="me"?`data-ed="${c.cd}|${k}"`:""} style="${c.st?c.st(R[k]):""}">${c.c(R[k],k,R,o)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+ return `<div class="rg-met"><div><b>${avg(x=>x.sueno)}</b>😴 h sueño (prom.)</div><div><b>${avg(x=>x.agua)}</b>💧 litros (prom.)</div><div><b>${Math.floor(scr/60)}:${pad2(scr%60)}</b>📱 h de scroll</div><div><b>${sinSol}</b>☀️ días sin sol</div>${o.tools?`<div class="mt">${o.tools}</div>`:""}</div><div class="tw">${t}</div>`}
 window.Semana={render,all,GROUPS,GORDER,VERSION:1};
 })();

@@ -895,7 +895,7 @@ footer.credit{
   .rg-met{ gap:5px; } .rg-met div{ padding:8px 4px; }
 }
 /* ---------- v21 ---------- */
-#cfgBio,#cfgPw,#cfgLockNow{ display:none !important; }
+#cfgBio,#cfgPw,#cfgLockNow,#authPill{ display:none !important; }
 .cfg-item small{ display:block; }
 .eye{ background:none; border:0; cursor:pointer; font-size:14px; padding:0 4px; position:relative; opacity:.45; }
 .eye.on{ opacity:1; }
@@ -912,7 +912,14 @@ footer.credit{
 .pw-row{ display:flex; gap:10px; align-items:center; padding:10px 0; font-size:14px; color:var(--text-light); }
 .pw-row small{ display:block; color:var(--text-faint); font-size:11.5px; }
 .tt td .sc2{ display:block; line-height:1.25; }
-.wk-tools{ display:flex; justify-content:flex-end; margin:0 0 8px; }
+.rg-met:has(.mt){ grid-template-columns:repeat(4,minmax(0,1fr)) auto; }
+.rg-met .mt{ background:none !important; padding:0 !important; display:flex; align-items:center; }
+.ib.gear{ font-size:20px; width:40px; height:40px; }
+.ib.eyeoff{ opacity:.55; }
+.ib.eyeoff::after{ content:""; position:absolute; left:4px; right:4px; top:50%; height:2px; background:#f2a19f; transform:rotate(-40deg); }
+.tt .rg-pens p,[data-pv]{ cursor:pointer; }
+.pv-text{ white-space:pre-wrap; line-height:1.55; font-size:15px; margin:10px 0 4px; max-height:60vh; overflow:auto; }
+.sh-c{ display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:14px; }
 .ib[disabled]{ opacity:.3; cursor:default; }
 /* tabla de la semana: conductas del mismo ancho (crecen hacia abajo), sin barra horizontal, encabezado fijo */
 .tt{ table-layout:auto; }
@@ -1458,7 +1465,7 @@ function selectDay(iso, jumpCalendarIfNeeded, highlightSpansByEntryIndex){
         <span class="mood-pill" style="background:${MOOD_COLOR[e.mood]}"><span class="sw"></span>${MOOD_EMO[e.mood]||''} ${MOOD_LABEL[e.mood]||''}</span>${emosOf(e).length ? `<span class="otr">${escapeHtml(penPill(e))}</span>` : ''}
         <span class="eact"><span class="etime">${e.time}</span><button type="button" class="ib" title="Editar este pensamiento" aria-label="Editar este pensamiento" data-pe="${iso}|${idx}">✏️</button><button type="button" class="ib" title="Borrar este pensamiento" aria-label="Borrar este pensamiento" data-pd="${iso}|${idx}">🗑️</button></span>
       </div>
-      <div class="etext">${renderEntryHtml(e, spans) || '<p style="opacity:.5">(sin texto)</p>'}</div>
+      <div class="etext" data-pv="${iso}|${idx}" title="Tocá para verlo en grande">${renderEntryHtml(e, spans) || '<p style="opacity:.5">(sin texto)</p>'}</div>
     </div>`;
   }).join('');
 }
@@ -3002,7 +3009,8 @@ function renderCfgMenu(){
   L('cfgState').innerHTML = !linked ? 'Tu diario todavía no tiene hoja'
     : (ME ? escH(ME.email) + '<br>' : '') + (pend ? `⏳ ${pend} sin subir a tu hoja` : '✓ Todo guardado en tu hoja' + (ME && ME.sheetTitle ? ' «' + escH(ME.sheetTitle) + '»' : ''));
   if(linked){ renderInstall(); renderBioItem(); }
-  const np = pendCount(); L('cfgSyncSub').textContent = `Faltan subir: ${np}`; L('cfgSync').hidden = !linked || !np;   // solo si falta algo
+  const np = pendCount(); L('cfgSyncSub').textContent = `Faltan subir: ${np}`; const na = !L('authPill').hidden; L('cfgSync').hidden = !linked || !(np || na);   // solo si falta algo
+  if(!np && na) L('cfgSyncSub').textContent = 'Hay que renovar el permiso de Google';
   updateGearDot();
 }
 function pendCount(){ return getPending().length + EDQ.length + (window.RG ? RG.pendN() : 0); }
@@ -3128,7 +3136,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '23', APP_DATE = '24/11/2026 02:30';
+const APP_VERSION = '24', APP_DATE = '24/11/2026 02:20';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3713,7 +3721,7 @@ async function pull(){if(!isLinked()||!tokenOk())return;
   ((b&&b.values)||[]).slice(1).forEach(x=>{const f=isoOf(x[0]);if(out[f]&&x[1])out[f].habs.push({h:String(x[1]),p:+x[2]||0,c:String(x[3]||"")})});
   PEND.forEach(f=>{if(REG[f])out[f]=REG[f]});REG=out;save();redraw();await flush();
  }catch(e){if(e.status!==400)console.error(e)}}
-async function pushCfg(){cfgDirty=true;save();if(!isLinked()||!navigator.onLine||!tokenOk())return;
+async function pushCfg(){cfgDirty=true;save();if(isLinked()&&navigator.onLine&&!tokenOk())needAuth(true);if(!isLinked()||!navigator.onLine||!tokenOk())return;
  try{await gfetch(SHEETS+ID()+"/values/"+rng("_diario!A2:B2")+"?valueInputOption=RAW",{method:"PUT",body:{values:[["Configuración de Mimo (no la borres)",JSON.stringify(CFG)]]}});cfgDirty=false;save()}catch(e){console.error(e)}}
 let flushing=false;
 async function flush(){if(cfgDirty)await pushCfg();
@@ -3749,13 +3757,13 @@ const AUTOK=["animo","trist","verg","enojo","miedo","alegria","otras"];
 function autoOf(k){const ps=byDate.get(k)||[];if(!ps.length)return null;const sc=ps.map(e=>MOOD_SCORE[e.mood]).filter(Boolean);
  const a={animo:sc.length?(Math.max(...sc)+Math.min(...sc))/2:"",otras:[]};EMOS.forEach(([e])=>a[e]=0);
  ps.forEach(e=>emosOf(e).forEach(o=>{const q=emoKey(o.n);if(q)a[q]=Math.max(a[q],+o.v||0);else{const x=a.otras.find(y=>y.n.toLowerCase()===o.n.toLowerCase());if(x)x.v=Math.max(x.v,+o.v);else a.otras.push({n:o.n,v:+o.v})}}));return a}
-function manOf(k){CFG.man=CFG.man||{};if(CFG.man[k])return Object.assign({},CFG.man[k]);const x=REG[k],m={};
+function manOf(k){CFG.man=CFG.man||{};if(CFG.man[k])return Object.assign({},CFG.man[k]);const x=REG[k],m={};if(k>="2026-11-23")return m;   /* días cargados antes de Mimo: lo que tenga datos se cargó a mano */
  if(x){if(MN(x.animo)!=null)m.animo=1;EMOS.forEach(([e])=>{if(+x[e])m[e]=1});if((x.otras||[]).some(o=>o.n))m.otras=1}return m}
 const fv=(x,f)=>f==="otras"?otrStr(x.otras):f==="animo"?String(MN(x.animo)??""):String(+x[f]||0);
 let updA=null;
 function autoDay(k,ask){const a=autoOf(k);if(!a)return;const x=REG[k]?JSON.parse(JSON.stringify(REG[k])):blank();x.habs=x.habs||[];x.otras=x.otras||[];
  const m=manOf(k),diff=[];let ch=!REG[k];
- AUTOK.forEach(f=>{if(fv(x,f)===fv(a,f))return;if(m[f])diff.push(f);else{x[f]=f==="otras"?a.otras:a[f];ch=true}});
+ AUTOK.forEach(f=>{if(fv(x,f)===fv(a,f)){delete m[f];return}if(m[f])diff.push(f);else{x[f]=f==="otras"?a.otras:a[f];ch=true}});
  const rec=!(CFG.man&&CFG.man[k]);CFG.man[k]=m;if(rec){cfgDirty=true}
  if(ch){x.fecha=k;REG[k]=x;if(!PEND.includes(k))PEND.push(k)}
  if(ch||rec){save();clearTimeout(tmr);tmr=setTimeout(flush,1500)}
@@ -3781,11 +3789,11 @@ function crisisRow(show){if(!show)return "";
  return `<div class="crisis">${ib("📋 Plan de crisis","Abrir tu plan de crisis","data-cr=\"plan\"","wide")}${ib("📞 Mi psicóloga",CFG.psi?"Llamar a tu psicóloga ("+CFG.psi+")":"Cargar el teléfono de tu psicóloga","data-cr=\"psi\"","wide")}${ib("🚑 "+esc(CFG.emerName.replace(/^Emergencias\s*/i,"")||"Emergencias"),CFG.emer?"Llamar a "+esc(CFG.emerName)+" ("+CFG.emer+")":"Cargar el teléfono de "+esc(CFG.emerName),"data-cr=\"emer\"","wide")}${ib("☎️ Líneas gratis","Ver las líneas de ayuda gratuitas","data-cr=\"lineas\"","wide")}</div>`}
 function penTag(e){const p=penPill(e);return (MOOD_EMO[e.mood]||"")+" "+(MOOD_LABEL[e.mood]||"")+(p?` <span class="hint2">· ${esc(p)}</span>`:"")}
 function penList(){const ps=byDate.get(day)||[];
- return `<div class="mod">Pensamientos del día</div>${ps.map((e,i)=>`<div class="pen"><i style="background:${MOOD_HEX[e.mood]}"></i><div class="pt"><b style="color:${MOOD_HEX[e.mood]}">${penTag(e)}</b> · ${e.time}<p>${esc(e.text)}</p></div>${ib("✏️","Editar este pensamiento",`data-pe="${day}|${i}"`)}${ib("🗑️","Borrar este pensamiento",`data-pd="${day}|${i}"`)}</div>`).join("")||`<div class="hint2">Todavía no hay pensamientos este día.</div>`}${ib("＋ Agregar pensamiento","Escribir un pensamiento nuevo en este día",`data-pn="${day}"`,"wide add")}`}
+ return `<div class="mod">Pensamientos del día</div>${ps.map((e,i)=>`<div class="pen"><i style="background:${MOOD_HEX[e.mood]}"></i><div class="pt" data-pv="${day}|${i}" title="Tocá para verlo en grande"><b style="color:${MOOD_HEX[e.mood]}">${penTag(e)}</b> · ${e.time}<p>${esc(e.text)}</p></div>${ib("✏️","Editar este pensamiento",`data-pe="${day}|${i}"`)}${ib("🗑️","Borrar este pensamiento",`data-pd="${day}|${i}"`)}</div>`).join("")||`<div class="hint2">Todavía no hay pensamientos este día.</div>`}${ib("＋ Agregar pensamiento","Escribir un pensamiento nuevo en este día",`data-pn="${day}"`,"wide add")}`}
 const PSI_VE=["sueno","agua","ejer","sol","mens"];
 const seen=f=>{const c=Semana.all(CFG).find(x=>x.k===(f.k==="mens"?"ciclo":f.k));return !!c&&!c.del&&!c.np};
 function bodyCard(){const fs=fields(),head="";
- if(bodyEdit)return fs.filter(f=>!f.del).map(f=>`<div class="q fe ${f.hid?"off":""}"><div class="qn">${esc(f.l)} <small class="hl">${f.t==="yn"?"Sí / No":"Número"}</small></div><div class="fbtn">${ib(f.hid?"🙈":"👁️",f.hid?"Oculto para vos: tocá para volver a mostrarlo":"Lo ves vos: tocá para ocultarlo (los datos quedan)",`data-bh="${f.k}"`)}${ib("👤",seen(f)?"Tu psicóloga lo ve: tocá para que no lo vea":"Tu psicóloga no lo ve: tocá para que lo vea",`data-bp="${f.k}"`,seen(f)?"psi on":"psi")}${ib("✏️","Cambiar el nombre",`data-br="${f.k}"`)}${ib("🗑️","Borrar el campo",`data-bd="${f.k}"`)}</div><div class="qm"></div></div>`).join("")+ib("＋ Agregar campo","Sumar un campo nuevo","data-ba=\"1\"","wide add")+(fs.some(f=>f.del&&!f.x)?`<div class="hint2" style="margin-top:8px">Borrados: ${fs.filter(f=>f.del&&!f.x).map(f=>`<button type="button" class="lnk" data-bu="${f.k}" title="Volver a usar este campo">${esc(f.l)}</button>`).join(", ")}</div>`:"");
+ if(bodyEdit)return fs.filter(f=>!f.del).map(f=>`<div class="q fe ${f.hid?"off":""}"><div class="qn">${esc(f.l)} <small class="hl">${f.t==="yn"?"Sí / No":"Número"}</small></div><div class="fbtn">${ib("👁️",f.hid?"Oculto para vos: tocá para volver a mostrarlo":"Lo ves vos: tocá para ocultarlo (los datos quedan)",`data-bh="${f.k}"`,f.hid?"eyeoff":"")}${ib("👤",seen(f)?"Tu psicóloga lo ve: tocá para que no lo vea":"Tu psicóloga no lo ve: tocá para que lo vea",`data-bp="${f.k}"`,seen(f)?"psi on":"psi")}${ib("✏️","Cambiar el nombre",`data-br="${f.k}"`)}${ib("🗑️","Borrar el campo",`data-bd="${f.k}"`)}</div><div class="qm"></div></div>`).join("")+ib("＋ Agregar campo","Sumar un campo nuevo","data-ba=\"1\"","wide add")+(fs.some(f=>f.del&&!f.x)?`<div class="hint2" style="margin-top:8px">Borrados: ${fs.filter(f=>f.del&&!f.x).map(f=>`<button type="button" class="lnk" data-bu="${f.k}" title="Volver a usar este campo">${esc(f.l)}</button>`).join(", ")}</div>`:"");
  return head+live().filter(f=>!f.hid).map(f=>f.t==="num"?stepper(f.k,esc(f.l),f.u||"número",f.st||.5):yn(f.k,esc(f.l),"",f.g!==0&&(f.g||f.x))).join("")+circ("terapia","Impulso de dejar terapia",d.terapia,"c")}
 function body(c){switch(c.id){
  case"dia":return `<div class="mod" style="margin-top:0">Resumen para tu psicóloga</div><textarea id="rgNotas" placeholder="Trabajo · sol · terapia&#10;Me detonó: …&#10;Para charlar: …">${esc(d.notas)}</textarea>${penList()}`;
@@ -3833,6 +3841,8 @@ function pnEmo(){return `<div class="mod" style="margin-top:4px">¿Qué emocione
 function penSheet(k,i){const e=i==null?null:(byDate.get(k)||[])[i];penOld=e;PN={mood:e&&e.mood||"",std:{},otr:[]};
  if(e)emosOf(e).forEach(o=>{const q=emoKey(o.n);if(q)PN.std[q]=+o.v;else PN.otr.push({n:o.n,v:+o.v})});
  sheet(e?"Editar pensamiento":"Nuevo pensamiento",`<div class="rg-row2"><input type="date" id="pnDate" value="${e?e.date:k}"><input type="time" id="pnTime" value="${e?e.time:nowHHMM()}"></div><textarea id="pnText" style="min-height:140px" placeholder="Qué pasó, qué sentiste y por qué…">${e?esc(e.text):""}</textarea><div id="pnEmo">${pnEmo()}</div><datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia","Calma","Frustración","Rechazada"].map(x=>`<option value="${x}">`).join("")}</datalist><div class="err2" id="pnErr"></div><div class="actions">${e?ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide"):""}<button type="button" class="btn-p" id="pnOk">Guardar</button></div>`)}
+function penView(k,i){const e=(byDate.get(k)||[])[i];if(!e)return;const p=penPill(e);
+ sheet(`${MOOD_EMO[e.mood]||""} ${MOOD_LABEL[e.mood]||""}`,`${p?`<div class="hint2">${esc(p)}</div>`:""}<div class="pv-text">${esc(e.text)}</div><div class="actions">${ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide")}<button type="button" class="btn-p" data-pe="${k}|${i}">✏️ Editar</button></div>`,DIAS[dt(e.date).getDay()]+" "+fmt(e.date)+" · "+e.time)}
 function penDel(k,i){const e=(byDate.get(k)||[])[i];if(!e)return;penOld=e;
  sheet("¿Borrar este pensamiento?",`<div class="pen"><i style="background:${MOOD_HEX[e.mood]}"></i><div class="pt"><b style="color:${MOOD_HEX[e.mood]}">${penTag(e)}</b> · ${fmt(e.date)} ${e.time}<p>${esc(e.text.slice(0,240))}${e.text.length>240?"…":""}</p></div></div><p class="hint2">Se borra de este dispositivo y de tu hoja. No se puede deshacer.</p><div class="actions"><button type="button" class="btn-g" data-skx="1">Cancelar</button><button type="button" class="btn-p danger" id="pnDelOk">🗑️ Borrar</button></div>`)}
 function afterPen(k,k2){if(k2&&k2!==k)autoDay(k2,false);autoDay(k,true);if(bg.classList.contains("open")&&d&&!bg.classList.contains("solo"))render();redraw()}
@@ -3851,7 +3861,9 @@ function toast2(t){setStatus(t,"ok")}
 
 /* --- vista Semana: últimos 8 días, igual a la de la psicóloga --- */
 function cycleDay(k){const ks=Object.keys(REG).filter(x=>REG[x].mens==="SÍ").sort();let s0=null;for(const s of ks){if(s>k)break;const p=dt(s);p.setDate(p.getDate()-1);const pk=toISO(p);if(!(REG[pk]&&REG[pk].mens==="SÍ"))s0=s}if(!s0)return"";const n=Math.round((dt(k)-dt(s0))/864e5)+1;return n>60?"":n}
-function week(ds){return `<div class="wk-tools">${ib("⚙️ Editar columnas","Ver, renombrar, ordenar, sacar o agregar columnas y elegir cuáles ve tu terapeuta","data-wcol=\"1\"","wide")}</div>`+Semana.render({days:ds,REG,cfg:CFG,who:"me",dayColor,dayTitle:k=>mText(dayNum(k))||MOOD_LABEL[dayMood(k)]||"",today:toISO(new Date())})}
+function wkThoughts(k){const ps=byDate.get(k)||[];if(!ps.length)return "";return `<details class="pd" data-pdk="${k}" ${openPd.has(k)?"open":""}><summary>${ps.length} pensamiento${ps.length>1?"s":""}</summary><div class="rg-pens">${ps.map((e,i)=>`<p data-pv="${k}|${i}" title="Tocá para verlo completo"><i style="background:${MOOD_HEX[e.mood]}"></i>${esc(e.text.length>140?e.text.slice(0,140)+"…":e.text)}</p>`).join("")}</div></details>`}
+const openPd=new Set();
+function week(ds){return Semana.render({days:ds,REG,cfg:CFG,who:"me",thoughts:wkThoughts,tools:ib("⚙️","Editar columnas: ver, renombrar, ordenar, sacar o agregar y elegir cuáles ve tu terapeuta","data-wcol=\"1\"","gear"),dayColor,dayTitle:k=>mText(dayNum(k))||MOOD_LABEL[dayMood(k)]||"",today:toISO(new Date())})}
 /* --- columnas del resumen semanal (CFG.week) --- */
 function W_(){CFG.week=CFG.week||{};["del","hid","np","l"].forEach(x=>CFG.week[x]=CFG.week[x]||{});return CFG.week}
 function colDone(){pushCfg();colSheet();redraw()}
@@ -3859,14 +3871,15 @@ function moveCol(k,dir){const A=Semana.all(CFG).filter(c=>!c.del),i=A.findIndex(
 function colSheet(){const A=Semana.all(CFG),on=A.filter(c=>!c.del),off=A.filter(c=>c.del);let h="",g0=null;
  on.forEach(c=>{if(c.g!==g0){g0=c.g;h+=`<div class="mod">${Semana.GROUPS[c.g]||"Resumen"}</div>`+(c.g==="psi"?`<div class="hint2">Aparecen solo si algún día de la semana está en SÍ.</div>`:"")}
   const sib=on.filter(x=>x.g===c.g),j=sib.indexOf(c);
-  h+=`<div class="q fe ${c.hid?"off":""}"><div class="qn">${esc(c.name)}</div><div class="fbtn">${ib(c.hid?"🙈":"👁️",c.hid?"Vos no la ves: tocá para verla":"La ves vos: tocá para ocultarla",`data-wh="${c.k}"`)}${ib("👤",c.np?"Tu terapeuta no la ve: tocá para que la vea":"Tu terapeuta la ve: tocá para que no la vea",`data-wp="${c.k}"`,c.np?"psi":"psi on")}${ib("✏️","Cambiar el nombre",`data-wl="${c.k}"`)}${ib("↑","Mover antes (a la izquierda)",`data-wu="${c.k}" ${j?"":"disabled"}`)}${ib("↓","Mover después (a la derecha)",`data-wd="${c.k}" ${j<sib.length-1?"":"disabled"}`)}${ib("🗑️","Sacar de la tabla (tus datos no se borran)",`data-wx="${c.k}"`)}</div><div class="qm"></div></div>`});
+  h+=`<div class="q fe ${c.hid?"off":""}"><div class="qn">${esc(c.name)}</div><div class="fbtn">${ib("👁️",c.hid?"Vos no la ves: tocá para verla":"La ves vos: tocá para ocultarla",`data-wh="${c.k}"`,c.hid?"eyeoff":"")}${ib("👤",c.np?"Tu terapeuta no la ve: tocá para que la vea":"Tu terapeuta la ve: tocá para que no la vea",`data-wp="${c.k}"`,c.np?"psi":"psi on")}${ib("✏️","Cambiar el nombre",`data-wl="${c.k}"`)}${ib("↑","Mover antes (a la izquierda)",`data-wu="${c.k}" ${j?"":"disabled"}`)}${ib("↓","Mover después (a la derecha)",`data-wd="${c.k}" ${j<sib.length-1?"":"disabled"}`)}${ib("🗑️","Sacar de la tabla (tus datos no se borran)",`data-wx="${c.k}"`)}</div><div class="qm"></div></div>`});
  if(off.length)h+=`<div class="mod">Agregar a la tabla</div><div class="chips">${off.map(c=>`<button type="button" class="chip" data-wa="${c.k}" title="Agregar «${esc(c.name)}» a la tabla">＋ ${esc(c.name)}</button>`).join("")}</div>`;
- sheet("Columnas del resumen semanal",`<p class="hint2">👁️ la ves vos · 👤 la ve tu terapeuta · ↑↓ cambia el orden dentro de su grupo. Sacar una columna no borra tus datos.</p>${h}`)}
+ sheet("Columnas del resumen semanal",`<p class="hint2">👁️ la ves vos (tachado: no la ves) · 👤 la ve tu terapeuta · ↑↓ cambia el orden dentro de su grupo. Sacar una columna no borra tus datos.</p>${h}`)}
 /* --- link para la terapeuta (CFG.share = {t, days}) --- */
 const tok=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);return btoa(String.fromCharCode(...a)).replace(/[+/=]/g,c=>({"+":"-","/":"_","=":""}[c]))};
 function shareUrl(){const s=CFG.share||{},u=s.url||"";return u&&s.t?u+"?t="+s.t:""}
+async function cfgNow(){if(!isLinked()||!navigator.onLine)return false;if(!tokenOk()){try{await askToken(ME.email)}catch(_){return false}needAuth(false)}await pushCfg();return !cfgDirty}
 function shareSheet(){CFG.share=CFG.share||{};const s=CFG.share;if(!s.t){s.t=tok();s.days=s.days||8;pushCfg()}const u=shareUrl(),d=s.days||8,from=fmt(toISO(addDays(new Date(),-(d-1))));
- sheet("👩‍⚕️ Link para tu terapeuta",u?`<p class="hint2">Es siempre el mismo: mandáselo una sola vez. Ve solo el resumen semanal (sin tus pensamientos) y no puede cambiar nada.</p><div class="mod">¿Cuántos días puede ver?</div><div class="rg-moods">${[8,15,22,29].map((n,i)=>`<button type="button" data-shd="${n}" class="${d===n?"on":""}" style="--c:var(--accent)" title="${i+1} semana${i?"s":""} más hoy (${n} días)">${i+1} sem. + hoy</button>`).join("")}</div><p class="hint2">Ve desde el <b>${from}</b> hasta hoy (${d} días). Cada día se corre solo.</p><div class="actions"><button type="button" class="btn-p" data-shc="1">📋 Copiar link</button></div><p class="hint2" style="margin-top:16px">Si el link le llega a otra persona, cortalo: el actual deja de andar y se crea uno nuevo para mandarle a tu terapeuta.</p>${ib("✂️ Cortar acceso y crear link nuevo","El link actual deja de funcionar","data-shn=\"1\"","wide")}`:`<p class="hint2">Falta la dirección de tu página de Apps Script (termina en /exec).</p><label class="fl">Dirección<input type="url" id="rgShUrl" placeholder="https://script.google.com/macros/s/…/exec"></label><div class="actions"><button type="button" class="btn-p" data-shu="1">Guardar</button></div>`)}
+ sheet("👩‍⚕️ Link para tu terapeuta",u?`<p class="hint2">Es siempre el mismo: mandáselo una sola vez. Ve solo el resumen semanal (sin tus pensamientos) y no puede cambiar nada.</p><div class="mod">¿Cuántos días puede ver?</div><div class="rg-moods">${[8,15,22,29].map((n,i)=>`<button type="button" data-shd="${n}" class="${d===n?"on":""}" style="--c:var(--accent)" title="${i+1} semana${i?"s":""} más hoy (${n} días)">${i+1} sem. + hoy</button>`).join("")}</div><p class="hint2">Ve desde el <b>${from}</b> hasta hoy (${d} días). Cada día se corre solo.</p><div class="sh-c"><button type="button" class="btn-p" data-shc="1">📋 Copiar link</button></div><p class="hint2" style="margin-top:16px;text-align:center">Si el link le llega a otra persona, cortalo: el actual deja de andar y se crea uno nuevo para mandarle a tu terapeuta.</p><div class="sh-c">${ib("✂️ Cortar acceso y crear link nuevo","El link actual deja de funcionar","data-shn=\"1\"","wide")}</div>`:`<p class="hint2">Falta la dirección de tu página de Apps Script (termina en /exec).</p><label class="fl">Dirección<input type="url" id="rgShUrl" placeholder="https://script.google.com/macros/s/…/exec"></label><div class="actions"><button type="button" class="btn-p" data-shu="1">Guardar</button></div>`)}
 function weekView(start,end){const hd=document.querySelector('header.top');document.documentElement.style.setProperty('--hdrH',(hd&&getComputedStyle(hd).position==='sticky'?hd.offsetHeight:0)+'px');const ds=[];for(let x=new Date(start);x<=end;x=addDays(x,1))ds.push(toISO(x));$("weekView").innerHTML=week(ds);const gr=$("weekView").querySelector("tr.gr");if(gr)$("weekView").style.setProperty("--grH",gr.offsetHeight+"px")}
 
 function emoStats(s,e){const ks=[...new Set([...Object.keys(REG),...allDates.filter(k=>(byDate.get(k)||[]).some(x=>emosOf(x).length))])].filter(k=>k>=s&&k<=e).sort();
@@ -3894,7 +3907,7 @@ bg.addEventListener("input",e=>{const t=e.target;
  if(t.id==="rgNotas")d.notas=t.value;else if(t.id==="rgDet")d.suicDet=t.value;
  else if(t.dataset.num)d[t.dataset.num]=t.value===""?"":Math.max(0,+t.value);
  else if(t.dataset.on!==undefined){d.otras[+t.dataset.on].n=t.value;markMan("otras")}else return;touch()});
-async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b){if(e.target===bg){if(!$("rgSk").hidden)closeSheet();else close()}return}const s=b.dataset;
+async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b){const pv=e.target.closest("[data-pv]");if(pv){const[k,i]=pv.dataset.pv.split("|");return penView(k,+i)}if(e.target===bg){if(!$("rgSk").hidden)closeSheet();else close()}return}const s=b.dataset;
  if(b.id==="rgClose")return close();
  if(s.skx)return closeSheet();
  if(s.info){infoOpen=!infoOpen;$("rgInfo").hidden=!infoOpen;return}
@@ -3921,9 +3934,11 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(s.wls){const v=$("rgWName").value.trim();if(v)W_().l[s.wls]=v;return colDone()}
  if(s.wlr){delete W_().l[s.wlr];return colDone()}
  if(s.shu){const v=$("rgShUrl").value.trim().replace(/\?.*$/,"");if(/^https:\/\/script\.google\.com\/.+\/exec$/.test(v)){CFG.share.url=v;pushCfg();shareSheet()}return}
- if(s.shd){CFG.share.days=+s.shd;pushCfg();return shareSheet()}
- if(s.shc){const u=shareUrl();pushCfg();try{await navigator.clipboard.writeText(u);toast2(navigator.onLine?"Link copiado ✓ Pegalo en el chat con tu terapeuta":"Link copiado. Ojo: sin internet, empieza a andar cuando se sincronice")}catch(_){prompt("Copiá el link:",u)}return}
- if(s.shn){if(!confirm("¿Cortar el acceso?\n\nEl link actual deja de funcionar y se crea uno nuevo que tenés que mandarle a tu terapeuta."))return;CFG.share.t=tok();pushCfg();shareSheet();toast2("Listo: el link viejo ya no anda. Copiá el nuevo y mandáselo.");return}
+ if(s.shd){CFG.share.days=+s.shd;shareSheet();if(!await cfgNow())setStatus("No se pudo guardar en tu hoja: tocá ⚙️ → Sincronizar ahora.","err");return}
+ if(s.shc){const u=shareUrl();let cp=true;try{await navigator.clipboard.writeText(u)}catch(_){cp=false}
+  const ok=await cfgNow();if(!cp)prompt("Copiá el link:",u);
+  if(ok)toast2("Link copiado ✓ Ya funciona: pegalo en el chat con tu terapeuta");else setStatus("Link copiado, pero todavía no anda: falta guardarlo en tu hoja. Conectate a internet y tocá ⚙️ → Sincronizar ahora.","err");return}
+ if(s.shn){if(!confirm("¿Cortar el acceso?\n\nEl link actual deja de funcionar y se crea uno nuevo que tenés que mandarle a tu terapeuta."))return;CFG.share.t=tok();shareSheet();const ok=await cfgNow();ok?toast2("Listo: el link viejo ya no anda. Copiá el nuevo y mandáselo."):setStatus("Falta guardar el cambio en tu hoja: tocá ⚙️ → Sincronizar ahora.","err");return}
  if(s.sk!=null)return openSkill(+s.sk);
  if(s.eh!=null)return openSkill(SK.findIndex(x=>x[1]===d.habs[+s.eh].h));
  if(s.sc!=null){sk.p=+s.sc;$("rgSk").querySelectorAll("[data-sc]").forEach(x=>x.classList.toggle("on",+x.dataset.sc===sk.p));$("rgScErr").textContent="";return}
@@ -3947,8 +3962,8 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
   if(!text||!date||!PN.mood){$("pnErr").textContent=!text?"Escribí el pensamiento":!date?"Elegí la fecha":"Elegí cómo estuvo tu ánimo";return}
   const emos=[...EMOS.filter(([k])=>+PN.std[k]).map(([k,,l])=>({n:l,v:+PN.std[k]})),...PN.otr.map(o=>({n:cleanEmo(o.n).trim(),v:+o.v})).filter(o=>o.n&&o.v)];
   const ne={date,dow:csvDowFor(date),time,mood:PN.mood,text,emos},old=penOld;closeSheet();
-  if(old)await updateEntry(old,ne);else await addEntry(ne);afterPen(date,old&&old.date);return}
- if(b.id==="pnDelOk"){const old=penOld;closeSheet();await updateEntry(old,null);afterPen(old.date);return}
+  const pr=old?updateEntry(old,ne):addEntry(ne);afterPen(date,old&&old.date);await pr;return}
+ if(b.id==="pnDelOk"){const old=penOld;closeSheet();const pr=updateEntry(old,null);afterPen(old.date);await pr;return}
  /* campos de Cuerpo */
  if(s.be){bodyEdit=!bodyEdit;render();return}
  if(s.bp){const f=fields().find(x=>x.k===s.bp),k=s.bp==="mens"?"ciclo":s.bp,W=W_();if(seen(f))W.np[k]=1;else{W.del[k]=0;W.np[k]=0}pushCfg();render();redraw();return}
@@ -3967,6 +3982,8 @@ bg.addEventListener("click",onClick);
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&bg.classList.contains("open")){if(!$("rgSk").hidden)closeSheet();else close()}});
 document.addEventListener("click",e=>{if(bg.contains(e.target))return;
  const pb=e.target.closest("[data-pe],[data-pd],[data-pn]");if(pb){e.stopPropagation();onClick(e);return}
+ const pv=e.target.closest("[data-pv]");if(pv&&!e.target.closest("button,a,mark")){e.stopPropagation();const[k,i]=pv.dataset.pv.split("|");penView(k,+i);return}
+ const pd=e.target.closest("details[data-pdk]>summary");if(pd){const k=pd.parentElement.dataset.pdk;setTimeout(()=>{pd.parentElement.open?openPd.add(k):openPd.delete(k)},0)}
  const o=e.target.closest("[data-rgopen]");if(o){open(o.dataset.rgopen,"dia");return}
  if(e.target.closest("[data-wcol]")){colSheet();return}
  const td=e.target.closest("#weekView td[data-ed]");if(td&&!e.target.closest("details")){const[c,k]=td.dataset.ed.split("|");open(k,c)}},true);
