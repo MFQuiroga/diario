@@ -3147,7 +3147,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '27', APP_DATE = '24/11/2026 02:50';
+const APP_VERSION = '28', APP_DATE = '24/11/2026 03:00';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -3710,7 +3710,7 @@ const lastCol=()=>colA1(Math.max(31,...(CFG.extra||[]).map(x=>x.col)));
 
 /* --- guardar local (cifrado) y en la hoja --- */
 const KEY="mimo_reg_v1";
-async function load(){const v=await encGet(KEY).catch(()=>null);if(v){REG=v.REG||{};PEND=v.PEND||[];DELQ=v.DELQ||[];if(v.CFG)CFG=Object.assign(CFG,v.CFG);cfgDirty=!!v.cfgDirty}}
+async function load(){PD=await encGet(PD_KEY).catch(()=>null);const v=await encGet(KEY).catch(()=>null);if(v){REG=v.REG||{};PEND=v.PEND||[];DELQ=v.DELQ||[];if(v.CFG)CFG=Object.assign(CFG,v.CFG);cfgDirty=!!v.cfgDirty}}
 function save(){encSet(KEY,{REG,PEND,DELQ,CFG,cfgDirty})}
 const ID=()=>ME.sheetId;
 async function tabs(){const m=await sheetMeta(ID()),g={};(m.sheets||[]).forEach(s=>g[s.properties.title]=s.properties.sheetId);return g}
@@ -3847,11 +3847,27 @@ function open(k,card){autoDay(k,false);day=k;d=REG[k]?JSON.parse(JSON.stringify(
 function close(){$("regBg").classList.remove("open");flush();redraw()}
 
 /* --- ventanita (habilidad, teléfonos, campos, pensamientos, confirmaciones) --- */
-function sheet(title,html,sub){$("rgSk").innerHTML=`<div class="rg-top"><div>${sub?`<div class="mod" style="margin:0">${sub}</div>`:""}<h2>${title}</h2></div>${ib("✕","Cerrar","data-skx=\"1\"","x")}</div>${html}`;$("rgSk").hidden=false;$("rgSk").scrollTop=0;
+let SKIND="",PD=null,skDraft={};const PD_KEY="mimo_pd_v1";
+function sheet(title,html,sub){SKIND="";$("rgSk").innerHTML=`<div class="rg-top"><div>${sub?`<div class="mod" style="margin:0">${sub}</div>`:""}<h2>${title}</h2></div>${ib("✕","Cerrar","data-skx=\"1\"","x")}</div>${html}`;$("rgSk").hidden=false;$("rgSk").scrollTop=0;
  if(!$("regBg").classList.contains("open")){$("regBg").classList.add("open","solo")}}
+/* cerrar la ventanita sin perder nada: guarda lo que se pueda, y si falta algo queda como borrador */
+async function softClose(){if($("rgSk").hidden)return close();
+ if(SKIND==="pen"){const t=$("pnText").value.trim();
+  if(t&&PN.mood&&$("pnDate").value)return savePen();
+  if(t){pdSave();closeSheet();toast2("Guardé tu borrador"+(PN.mood?"":" (falta elegir el ánimo)")+": seguís cuando toques ＋ Agregar pensamiento.");return}
+  pdClear();return closeSheet()}
+ if(SKIND==="skill"&&sk){const c=$("rgComo");if(c)sk.c=c.value;
+  if(sk.p!==null){if(skI<0)d.habs.push(sk);else d.habs[skI]=sk;delete skDraft[day+sk.h];touch();closeSheet();render();toast2("Habilidad guardada ✓");return}
+  if(sk.c.trim())skDraft[day+sk.h]=sk}
+ closeSheet()}
+async function savePen(){const date=$("pnDate").value,time=$("pnTime").value||nowHHMM(),text=$("pnText").value.trim();
+  if(!text||!date||!PN.mood){$("pnErr").textContent=!text?"Escribí el pensamiento":!date?"Elegí la fecha":"Elegí cómo estuvo tu ánimo";return}
+  const emos=[...EMOS.filter(([k])=>+PN.std[k]).map(([k,,l])=>({n:l,v:+PN.std[k]})),...PN.otr.map(o=>({n:cleanEmo(o.n).trim(),v:+o.v})).filter(o=>o.n&&o.v)];
+  const ne={date,dow:csvDowFor(date),time,mood:PN.mood,text,emos},old=penOld;pdClear();closeSheet();
+  const pr=old?updateEntry(old,ne):addEntry(ne);afterPen(date,old&&old.date);await pr}
 function closeSheet(){$("rgSk").hidden=true;const bg=$("regBg");if(bg.classList.contains("solo"))bg.classList.remove("open","solo")}
-function openSkill(n){const s=SK[n];skI=d.habs.findIndex(x=>x.h===s[1]);sk=skI<0?{h:s[1],p:null,c:""}:{...d.habs[skI]};
- sheet(s[1],`<p>${s[2]}</p><b>Cómo hacerla</b><ol>${s[3].map(x=>`<li>${x}</li>`).join("")}</ol><b>¿Cómo te fue hoy?</b><div class="score">${ESC.map((x,k)=>`<button type="button" data-sc="${k}" class="${sk.p===k?"on":""}">${k} – ${x}</button>`).join("")}</div><div class="err2" id="rgScErr"></div><b>¿Cómo la usaste?</b><textarea id="rgComo" style="min-height:70px;margin-top:6px" placeholder="Situación y qué hiciste">${esc(sk.c)}</textarea><div class="actions">${skI>=0?ib("🗑️ Quitar","Quitar esta habilidad del día","id=\"rgSkRm\"","wide"):""}<button type="button" class="btn-p" id="rgSkOk">${skI>=0?"Guardar cambios":"La usé hoy"}</button></div>`,s[0])}
+function openSkill(n){const s=SK[n];skI=d.habs.findIndex(x=>x.h===s[1]);sk=skI<0?(skDraft[day+s[1]]||{h:s[1],p:null,c:""}):{...d.habs[skI]};
+ sheet(s[1],`<p>${s[2]}</p><b>Cómo hacerla</b><ol>${s[3].map(x=>`<li>${x}</li>`).join("")}</ol><b>¿Cómo te fue hoy?</b><div class="score">${ESC.map((x,k)=>`<button type="button" data-sc="${k}" class="${sk.p===k?"on":""}">${k} – ${x}</button>`).join("")}</div><div class="err2" id="rgScErr"></div><b>¿Cómo la usaste?</b><textarea id="rgComo" style="min-height:70px;margin-top:6px" placeholder="Situación y qué hiciste">${esc(sk.c)}</textarea><div class="actions">${skI>=0?ib("🗑️ Quitar","Quitar esta habilidad del día","id=\"rgSkRm\"","wide"):""}<button type="button" class="btn-p" id="rgSkOk">${skI>=0?"Guardar cambios":"La usé hoy"}</button></div>`,s[0]);SKIND="skill"}
 function telSheet(which){const isP=which==="psi",v=isP?CFG.psi:CFG.emer;
  sheet(isP?"Tu psicóloga":esc(CFG.emerName),`${v?`<a class="btn-p call" href="tel:${esc(v.replace(/[^\d+]/g,""))}">📞 Llamar a ${esc(v)}</a>`:""}${isP?"":`<label class="fl">Nombre<input type="text" id="rgEmName" value="${esc(CFG.emerName)}"></label>`}<label class="fl">Teléfono<input type="tel" id="rgTel" value="${esc(v)}" placeholder="Ej: 0351 4123456"></label><div class="actions"><button type="button" class="btn-p" data-tels="${which}">Guardar</button></div>`)}
 function planSheet(edit){const p=CFG.plan||"";
@@ -3862,9 +3878,12 @@ function linesSheet(){sheet("Líneas de ayuda gratuitas",LINEAS.map(([n,t])=>`<a
 /* pensamientos */
 let penOld=null,PN=null;
 function pnEmo(){return `<div class="mod" style="margin-top:4px">¿Qué emociones sentiste?</div>${EMOS.map(([k,em,l])=>{const v=PN.std[k]||0;return `<div class="q"><div class="qn">${em} ${l}</div>${dots(k,v,"pi",l)}<div class="qm">${v?v+" · "+WORDS[v].toLowerCase():""}</div></div>`}).join("")}${PN.otr.map((o,n)=>`<div class="q"><div class="qn"><input type="text" list="rgEmos" value="${esc(o.n)}" data-pon="${n}" placeholder="Otra emoción"></div>${dots(n,o.v,"po","Otra emoción",1)}<div class="qm">${ib("🗑️","Quitar esta emoción",`data-pod="${n}"`,"mini")}</div></div>`).join("")}${ib("＋ Otra emoción","Sumar otra emoción a este pensamiento","data-poa=\"1\"","wide add")}<div class="mod">¿Cómo estuvo tu ánimo?</div>${moodPick(MOOD_SCORE[PN.mood]||null,"pm")}`}
+function pdSave(){if(SKIND!=="pen"||!$("pnText"))return;PD={date:$("pnDate").value,time:$("pnTime").value,text:$("pnText").value,PN:JSON.parse(JSON.stringify(PN)),old:penOld?entryKey(penOld):null};encSet(PD_KEY,PD)}
+function pdClear(){PD=null;encSet(PD_KEY,null)}
 function penSheet(k,i){const e=i==null?null:(byDate.get(k)||[])[i];penOld=e;PN={mood:e&&e.mood||"",std:{},otr:[]};
  if(e)emosOf(e).forEach(o=>{const q=emoKey(o.n);if(q)PN.std[q]=+o.v;else PN.otr.push({n:o.n,v:+o.v})});
- sheet(e?"Editar pensamiento":"Nuevo pensamiento",`<div class="rg-row2"><input type="date" id="pnDate" value="${e?e.date:k}"><input type="time" id="pnTime" value="${e?e.time:nowHHMM()}"></div><textarea id="pnText" style="min-height:140px" placeholder="Qué pasó, qué sentiste y por qué…">${e?esc(e.text):""}</textarea><div id="pnEmo">${pnEmo()}</div><datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia","Calma","Frustración","Rechazada"].map(x=>`<option value="${x}">`).join("")}</datalist><div class="err2" id="pnErr"></div><div class="actions">${e?ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide"):""}<button type="button" class="btn-p" id="pnOk">Guardar</button></div>`)}
+ const dr=PD&&(e?PD.old===entryKey(e):!PD.old)&&(PD.text||"").trim()?PD:null;if(dr)PN=JSON.parse(JSON.stringify(dr.PN));
+ sheet(e?"Editar pensamiento":"Nuevo pensamiento",`${dr?`<div class="hint2" style="margin-bottom:6px">📝 Seguís con lo que habías empezado a escribir. ${ib("Descartar","Borrar este borrador y empezar de cero","data-pdx=\"1\"","mini")}</div>`:""}<div class="rg-row2"><input type="date" id="pnDate" value="${dr?dr.date:e?e.date:k}"><input type="time" id="pnTime" value="${dr?dr.time:e?e.time:nowHHMM()}"></div><textarea id="pnText" style="min-height:140px" placeholder="Qué pasó, qué sentiste y por qué…">${esc(dr?dr.text:e?e.text:"")}</textarea><div id="pnEmo">${pnEmo()}</div><datalist id="rgEmos">${["Celos","Culpa","Ansiedad","Envidia","Asco/rechazo","Amor","Paz","Gratitud","Satisfacción","Pertenencia","Libertad","Placer","Productividad","Angustia","Calma","Frustración","Rechazada"].map(x=>`<option value="${x}">`).join("")}</datalist><div class="err2" id="pnErr"></div><div class="actions">${e?ib("🗑️ Borrar","Borrar este pensamiento",`data-pd="${k}|${i}"`,"wide"):""}<button type="button" class="btn-p" id="pnOk">Guardar</button></div>`);SKIND="pen"}
 /* borrar todo lo de un día */
 function dayParts(k){const x=REG[k],out=[];if(x){if(String(x.notas||"").trim())out.push("Lo que hice");
  if(["suicImp","hostImp","sexImp","scrImp"].some(f=>+x[f]>0)||["suicAcc","hostAcc","sexAcc"].some(f=>x[f]==="SÍ")||+x.scrH||+x.scrM)out.push("Conductas");
@@ -3944,13 +3963,14 @@ const bg=$("regBg");
 bg.addEventListener("input",e=>{const t=e.target;
  if(t.id==="rgComo"&&sk){sk.c=t.value;return}if(t.id==="pwKeep"){ME.keep=!t.checked;putProfile(ME);setStatus(t.checked?"Te va a pedir la contraseña al abrir ✓":"En este dispositivo no te pide la contraseña hasta que toques Bloquear","ok");return}
  if((t.dataset.pon!=null||t.dataset.on!=null)&&/[,()]/.test(t.value)){const c=t.selectionStart;t.value=cleanEmo(t.value);try{t.setSelectionRange(c-1,c-1)}catch(_){}}
- if(t.dataset.pon!=null&&PN){PN.otr[+t.dataset.pon].n=t.value;return}if(!d||$("rgSk").contains(t))return;
+ if(t.dataset.pon!=null&&PN){PN.otr[+t.dataset.pon].n=t.value;pdSave();return}
+ if(t.id==="pnText"||t.id==="pnDate"||t.id==="pnTime"){pdSave();return}if(!d||$("rgSk").contains(t))return;
  if(t.id==="rgNotas")d.notas=t.value;else if(t.id==="rgDet")d.suicDet=t.value;
  else if(t.dataset.num)d[t.dataset.num]=t.value===""?"":Math.max(0,+t.value);
  else if(t.dataset.on!==undefined){d.otras[+t.dataset.on].n=t.value;markMan("otras");markGone("o:"+t.value.trim().toLowerCase(),0)}else return;touch()});
-async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b){const pv=e.target.closest("[data-pv]");if(pv){const[k,i]=pv.dataset.pv.split("|");return penView(k,+i)}if(e.target===bg){if(!$("rgSk").hidden)closeSheet();else close()}return}const s=b.dataset;
+async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b){const pv=e.target.closest("[data-pv]");if(pv){const[k,i]=pv.dataset.pv.split("|");return penView(k,+i)}return}   /* tocar afuera ya no cierra nada */const s=b.dataset;
  if(b.id==="rgClose")return close();
- if(s.skx)return closeSheet();
+ if(s.skx)return softClose();
  if(s.info){infoOpen=!infoOpen;$("rgInfo").hidden=!infoOpen;return}
  if(b.id==="rgPrev"){if(ci>0){ci--;render();$("rgCard").scrollTop=0}return}
  if(b.id==="rgNext"){if(ci<CARDS.length-1){ci++;render();$("rgCard").scrollTop=0;return}
@@ -3996,16 +4016,13 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(s.pn!=null)return penSheet(s.pn,null);
  if(s.pe){const[k,i]=s.pe.split("|");return penSheet(k,+i)}
  if(s.pd){const[k,i]=s.pd.split("|");return penDel(k,+i)}
- if(s.pi){const[k,n]=s.pi.split("|");PN.std[k]=+n;$("pnEmo").innerHTML=pnEmo();return}
- if(s.pm){const m=SCORE_MOOD[+s.pm];PN.mood=PN.mood===m?"":m;$("pnEmo").innerHTML=pnEmo();$("pnErr").textContent="";return}
- if(s.po){const[i,n]=s.po.split("|");PN.otr[+i].v=+n;$("pnEmo").innerHTML=pnEmo();return}
- if(s.poa){PN.otr.push({n:"",v:1});$("pnEmo").innerHTML=pnEmo();return}
- if(s.pod!=null){PN.otr.splice(+s.pod,1);$("pnEmo").innerHTML=pnEmo();return}
- if(b.id==="pnOk"){const date=$("pnDate").value,time=$("pnTime").value||nowHHMM(),text=$("pnText").value.trim();
-  if(!text||!date||!PN.mood){$("pnErr").textContent=!text?"Escribí el pensamiento":!date?"Elegí la fecha":"Elegí cómo estuvo tu ánimo";return}
-  const emos=[...EMOS.filter(([k])=>+PN.std[k]).map(([k,,l])=>({n:l,v:+PN.std[k]})),...PN.otr.map(o=>({n:cleanEmo(o.n).trim(),v:+o.v})).filter(o=>o.n&&o.v)];
-  const ne={date,dow:csvDowFor(date),time,mood:PN.mood,text,emos},old=penOld;closeSheet();
-  const pr=old?updateEntry(old,ne):addEntry(ne);afterPen(date,old&&old.date);await pr;return}
+ if(s.pi){const[k,n]=s.pi.split("|");PN.std[k]=+n;$("pnEmo").innerHTML=pnEmo();pdSave();return}
+ if(s.pm){const m=SCORE_MOOD[+s.pm];PN.mood=PN.mood===m?"":m;$("pnEmo").innerHTML=pnEmo();pdSave();$("pnErr").textContent="";return}
+ if(s.po){const[i,n]=s.po.split("|");PN.otr[+i].v=+n;$("pnEmo").innerHTML=pnEmo();pdSave();return}
+ if(s.poa){PN.otr.push({n:"",v:1});$("pnEmo").innerHTML=pnEmo();pdSave();return}
+ if(s.pod!=null){PN.otr.splice(+s.pod,1);$("pnEmo").innerHTML=pnEmo();pdSave();return}
+ if(b.id==="pnOk")return savePen();
+ if(s.pdx){pdClear();const k=$("pnDate").value;return penSheet(k,null)}
  if(b.id==="pnDelOk"){const old=penOld;closeSheet();const pr=updateEntry(old,null);afterPen(old.date);await pr;return}
  /* campos de Cuerpo */
  if(s.be){bodyEdit=!bodyEdit;render();return}
@@ -4022,7 +4039,7 @@ async function onClick(e){const b=e.target.closest("button,a.line,a.call");if(!b
  if(b.id==="rgFAdd"){const l=$("rgFName").value.trim();if(!l)return;const t=$("rgFType").querySelector(".on").dataset.ft;
   CFG.extra=CFG.extra||[];const col=Math.max(31,...CFG.extra.map(x=>x.col))+1;CFG.extra.push({k:"x"+col,l,t,col,x:1,g:1});if(d)d["x"+col]=t==="yn"?"NO":"";pushCfg();closeSheet();render();return}}
 bg.addEventListener("click",onClick);
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&bg.classList.contains("open")){if(!$("rgSk").hidden)closeSheet();else close()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&bg.classList.contains("open"))softClose()});
 document.addEventListener("click",e=>{if(bg.contains(e.target))return;
  const pb=e.target.closest("[data-pe],[data-pd],[data-pn]");if(pb){e.stopPropagation();onClick(e);return}
  const pv=e.target.closest("[data-pv]");if(pv&&!e.target.closest("button,a,mark")){e.stopPropagation();const[k,i]=pv.dataset.pv.split("|");penView(k,+i);return}
