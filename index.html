@@ -653,6 +653,7 @@ footer.credit{
 .lock-err{ color:#ff8a8a !important; min-height:18px; }
 .dev-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; color:var(--text-light); }
 .dev-row{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:var(--bg-panel-2); border:1px solid var(--line); }
+.dev-row.off{ opacity:.55; }
 .dev-row .nm{ flex:1; font:500 14px 'Inter',sans-serif; }
 .dev-row .nm small{ display:block; font-weight:400; font-size:12px; color:var(--text-mute,#a9a3c4); margin-top:2px; }
 .dev-row .me{ font-size:11px; padding:2px 8px; border-radius:20px; background:var(--accent); color:#fff; }
@@ -756,6 +757,20 @@ footer.credit{
     </div>
   </div>
 </div>
+<div class="modal-bg" id="devBg">
+  <div class="composer" role="dialog" aria-labelledby="devTitle">
+    <h2 id="devTitle">Dispositivos</h2>
+    <div id="devList" class="dev-list">Cargando…</div>
+    <div class="dev-pair">
+      <h3>Sumar un dispositivo</h3>
+      <p class="dev-hint">Abrí este link en el otro dispositivo (o escaneá el código) y entrá con tu cuenta de Google. Tu hoja aparece sola.</p>
+      <div id="devQr" class="dev-qr"></div>
+      <div class="actions dev-act"><button class="btn-g" id="devCopy">Copiar link</button></div>
+      <p class="dev-hint">Si perdés un dispositivo, tocá «Desconectar»: la próxima vez que se abra con internet borra todo lo que tiene guardado. Lo que ya está en tu hoja no se pierde. Para más seguridad, cambiá también tu contraseña (bloqueá y tocá «Me la olvidé»).</p>
+    </div>
+    <div class="actions"><button class="btn-g" id="devClose">Cerrar</button></div>
+  </div>
+</div>
 <div class="modal-bg" id="sheetBg">
   <div class="composer sheet-card" role="dialog" aria-labelledby="sheetTitle">
     <h2 id="sheetTitle">Enlazá tu hoja de cálculo</h2>
@@ -797,6 +812,7 @@ footer.credit{
         <div class="cfg-state" id="cfgState"></div>
         <button class="cfg-item" id="cfgLinkSheet" title="Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado."><span class="ic">📗</span><span>Enlazar a hoja de cálculo<small>Tu diario se guarda en tu propia hoja de Google. Sin enlazarla, lo que escribas no queda guardado en ningún lado.</small></span></button>
         <button class="cfg-item" id="cfgBio" hidden><span class="ic">👆</span><span>Activar huella</span></button>
+        <button class="cfg-item" id="cfgDevices" data-linked><span class="ic">📱</span><span>Dispositivos<small>Sumar uno o desconectar uno perdido</small></span></button>
         <button class="cfg-item" id="cfgLockNow" data-linked><span class="ic">🔒</span><span>Bloquear</span></button>
         <button class="cfg-item" id="cfgInstall" hidden><span class="ic">📲</span><span>Instalar app</span></button>
         <div class="cfg-sep" data-linked></div>
@@ -2518,7 +2534,95 @@ async function pullFromSheet(){
 }
 /* si se venció el permiso de Google, un botón para renovarlo (necesita un toque) */
 function needAuth(on){ const b = L('authPill'); if(b) b.hidden = !(on && unlocked && isLinked()); updateGearDot(); }
-async function afterToken(){ if(!pulledOnce) await pullFromSheet(); else await syncPendingToSheet(); await reconcilePw(); await checkTag(); }
+async function afterToken(){
+  if(await deviceRevoked()) return wipeRevoked();
+  if(!pulledOnce) await pullFromSheet(); else await syncPendingToSheet();
+  await reconcilePw(); await checkTag(); await registerDevice();
+}
+/* --- dispositivos: lista en la pestaña oculta _diario, desde la fila 4 --- */
+const DEV_RANGE = '_diario!A4:E';
+function devName(){
+  const ua = navigator.userAgent;
+  const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? (/Mobile/.test(ua) ? 'Celular Android' : 'Tablet Android')
+           : /Windows/.test(ua) ? 'Compu Windows' : /Mac OS X/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Compu Linux' : 'Dispositivo';
+  const br = /Edg\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /Firefox|FxiOS/.test(ua) ? 'Firefox' : /Chrome|CriOS/.test(ua) ? 'Chrome' : /Safari/.test(ua) ? 'Safari' : '';
+  return os + (br ? ' · ' + br : '') + (isStandalone() ? ' (app)' : '');
+}
+function myDevId(){ if(!ME.devId){ ME.devId = b64(rnd(9)).replace(/[+/=]/g, ''); putProfile(ME); } return ME.devId; }
+async function readDevices(){
+  const r = await gfetch(SHEETS + ME.sheetId + '/values/' + rng(DEV_RANGE));
+  return (r.values || []).slice(1).map((v, i) => ({ row: i + 5, id: v[0], name: v[1] || '', added: v[2] || '', seen: v[3] || '', off: v[4] === 'desconectado' })).filter(d => d.id);
+}
+async function writeDevRow(row, d){
+  await gfetch(SHEETS + ME.sheetId + '/values/' + rng('_diario!A' + row + ':E' + row) + '?valueInputOption=RAW', { method:'PUT',
+    body:{ values:[[d.id, d.name, d.added, d.seen, d.off ? 'desconectado' : 'activo']] } });
+}
+async function deviceRevoked(){
+  if(!isLinked() || !tokenOk() || !ME.devId) return false;
+  try{ return (await readDevices()).some(d => d.id === ME.devId && d.off); }catch(_){ return false; }
+}
+let devRegistered = false;
+async function registerDevice(){
+  if(devRegistered || !isLinked() || !tokenOk()) return;
+  try{
+    const list = await readDevices(), id = myDevId(), now = nowStamp();
+    await gfetch(SHEETS + ME.sheetId + '/values/' + rng('_diario!A4:E4') + '?valueInputOption=RAW', { method:'PUT',
+      body:{ values:[['Dispositivo', 'Nombre', 'Conectado', 'Último uso', 'Estado']] } });
+    const me = list.find(d => d.id === id);
+    if(me && me.off) return wipeRevoked();
+    const row = me ? me.row : Math.max(4, ...list.map(d => d.row)) + 1;
+    await writeDevRow(row, { id, name: devName(), added: me ? me.added : now, seen: now, off: false });
+    devRegistered = true;
+  }catch(e){ console.warn('dispositivos', e); }
+}
+async function wipeRevoked(){
+  await wipeLocalData();
+  try{ indexedDB.deleteDatabase(DB_NAME); }catch(_){}
+  dropProfile(ME.email);
+  try{ sessionStorage.removeItem(SESS_KEY); }catch(_){}
+  alert('Este dispositivo fue desconectado de tu diario. Se borró lo que estaba guardado acá. Lo que está en tu hoja no se perdió.');
+  location.reload();
+  await new Promise(()=>{});
+}
+async function renderDevices(){
+  const box = L('devList');
+  if(!navigator.onLine){ box.textContent = 'Necesitás internet para ver tus dispositivos.'; return; }
+  if(!tokenOk()){ box.innerHTML = '<button class="btn-g" id="devAuth">Conectar con Google para ver la lista</button>'; return; }
+  box.textContent = 'Cargando…';
+  try{
+    const list = (await readDevices()).sort((a, b) => (a.off - b.off) || b.seen.localeCompare(a.seen));
+    box.innerHTML = list.map(d => `<div class="dev-row${d.off ? ' off' : ''}"><span class="nm">${escH(d.name)}<small>${d.off ? 'Desconectado' : 'Conectado el ' + escH(d.added) + ' · último uso ' + escH(d.seen)}</small></span>${d.id === ME.devId ? '<span class="me">este</span>' : ''}${d.off ? '' : `<button data-id="${escH(d.id)}" data-row="${d.row}">Desconectar</button>`}</div>`).join('') || 'Todavía no hay dispositivos.';
+  }catch(err){ box.textContent = 'No se pudo cargar la lista: ' + err.message; }
+}
+L('devList').addEventListener('click', async ev=>{
+  if(ev.target.id === 'devAuth'){ try{ await askToken(ME.email); await afterToken(); }catch(err){ setStatus(err.message, 'err'); } renderDevices(); return; }
+  const b = ev.target.closest('button[data-id]'); if(!b) return;
+  const me = b.dataset.id === ME.devId;
+  if(!confirm(me ? '¿Desconectar ESTE dispositivo?\n\nSe borra lo guardado acá. Lo que está en tu hoja no se pierde.'
+                 : '¿Desconectar ese dispositivo?\n\nLa próxima vez que se abra con internet va a borrar todo lo que tiene guardado y no va a poder entrar a tu diario sin volver a entrar con Google.')) return;
+  b.disabled = true;
+  try{
+    if(me){ await syncPendingToSheet(); }
+    const d = (await readDevices()).find(x => x.id === b.dataset.id);
+    if(d) await writeDevRow(d.row, Object.assign(d, { off: true }));
+    if(me) return wipeRevoked();
+    renderDevices();
+  }catch(err){ b.disabled = false; alert('No se pudo: ' + err.message); }
+});
+let qrLib = null;
+function loadQr(){ return window.QRCode ? Promise.resolve() : (qrLib || (qrLib = loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'))); }
+L('cfgDevices').addEventListener('click', async ()=>{
+  closeCfg(); L('devBg').classList.add('open'); renderDevices();
+  const q = L('devQr'); q.innerHTML = '';
+  try{ await loadQr(); new QRCode(q, { text: APP_URL, width:420, height:420, correctLevel: QRCode.CorrectLevel.L }); }catch(_){ q.innerHTML = ''; }
+});
+L('devCopy').addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText(APP_URL); L('devCopy').textContent = 'Copiado ✓'; }
+  catch(_){ prompt('Copiá este link:', APP_URL); }
+  setTimeout(()=> L('devCopy').textContent = 'Copiar link', 2000);
+});
+L('devClose').addEventListener('click', ()=> L('devBg').classList.remove('open'));
+L('devBg').addEventListener('click', ev=>{ if(ev.target === L('devBg')) L('devBg').classList.remove('open'); });
 let tagChecked = false;
 async function checkTag(){
   if(tagChecked || !isLinked() || !tokenOk()) return;
@@ -2756,7 +2860,7 @@ compSave.addEventListener('click', async ()=>{
    BLOQUEO · entrar con Google, contraseña única (verificador en tu hoja),
    huella/cara por dispositivo y datos cifrados en el dispositivo
    ========================================================= */
-const APP_VERSION = '11', APP_DATE = '23/11/2026 21:16';
+const APP_VERSION = '12', APP_DATE = '23/11/2026 21:34';
 const LAST_KEY = 'diario_last_active_v1';
 const SESS_KEY = 'mimo_sk_v1';
 const IDLE_MS  = 10 * 60 * 1000;
@@ -2855,6 +2959,7 @@ function busy(on, txt){ L('lockGo').disabled = on; if(txt) L('lockGo').textConte
 function sessGet(){ try{ return JSON.parse(sessionStorage.getItem(SESS_KEY) || 'null'); }catch(_){ return null; } }
 
 async function finishUnlock(){
+  if(await deviceRevoked()) return wipeRevoked();
   unlocked = true;
   try{ localStorage.setItem(LAST_KEY, String(Date.now())); }catch(_){}
   lastWrite = Date.now();
@@ -2866,6 +2971,7 @@ async function finishUnlock(){
   needAuth(!tokenOk());
   await reconcilePw();
   await checkTag();
+  await registerDevice();
 }
 
 /* después de entrar con Google: ¿tiene hoja? ¿ya hay contraseña en la hoja? */
