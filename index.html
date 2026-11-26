@@ -1517,6 +1517,29 @@ function fuzzyThreshold(len){
 }
 
 let STRICT = false;
+/* el «Resumen del día» (para la psicóloga) también entra en la búsqueda */
+const REG_SRC = new Map();
+function regText(x){
+  return [x.notas, x.suicDet, ...(x.otras||[]).map(o=>o&&o.n), ...(x.habs||[]).map(h=>h&&h.h)]
+    .map(v=>String(v||'').trim()).filter(Boolean).join(' · ');
+}
+function regSources(){
+  const R = (window.RG && RG.REG) || {}, out = [];
+  for(const k of Object.keys(R)){
+    const x = R[k]; if(!x) continue;
+    const text = regText(x); if(!text) { REG_SRC.delete(k); continue; }
+    let src = REG_SRC.get(k);
+    if(!src || src.text !== text){
+      const toks = []; let m; WORD_RE.lastIndex = 0;
+      while((m = WORD_RE.exec(text)) !== null) toks.push({ raw:m[0], norm:normWord(m[0]), start:m.index, end:m.index+m[0].length });
+      src = { date:k, time:'', text, _tokens:toks, _reg:true, _suic:String(x.suicDet||'') };
+      REG_SRC.set(k, src);
+    }
+    src.mood = RG.dayMood ? RG.dayMood(k) : '';
+    out.push(src);
+  }
+  return out;
+}
 function searchEntries(query){
   const qNorm = query.trim();
   if(!qNorm) return [];
@@ -1526,7 +1549,7 @@ function searchEntries(query){
   const phraseNorm = normWord(terms.join(''));
   const results = [];
 
-  for(const e of ENTRIES){
+  for(const e of ENTRIES.concat(regSources())){
     const matchedSpansAll = [];
     let allTermsMatched = true;
 
@@ -1613,9 +1636,9 @@ function renderSearchResults(query){
       return `
       <button class="search-item" data-i="${i}">
         <div class="row1">
-          <span class="dot" style="background:${MOOD_COLOR[r.entry.mood]}"></span>
+          <span class="dot" style="background:${MOOD_COLOR[r.entry.mood] || 'var(--text-faint)'}"></span>
           <span class="date">${label}</span>
-          <span class="time">${r.entry.time}</span>
+          <span class="time">${r.entry._reg ? '📋 Resumen para tu psicóloga' : r.entry.time}</span>
         </div>
         <div class="snippet">${buildSnippet(r.entry, r.spans)}</div>
       </button>`;
@@ -1631,6 +1654,24 @@ function renderSearchResults(query){
 }
 
 function goToSearchResult(result){
+  if(result.entry._reg){
+    const k = result.entry.date;
+    const inSuic = result.entry._suic && result.spans.some(([a]) => a >= result.entry.text.indexOf(result.entry._suic) && a < result.entry.text.indexOf(result.entry._suic) + result.entry._suic.length);
+    searchResultsEl.classList.remove('open'); searchInput.blur();
+    if(statsPeriodType === 'week' && window.RG){
+      selectedDate = k; statsAnchor = parseISO(k);
+      renderStats(); syncCalFromStats();
+    } else selectDay(k, true);
+    requestAnimationFrame(()=>{
+      const p = statsPeriodType === 'week'
+        ? (document.querySelector(`#weekView .tw [data-ed="${inSuic ? 'suic' : 'dia'}|${k}"]`) || document.querySelector(`#weekView .tw [data-ed="dia|${k}"]`))
+        : document.querySelector('#dayEntries .rg-day');
+      if(!p) return;
+      p.scrollIntoView({behavior:'smooth', block:'center'});
+      p.classList.add('flash'); setTimeout(()=>p.classList.remove('flash'), 1700);
+    });
+    return;
+  }
   if(statsPeriodType === 'week' && window.RG){
     const k = result.entry.date, idx = (byDate.get(k) || []).indexOf(result.entry);
     searchResultsEl.classList.remove('open'); searchInput.blur();
