@@ -186,6 +186,7 @@ header.top .titles p .n{ color:var(--accent-2); font-weight:600; }
 .search-item .date{ font-size:12.5px; color:var(--accent-2); font-weight:600; }
 .search-item .time{ font-size:11px; color:var(--text-faint); margin-left:auto; font-family:'JetBrains Mono',monospace; }
 .search-item .snippet{ font-size:13px; color:var(--text-muted); line-height:1.5; }
+mark.hl{ background:#ffd873; color:#2c2536; border-radius:3px; padding:0 2px; }
 .search-item .snippet mark{ background:rgba(240,178,63,.35); color:#fff; border-radius:3px; padding:0 2px; }
 .search-empty{ padding:22px 12px; text-align:center; color:var(--text-faint); font-size:13.5px; }
 
@@ -1653,6 +1654,25 @@ function renderSearchResults(query){
   });
 }
 
+/* marca en amarillo, dentro de un elemento ya dibujado, las palabras encontradas */
+function markWords(el, result){
+  if(!el) return;
+  const t = result.entry.text || '', set = new Set(result.spans.map(([a,b]) => normWord(t.slice(a,b))));
+  if(!set.size) return;
+  const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), nodes = [];
+  while(tw.nextNode()) if(!tw.currentNode.parentElement.closest('mark')) nodes.push(tw.currentNode);
+  for(const n of nodes){
+    const v = n.nodeValue; let m, last = 0, frag = null; WORD_RE.lastIndex = 0;
+    while((m = WORD_RE.exec(v)) !== null){
+      if(!set.has(normWord(m[0]))) continue;
+      frag = frag || document.createDocumentFragment();
+      frag.append(v.slice(last, m.index));
+      const mk = document.createElement('mark'); mk.className = 'hl'; mk.textContent = m[0]; frag.append(mk);
+      last = m.index + m[0].length;
+    }
+    if(frag){ frag.append(v.slice(last)); n.replaceWith(frag); }
+  }
+}
 function goToSearchResult(result){
   if(result.entry._reg){
     const k = result.entry.date;
@@ -1667,6 +1687,7 @@ function goToSearchResult(result){
         ? (document.querySelector(`#weekView .tw [data-ed="${inSuic ? 'suic' : 'dia'}|${k}"]`) || document.querySelector(`#weekView .tw [data-ed="dia|${k}"]`))
         : document.querySelector('#dayEntries .rg-day');
       if(!p) return;
+      markWords(p, result);
       p.scrollIntoView({behavior:'smooth', block:'center'});
       p.classList.add('flash'); setTimeout(()=>p.classList.remove('flash'), 1700);
     });
@@ -1680,6 +1701,7 @@ function goToSearchResult(result){
     requestAnimationFrame(()=>{
       const p = document.querySelector(`#weekView .tw [data-pv="${k}|${idx}"]`);
       if(!p) return;
+      markWords(p, result);
       p.scrollIntoView({behavior:'smooth', block:'center'});
       p.classList.add('flash'); setTimeout(()=>p.classList.remove('flash'), 1700);
     });
