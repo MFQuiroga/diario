@@ -1875,9 +1875,7 @@ function renderHorizonLegend(){
   const el = document.getElementById('horizonLegend');
   el.innerHTML = showDailyRange
     ? `<span><i class="dot" style="background:linear-gradient(90deg,#7a4fc9,#e0524f,#dfb43a,#9ccc65,#1e8449)"></i> Promedio (color del ánimo)</span>
-       <span><i style="background:rgba(151,132,240,.35)"></i> Rango del día</span>
-       <span><i class="dot" style="background:var(--range-peak)"></i> Pico del día</span>
-       <span><i class="dot" style="background:var(--range-valley)"></i> Mínimo del día</span>`
+       <span><i style="background:rgba(151,132,240,.35)"></i> Rango del día</span>`
     : `<span><i class="dot" style="background:linear-gradient(90deg,#7a4fc9,#e0524f,#dfb43a,#9ccc65,#1e8449)"></i> Promedio (color del ánimo)</span>`;
 }
 
@@ -1924,7 +1922,7 @@ function renderHorizon(points){
       const x = padL+i*xStep;
       return `<circle cx="${x}" cy="${yFor(p.max)}" r="1.8" fill="var(--range-peak)"/><circle cx="${x}" cy="${yFor(p.min)}" r="1.8" fill="var(--range-valley)"/>`;
     }).join('');
-    bandEls = bands + peakDots;
+    bandEls = bands;
   }
 
   // avg line — single solid color (white), connecting consecutive available points
