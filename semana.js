@@ -16,7 +16,7 @@ const ESC=["No pensé en usarla","Pensé en usarla pero no lo quise","Pensé en 
 const GROUPS={dia:"",cond:"Conductas · (impulso) acción",psi:"Para mi psicóloga",emo:"Emociones (0-5)",hab:"Habilidades",cuerpo:"Cuerpo"};
 const GORDER=["dia","cond","psi","emo","hab","cuerpo"];
 const SN=(x,f,good)=>!x||!x[f]?"–":`<b class="${(x[f]==="SÍ")===!!good?"no":"si"}">${x[f]}</b>`;
-const IMP=v=>+v>0?`<b class="si">(${+v})</b>`:`(${+v||0})`;
+const IMP=v=>v===""||v==null?"(–)":+v>0?`<b class="si">(${+v})</b>`:`(${+v||0})`;
 function cond(imp,acc,card,label,det){return {k:card,g:"cond",l:label,cls:"c4",cd:card,c:x=>x?`${IMP(x[imp])} ${SN(x,acc)}`+(det&&x[acc]==="SÍ"&&x.suicDet?`<div class="det">${esc(x.suicDet)}</div>`:""):"–"}}
 function base(){return [
  {k:"dia",g:"dia",l:"Lo que hice",cls:"nt",cd:"dia",c:(x,k,R,o)=>{if(x&&x.notas)return `<div class="nn">${esc(x.notas)}</div>`+(o&&o.thoughts?o.thoughts(k):"");const ps=o&&o.pens?o.pens(k)||[]:[];return ps.length?pens(ps,o.who==="me"?k:""):"–"}},
